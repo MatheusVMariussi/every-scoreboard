@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "every-scoreboard",
+    "slug": "every-scoreboard",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-localization",
+      "expo-screen-orientation",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b97f4efc-f879-431f-9fbe-68076bca341b"
+      }
+    }
+  }
+}
