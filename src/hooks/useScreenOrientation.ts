@@ -1,32 +1,35 @@
 import { useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Platform } from 'react-native';
 
-export function useScreenOrientation(
-  orientation: ScreenOrientation.OrientationLock = ScreenOrientation.OrientationLock.PORTRAIT_UP
-) {
+export function useScreenOrientation(mode: 'PORTRAIT' | 'LANDSCAPE') {
+  const navigation = useNavigation();
+
   useFocusEffect(
     useCallback(() => {
       const lockScreen = async () => {
-        try {
-          await ScreenOrientation.unlockAsync();
-          
-          if (Platform.OS === 'android') {
-             await new Promise(resolve => setTimeout(resolve, 50));
-          }
+        // Pequena espera para garantir que a animação de navegação iniciou/terminou
+        // Isso evita o "congelamento" da UI durante a transição
+        if (Platform.OS === 'ios') {
+           await new Promise(resolve => setTimeout(resolve, 300));
+        }
 
-          await ScreenOrientation.lockAsync(orientation);
-        } catch (error) {
-          console.error('[Orientation Hook] Erro ao travar tela:', error);
+        if (mode === 'LANDSCAPE') {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        } else {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
         }
       };
 
       lockScreen();
 
       return () => {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        const unlock = async () => {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        };
+        unlock();
       };
-    }, [orientation])
+    }, [mode])
   );
 }

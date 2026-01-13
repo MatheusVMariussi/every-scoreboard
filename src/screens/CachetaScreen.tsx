@@ -1,19 +1,20 @@
-import React, { useState, useLayoutEffect, useRef, useMemo, useCallback, useEffect } from 'react'; // Adicionado useEffect
+import React, { useState, useLayoutEffect, useRef, useMemo, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  Alert, TextInput, Keyboard, TouchableWithoutFeedback 
+  Alert, Keyboard, TouchableWithoutFeedback 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
+import { EditNameModal } from '../components/EditNameModal';
+import { CachetaSettingsModal } from '../components/CachetaSettingsModal';
 
 // --- INTERFACES ---
 type Action = 'won' | 'fold' | 'lost' | null;
@@ -26,7 +27,8 @@ interface Player {
 }
 
 export const CachetaScreen = () => {
-  useScreenOrientation(ScreenOrientation.OrientationLock.LANDSCAPE);
+  // Força Landscape com segurança
+  useScreenOrientation('LANDSCAPE');
   
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -40,16 +42,15 @@ export const CachetaScreen = () => {
     { id: '3', name: 'JOGADOR 3', history: [], currentAction: null },
   ]);
   
-  // Overlays (Substitutos de Modais para evitar crashes)
+  // MODAIS
   const [showEditName, setShowEditName] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
-  const [tempName, setTempName] = useState('');
-
+  
   const [showEditHistory, setShowEditHistory] = useState(false);
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
-  // --- PERSISTÊNCIA DE DADOS ---
-  // Carregar dados salvos ao abrir a tela
+  const [settingsVisible, setSettingsVisible] = useState(false); // <--- NOVO ESTADO
+
   useEffect(() => {
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.CACHETA_DATA);
@@ -61,7 +62,6 @@ export const CachetaScreen = () => {
     loadData();
   }, []);
 
-  // Salvar dados sempre que houver mudanças nos jogadores ou pontos iniciais
   useEffect(() => {
     saveData(STORAGE_KEYS.CACHETA_DATA, { players, initialPoints });
   }, [players, initialPoints]);
@@ -70,19 +70,17 @@ export const CachetaScreen = () => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  // --- CÁLCULO DINÂMICO DE PONTOS ---
   const playersWithPoints = useMemo(() => {
     return players.map(p => {
       let pts = initialPoints;
       p.history.forEach(act => {
-        if (act === 'fold') pts -= 1; // Correu perde 1
-        if (act === 'lost') pts -= 2; // Perdeu perde 2
+        if (act === 'fold') pts -= 1;
+        if (act === 'lost') pts -= 2;
       });
       return { ...p, currentPoints: Math.max(0, pts) };
     });
   }, [players, initialPoints]);
 
-  // --- LÓGICA DE JOGO ---
   const handleNextRound = () => {
     const hasWinner = players.some(p => p.currentAction === 'won');
     const alive = playersWithPoints.filter(p => p.currentPoints > 0);
@@ -102,12 +100,8 @@ export const CachetaScreen = () => {
   };
 
   const handleReset = () => {
-    Alert.alert(translate('common.confirm_reset_title'), translate('common.confirm_reset_message'), [
-      { text: translate('common.cancel'), style: 'cancel' },
-      { text: translate('common.confirm'), style: 'destructive', onPress: () => {
-        setPlayers(prev => prev.map(p => ({ ...p, history: [], currentAction: null })));
-      }}
-    ]);
+    // A lógica de confirmação já está dentro do modal, mas podemos manter uma verificação extra se quiser
+    setPlayers(prev => prev.map(p => ({ ...p, history: [], currentAction: null })));
   };
 
   const updateAction = (pId: string, action: Action, isHistory = false) => {
@@ -122,7 +116,6 @@ export const CachetaScreen = () => {
     }));
   };
 
-  // --- VALIDAÇÕES DE OVERLAY ---
   const handleSaveHistory = () => {
     if (editingRoundIdx !== null) {
       const hasWinner = players.some(p => p.history[editingRoundIdx] === 'won');
@@ -134,11 +127,27 @@ export const CachetaScreen = () => {
     setShowEditHistory(false);
   };
 
-  const handleDeletePlayer = (id: string) => {
+  const handleAddPlayer = () => {
+    setPlayers(prev => {
+      const currentRounds = prev.length > 0 ? prev[0].history.length : 0;
+      const penaltyHistory: Action[] = Array(currentRounds).fill('lost');
+      const newPlayer: Player = { 
+        id: Date.now().toString(), 
+        name: `JOGADOR ${prev.length + 1}`, 
+        history: penaltyHistory, 
+        currentAction: null 
+      };
+      return [...prev, newPlayer];
+    });
+  };
+
+  const handleDeletePlayer = () => {
+    if (!editingPlayerId) return;
+    
     Alert.alert(translate('common.delete_player'), translate('common.confirm_delete_player'), [
       { text: translate('common.cancel'), style: 'cancel' },
       { text: translate('common.confirm'), style: 'destructive', onPress: () => {
-          setPlayers(prev => prev.filter(p => p.id !== id));
+          setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
           setShowEditName(false);
       }}
     ]);
@@ -146,9 +155,14 @@ export const CachetaScreen = () => {
 
   const getActionColor = (action: Action) => {
     if (action === 'won') return theme.colors.status.success;
-    if (action === 'fold') return '#FFD700'; // Amarelo
-    if (action === 'lost') return '#FF8C00'; // Laranja
+    if (action === 'fold') return '#FFD700'; 
+    if (action === 'lost') return '#FF8C00'; 
     return 'transparent';
+  };
+
+  const getEditingPlayerName = () => {
+    const player = players.find(p => p.id === editingPlayerId);
+    return player ? player.name : '';
   };
 
   return (
@@ -157,46 +171,46 @@ export const CachetaScreen = () => {
       
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'top']}>
         
-        {/* HEADER SIMÉTRICO */}
+        {/* HEADER LIMPO E SIMÉTRICO */}
         <View style={styles.header}>
           <View style={styles.headerSide}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
               <Ionicons name="arrow-back" size={24} color="#FFF" />
             </TouchableOpacity>
           </View>
+          
           <Text style={styles.headerTitle}>{translate('home.cacheta').toUpperCase()}</Text>
-          <View style={[styles.headerSide, { justifyContent: 'flex-end', gap: 10 }]}>
-            <TouchableOpacity style={styles.pointsBadge} onPress={() => Alert.prompt(translate('cacheta.initial_points'), "", (t) => setInitialPoints(parseInt(t) || 10), 'plain-text', initialPoints.toString(), 'number-pad')}>
-               <Ionicons name="options-outline" size={14} color="#FFF" style={{ marginRight: 4 }} />
-               <Text style={styles.badgeText}>{initialPoints} {translate('cacheta.points_abbr')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleReset} style={styles.iconBtn}>
-                <Ionicons name="refresh" size={24} color="#FFF" />
+          
+          <View style={[styles.headerSide, { justifyContent: 'flex-end' }]}>
+            {/* Botão de Settings (Engrenagem) */}
+            <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+                <Ionicons name="settings-sharp" size={24} color="#FFF" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* MESA DE JOGO */}
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <ScrollView ref={horizontalScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tableScroll}>
             
-            {/* JOGADORES */}
             <View style={styles.namesColumn}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>JOGADOR</Text></View>
               {playersWithPoints.map(p => (
-                <TouchableOpacity key={p.id} style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]} onPress={() => { setEditingPlayerId(p.id); setTempName(p.name); setShowEditName(true); }}>
+                <TouchableOpacity 
+                    key={p.id} 
+                    style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]} 
+                    onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
+                >
                   <Text style={[styles.playerName, p.currentPoints <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
                   <Text style={[styles.playerPoints, { color: theme.colors.truco.scoreText }]}>{p.currentPoints}</Text>
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={styles.addBtn} onPress={() => setPlayers([...players, { id: Date.now().toString(), name: `JOGADOR ${players.length + 1}`, history: [], currentAction: null }])}>
+              <TouchableOpacity style={styles.addBtn} onPress={handleAddPlayer}>
                 <Ionicons name="add-circle" size={26} color={theme.colors.neon.primary} />
               </TouchableOpacity>
             </View>
 
-            {/* HISTÓRICO ANTERIOR */}
             <View style={{ flexDirection: 'row' }}>
-              {players[0].history.map((_, rIdx) => (
+              {players.length > 0 && players[0].history.map((_, rIdx) => (
                 <TouchableOpacity key={rIdx} style={styles.historyColumn} onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}>
                   <View style={styles.cellHeader}><Text style={styles.headerText}>R{rIdx + 1}</Text></View>
                   {playersWithPoints.map(p => (
@@ -208,7 +222,6 @@ export const CachetaScreen = () => {
               ))}
             </View>
 
-            {/* RODADA ATUAL */}
             <View style={[styles.activeColumn, { backgroundColor: theme.colors.truco.cardBackground }]}>
               <View style={[styles.cellHeaderActive, { backgroundColor: theme.colors.neon.primary + '22' }]}>
                 <Text style={[styles.headerText, { color: theme.colors.neon.primary }]}>ATUAL</Text>
@@ -238,38 +251,26 @@ export const CachetaScreen = () => {
 
       </SafeAreaView>
 
-      {/* OVERLAY: EDIÇÃO DE NOME */}
-      {showEditName && (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.absoluteOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={[styles.overlayContent, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
-                <View style={styles.modalHeader}>
-                  <Text style={[styles.overlayTitle, { color: theme.colors.text.primary, flex: 1, textAlign: 'left' }]}>{translate('common.edit_name')}</Text>
-                  <TouchableOpacity onPress={() => handleDeletePlayer(editingPlayerId!)} style={{ padding: 5 }}>
-                    <Ionicons name="trash-outline" size={22} color={theme.colors.status.error} />
-                  </TouchableOpacity>
-                </View>
-                
-                <TextInput 
-                    style={[styles.input, { color: theme.colors.text.primary, borderColor: theme.colors.text.secondary }]} 
-                    value={tempName} onChangeText={setTempName} autoFocus maxLength={12} 
-                />
+      {/* NOVO MODAL DE SETTINGS */}
+      <CachetaSettingsModal 
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+        onReset={handleReset}
+        initialPoints={initialPoints}
+        setInitialPoints={setInitialPoints}
+      />
 
-                <View style={styles.overlayButtons}>
-                  <TouchableOpacity onPress={() => setShowEditName(false)}><Text style={{ color: theme.colors.status.error, fontFamily: 'Minecraft' }}>{translate('common.cancel')}</Text></TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={() => { setPlayers(prev => prev.map(p => p.id === editingPlayerId ? { ...p, name: tempName } : p)); setShowEditName(false); Keyboard.dismiss(); }} 
-                    style={styles.saveBtn}
-                  >
-                    <Text style={{ color: '#FFF', fontFamily: 'Minecraft' }}>{translate('common.save')}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      )}
+      <EditNameModal 
+        visible={showEditName} 
+        initialValue={getEditingPlayerName()} 
+        onClose={() => setShowEditName(false)} 
+        onSave={(newName) => {
+            if (newName.trim() && editingPlayerId) {
+                setPlayers(prev => prev.map(p => p.id === editingPlayerId ? { ...p, name: newName } : p));
+            }
+        }}
+        onDelete={handleDeletePlayer}
+      />
 
       {/* OVERLAY: EDIÇÃO DE HISTÓRICO */}
       {showEditHistory && editingRoundIdx !== null && (
@@ -337,8 +338,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, height: 50 },
   headerSide: { flex: 1, flexDirection: 'row' },
   headerTitle: { fontFamily: 'Minecraft', color: '#FFF', fontSize: 16, textAlign: 'center', flex: 2 },
-  pointsBadge: { backgroundColor: 'rgba(255,255,255,0.15)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  badgeText: { color: '#FFF', fontFamily: 'Minecraft', fontSize: 10 },
   iconBtn: { padding: 5 },
   tableScroll: { paddingHorizontal: 20, paddingBottom: 20 },
   namesColumn: { width: 130 },
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
   historyColumn: { width: 45, alignItems: 'center' },
   historyCell: { width: 38, height: 55, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  activeColumn: { width: 190, marginLeft: 15, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  activeColumn: { marginLeft: 15, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', alignSelf: 'flex-start' },
   cellHeaderActive: { height: 35, justifyContent: 'center', alignItems: 'center' },
   activeCell: { height: 55, justifyContent: 'center', paddingHorizontal: 10, marginBottom: 4 },
   actionRow: { flexDirection: 'row', gap: 6 },
@@ -363,9 +362,6 @@ const styles = StyleSheet.create({
   absoluteOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', zIndex: 999 },
   overlayContent: { width: '60%', padding: 20, borderRadius: 20, borderWidth: 1 },
   overlayTitle: { fontFamily: 'Minecraft', fontSize: 14, marginBottom: 15, textAlign: 'center' },
-  input: { borderWidth: 1, borderRadius: 8, padding: 10, fontFamily: 'Minecraft', fontSize: 14, marginBottom: 20 },
-  overlayButtons: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 20 },
-  saveBtn: { backgroundColor: '#FF9F00', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   editHistoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#333' },
   modalFooterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },

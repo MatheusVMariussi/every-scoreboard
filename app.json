@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.servyy.everyscoreboard",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,12 +31,17 @@
     },
     "plugins": [
       "expo-localization",
-      "expo-screen-orientation",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "PORTRAIT"
+        }
+      ]
     ],
     "extra": {
       "eas": {
-        "projectId": "b97f4efc-f879-431f-9fbe-68076bca341b"
+        "projectId": "db076d07-41d3-4457-b76d-7a71d9b4376d"
       }
     }
   }

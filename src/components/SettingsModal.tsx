@@ -43,7 +43,6 @@ export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: Set
         { 
           text: translate('common.confirm'),
           style: 'destructive', 
-          onPress: () => Alert.alert("Reset", "Dados apagados.") 
         }
       ]
     );

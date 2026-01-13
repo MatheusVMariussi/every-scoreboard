@@ -58,7 +58,9 @@ export default {
     button_eight: 'EIGHT',
     button_ten: 'TEN',
     button_max: 'MAXIMUM',
-    value_12: 'VALUE 12'
+    value_12: 'VALUE 12',
+    game_mode: 'GAME MODE',
+    max_score: 'MAXIMUM SCORE',
     },
   cacheta: {
     title: 'Cacheta',

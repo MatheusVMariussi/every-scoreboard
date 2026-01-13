@@ -8,7 +8,6 @@ import { HomeScreenNavigationProp, RootStackParamList } from '../navigation/type
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { SettingsModal } from '../components/SettingsModal';
@@ -27,7 +26,7 @@ const GAMES: GameItem[] = [
 ];
 
 export const HomeScreen = () => {
-  useScreenOrientation(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+  useScreenOrientation('PORTRAIT');
   
   const { theme, toggleTheme, themeName } = useTheme(); 
   const navigation = useNavigation<HomeScreenNavigationProp>();
