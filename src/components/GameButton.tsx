@@ -8,16 +8,41 @@ interface GameButtonProps {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'destructive';
 }
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-export const GameButton = ({ title, onPress, style, disabled }: GameButtonProps) => {
+export const GameButton = ({ 
+  title, 
+  onPress, 
+  style, 
+  disabled, 
+  variant = 'primary' // Padrão é primary
+}: GameButtonProps) => {
   const { theme } = useTheme();
 
-  // Cores padrão (se não vierem via prop style)
-  const defaultBgColor = theme.colors.home.buttonBackground || '#FF9F00';
-  const defaultBorderColor = theme.colors.home.buttonBorder || '#CC7A00';
+  // Lógica de Cores baseada na Variante
+  let bgColor, borderColor;
+
+  switch (variant) {
+    case 'secondary':
+      // Amarelo/Dourado (Fase de Apostas)
+      bgColor = '#F1C40F';
+      borderColor = '#B7950B';
+      break;
+    case 'destructive':
+      // Vermelho (Perigo/Reset)
+      bgColor = theme.colors.status.error; // ex: #FF3B30
+      borderColor = '#99221C';
+      break;
+    case 'primary':
+    default:
+      // Laranja Padrão (Fase de Resultados / Ação Principal)
+      bgColor = theme.colors.home.buttonBackground || '#FF9F00';
+      borderColor = theme.colors.home.buttonBorder || '#CC7A00';
+      break;
+  }
   
   // Textos
   const textColor = theme.colors.home.title || '#FFFFFF';
@@ -54,8 +79,8 @@ export const GameButton = ({ title, onPress, style, disabled }: GameButtonProps)
           styles.visualContainer,
           animatedStyle,
           { 
-            backgroundColor: defaultBgColor, 
-            borderColor: defaultBorderColor 
+            backgroundColor: bgColor,
+            borderColor: borderColor
           }, 
           style
         ]}
@@ -86,19 +111,18 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent', // Garante que não tenha "caixa quadrada"
+    backgroundColor: 'transparent',
   },
   visualContainer: {
     width: '100%',
     height: '100%',
-    borderRadius: 20, // Arredondamento visual
+    borderRadius: 20,
     borderWidth: 0,
-    borderBottomWidth: 6, // Efeito 3D
+    borderBottomWidth: 6,
     borderLeftWidth: 1,
     borderRightWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // Sombras
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -114,7 +138,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   text: {
-    fontSize: 24, // Aumentei um pouco para preencher melhor
+    fontSize: 24,
     fontWeight: '900',
     letterSpacing: 1,
     textShadowOffset: { width: 1.5, height: 1.5 },

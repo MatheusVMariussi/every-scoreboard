@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import i18n from '../i18n';
+import { clearAllData } from '../utils/storage';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -46,6 +47,7 @@ export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: Set
         }
       ]
     );
+    clearAllData();
   };
 
   return (

@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const STORAGE_KEYS = {
   TRUCO_DATA: '@truco_data',
   CACHETA_DATA: '@cacheta_data',
+  FODINHA_DATA: '@fodinha_data',
   SETTINGS: '@settings_data',
 };
 
