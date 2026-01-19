@@ -120,6 +120,16 @@ const styles = StyleSheet.create({
   listSection: { flex: 1, width: '100%' },
   listContent: { alignItems: 'center', flexGrow: 1, justifyContent: 'center' },
   buttonWrapper: { width: 280, height: 65 },
-  footerSection: { height: 60, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingHorizontal: 10 },
+  footerSection: {
+    height: 60,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 10,
+    zIndex: 10,
+    elevation: 10,
+    backgroundColor: 'transparent'
+  },
   iconButton: { padding: 10 }
 });
