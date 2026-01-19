@@ -16,6 +16,11 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
   const { theme } = useTheme();
   const [name, setName] = useState(initialValue);
 
+  // Hardcoded Dark Colors for Game Consistency
+  const DARK_BG = '#222222';
+  const TEXT_COLOR = '#FFFFFF';
+  const BORDER_COLOR = '#AAAAAA';
+
   useEffect(() => {
     if (visible) {
       setName(initialValue);
@@ -43,11 +48,11 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           <TouchableWithoutFeedback>
-            <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
+            <View style={[styles.container, { backgroundColor: DARK_BG, borderColor: theme.colors.truco.scoreText }]}>
               
               {/* HEADER: TÍTULO + LIXEIRA (SE HOUVER) */}
               <View style={styles.header}>
-                  <Text style={[styles.title, { color: theme.colors.text.primary }]}>
+                  <Text style={[styles.title, { color: TEXT_COLOR }]}>
                     {translate('common.edit_name')}
                   </Text>
                   {onDelete && (
@@ -58,12 +63,12 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
               </View>
               
               <TextInput
-                style={[styles.input, { color: theme.colors.text.primary, borderColor: theme.colors.text.secondary }]}
+                style={[styles.input, { color: TEXT_COLOR, borderColor: BORDER_COLOR }]}
                 value={name}
                 onChangeText={setName}
                 autoFocus={false}
                 maxLength={12}
-                placeholderTextColor={theme.colors.text.secondary}
+                placeholderTextColor={BORDER_COLOR}
               />
 
               <View style={styles.buttonRow}>
