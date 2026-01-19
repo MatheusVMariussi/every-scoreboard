@@ -61,7 +61,8 @@ export const FodinhaScreen = () => {
   const actionsTarget = useTutorialTarget(tutorialActive && tutorialStep === 2);
   const buttonTarget = useTutorialTarget(tutorialActive && tutorialStep === 3);
   const historyTarget = useTutorialTarget(tutorialActive && tutorialStep === 4);
-  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 5);
+  const editModalTarget = useTutorialTarget(tutorialActive && tutorialStep === 5);
+  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 6);
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
@@ -94,9 +95,9 @@ export const FodinhaScreen = () => {
 
   // --- TUTORIAL LOGIC ---
   const advanceTutorial = () => {
-    // Wait for interaction on step 3 (finish round) and 4 (delete round)
-    if (tutorialStep !== 3 && tutorialStep !== 4) {
-      if (tutorialStep < 5) {
+    // Wait for interaction on step 3 (finish round), 4 (open history), 5 (edit modal)
+    if (tutorialStep !== 3 && tutorialStep !== 4 && tutorialStep !== 5) {
+      if (tutorialStep < 6) {
         setTutorialStep(p => p + 1);
       } else {
         finishTutorial();
@@ -229,11 +230,18 @@ export const FodinhaScreen = () => {
             setShowEditHistory(false);
 
             // Advance tutorial if in deletion step
-            if (tutorialActive && tutorialStep === 4) {
-                setTutorialStep(5);
+            if (tutorialActive && tutorialStep === 5) {
+                setTutorialStep(6);
             }
         }}
     ]);
+  };
+
+  const closeEditHistory = () => {
+      setShowEditHistory(false);
+      if (tutorialActive && tutorialStep === 5) {
+          setTutorialStep(6);
+      }
   };
 
   const handleReset = () => {
@@ -366,7 +374,13 @@ export const FodinhaScreen = () => {
                 <View key={rIdx} ref={rIdx === 0 && tutorialStep === 4 ? historyTarget.ref : undefined} collapsable={false}>
                     <TouchableOpacity
                         style={styles.historyColumn}
-                        onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}
+                        onPress={() => {
+                            setEditingRoundIdx(rIdx);
+                            setShowEditHistory(true);
+                            if (tutorialActive && tutorialStep === 4) {
+                                setTimeout(() => setTutorialStep(5), 300);
+                            }
+                        }}
                     >
                     <View style={styles.cellHeader}><Text style={styles.headerText}>{rIdx + 1}</Text></View>
                     {players.map(p => {
@@ -456,16 +470,19 @@ export const FodinhaScreen = () => {
             <TouchableOpacity 
                 style={StyleSheet.absoluteFill} 
                 activeOpacity={1} 
-                onPress={() => setShowEditHistory(false)} 
+                onPress={closeEditHistory}
             />
 
-            <View style={[styles.overlayContent, { width: '50%', maxHeight: '85%', backgroundColor: theme.colors.background.secondary }]}>
+            <View
+                ref={editModalTarget.ref} collapsable={false}
+                style={[styles.overlayContent, { width: '50%', maxHeight: '85%', backgroundColor: theme.colors.background.secondary }]}
+            >
                 
                 <View style={styles.modalHeader}>
                     <Text style={[styles.overlayTitle, { color: theme.colors.text.primary }]}>
                         EDITAR RODADA {editingRoundIdx + 1}
                     </Text>
-                    <TouchableOpacity onPress={() => setShowEditHistory(false)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                    <TouchableOpacity onPress={closeEditHistory} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
                         <Ionicons name="close" size={24} color={theme.colors.text.primary} />
                     </TouchableOpacity>
                 </View>
@@ -511,7 +528,7 @@ export const FodinhaScreen = () => {
                         <Text style={{ color: '#FF3B30', fontFamily: 'Minecraft', fontSize: 12, textDecorationLine: 'underline' }}>EXCLUIR RODADA</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={() => setShowEditHistory(false)} style={[styles.saveBtnSmall, { backgroundColor: theme.colors.brand.primary }]}>
+                        <TouchableOpacity onPress={closeEditHistory} style={[styles.saveBtnSmall, { backgroundColor: theme.colors.brand.primary }]}>
                         <Text style={{ color: '#FFF', fontFamily: 'Minecraft' }}>CONCLUIR</Text>
                         </TouchableOpacity>
                 </View>
@@ -545,6 +562,7 @@ export const FodinhaScreen = () => {
             tutorialStep === 2 ? actionsTarget.layout :
             tutorialStep === 3 ? buttonTarget.layout :
             tutorialStep === 4 ? historyTarget.layout :
+            tutorialStep === 5 ? editModalTarget.layout :
             settingsTarget.layout
         }
         message={
@@ -552,11 +570,12 @@ export const FodinhaScreen = () => {
             tutorialStep === 2 ? translate('fodinha.tutorial.actions') :
             tutorialStep === 3 ? translate('fodinha.tutorial.button') :
             tutorialStep === 4 ? translate('fodinha.tutorial.history') :
+            tutorialStep === 5 ? translate('fodinha.tutorial.edit_modal') :
             translate('fodinha.tutorial.settings')
         }
-        onNext={(tutorialStep !== 3 && tutorialStep !== 4) ? advanceTutorial : undefined}
+        onNext={(tutorialStep !== 3 && tutorialStep !== 4 && tutorialStep !== 5) ? advanceTutorial : undefined}
         onSkip={finishTutorial}
-        nextText={tutorialStep === 5 ? translate('common.finish_tutorial') : undefined}
+        nextText={tutorialStep === 6 ? translate('common.finish_tutorial') : undefined}
       />
     </View>
   );

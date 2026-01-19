@@ -62,7 +62,8 @@ export const CachetaScreen = () => {
   const actionsTarget = useTutorialTarget(tutorialActive && tutorialStep === 2);
   const buttonTarget = useTutorialTarget(tutorialActive && tutorialStep === 3);
   const historyTarget = useTutorialTarget(tutorialActive && tutorialStep === 4);
-  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 5);
+  const editModalTarget = useTutorialTarget(tutorialActive && tutorialStep === 5);
+  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 6);
 
   useEffect(() => {
     const checkTutorial = async () => {
@@ -94,9 +95,9 @@ export const CachetaScreen = () => {
 
   // --- TUTORIAL LOGIC ---
   const advanceTutorial = () => {
-    // If step 3 (Finish Round) or step 4 (Delete History), user needs to perform action
-    if (tutorialStep !== 3 && tutorialStep !== 4) {
-      if (tutorialStep < 5) {
+    // If step 3 (Finish Round) or step 4 (Open History) or step 5 (Edit Modal), user needs to perform action
+    if (tutorialStep !== 3 && tutorialStep !== 4 && tutorialStep !== 5) {
+      if (tutorialStep < 6) {
         setTutorialStep(p => p + 1);
       } else {
         finishTutorial();
@@ -171,6 +172,11 @@ export const CachetaScreen = () => {
       }
     }
     setShowEditHistory(false);
+
+    // Advance tutorial if in edit modal step
+    if (tutorialActive && tutorialStep === 5) {
+        setTutorialStep(6);
+    }
   };
 
   const handleAddPlayer = () => {
@@ -261,7 +267,14 @@ export const CachetaScreen = () => {
             <View style={{ flexDirection: 'row' }}>
               {players.length > 0 && players[0].history.map((_, rIdx) => (
                 <View key={rIdx} ref={rIdx === 0 && tutorialStep === 4 ? historyTarget.ref : undefined} collapsable={false}>
-                    <TouchableOpacity style={styles.historyColumn} onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}>
+                    <TouchableOpacity style={styles.historyColumn} onPress={() => {
+                        setEditingRoundIdx(rIdx);
+                        setShowEditHistory(true);
+                        // Advance to step 5 (Edit Modal)
+                        if (tutorialActive && tutorialStep === 4) {
+                            setTimeout(() => setTutorialStep(5), 300);
+                        }
+                    }}>
                     <View style={styles.cellHeader}><Text style={styles.headerText}>R{rIdx + 1}</Text></View>
                     {playersWithPoints.map(p => (
                         <View key={p.id} style={[styles.historyCell, { backgroundColor: getActionColor(p.history[rIdx]) + '22' }]}>
@@ -309,6 +322,7 @@ export const CachetaScreen = () => {
             tutorialStep === 2 ? actionsTarget.layout :
             tutorialStep === 3 ? buttonTarget.layout :
             tutorialStep === 4 ? historyTarget.layout :
+            tutorialStep === 5 ? editModalTarget.layout :
             settingsTarget.layout
         }
         message={
@@ -316,11 +330,12 @@ export const CachetaScreen = () => {
             tutorialStep === 2 ? translate('cacheta.tutorial.actions') :
             tutorialStep === 3 ? translate('cacheta.tutorial.button') :
             tutorialStep === 4 ? translate('cacheta.tutorial.history') :
+            tutorialStep === 5 ? translate('cacheta.tutorial.edit_modal') :
             translate('cacheta.tutorial.settings')
         }
-        onNext={tutorialStep !== 3 ? advanceTutorial : undefined} // Hide next button on step 3
+        onNext={tutorialStep !== 3 && tutorialStep !== 4 && tutorialStep !== 5 ? advanceTutorial : undefined}
         onSkip={finishTutorial}
-        nextText={tutorialStep === 5 ? translate('common.finish_tutorial') : undefined}
+        nextText={tutorialStep === 6 ? translate('common.finish_tutorial') : undefined}
       />
 
       {/* NOVO MODAL DE SETTINGS */}
@@ -349,7 +364,10 @@ export const CachetaScreen = () => {
         <TouchableWithoutFeedback onPress={handleSaveHistory}>
           <View style={styles.absoluteOverlay}>
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={[styles.overlayContent, { width: '85%', backgroundColor: theme.colors.background.secondary }]}>
+              <View
+                ref={editModalTarget.ref} collapsable={false}
+                style={[styles.overlayContent, { width: '85%', backgroundColor: theme.colors.background.secondary }]}
+              >
                 <View style={styles.modalHeader}>
                   <Text style={[styles.overlayTitle, { color: theme.colors.text.primary }]}>
                     {translate('cacheta.edit_round', { index: editingRoundIdx + 1 })}
@@ -381,8 +399,8 @@ export const CachetaScreen = () => {
                           setShowEditHistory(false);
 
                           // Advance tutorial if in deletion step
-                          if (tutorialActive && tutorialStep === 4) {
-                              setTutorialStep(5);
+                          if (tutorialActive && tutorialStep === 5) {
+                              setTutorialStep(6);
                           }
                       }}
                     ]);
