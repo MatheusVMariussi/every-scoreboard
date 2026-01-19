@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, LayoutRectangle } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, LayoutRectangle, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ export const TrucoScreen = () => {
   
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const { width, height } = useWindowDimensions();
 
   // CORES DOS TIMES
   const COLOR_THEM = '#FF453A';
@@ -66,7 +67,7 @@ export const TrucoScreen = () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_TRUCO);
       if (!hasSeen) {
         setTutorialActive(true);
-        setTimeout(() => setTutorialStep(1), 500); // Start tutorial after a delay
+        setTimeout(() => setTutorialStep(1), 1000); // Increased delay
       }
     };
     checkTutorial();
@@ -119,13 +120,15 @@ export const TrucoScreen = () => {
     };
 
     // Small delay to ensure layout is ready or updated
-    const timer = setTimeout(measureTarget, 100);
+    const timer = setTimeout(measureTarget, 200);
     return () => clearTimeout(timer);
-  }, [tutorialStep, tutorialActive]);
+  }, [tutorialStep, tutorialActive, width, height]); // Trigger on rotation
 
   const advanceTutorial = () => {
     if (tutorialStep < 3) {
       setTutorialStep(p => p + 1);
+    } else {
+      finishTutorial();
     }
   };
 
@@ -339,7 +342,9 @@ export const TrucoScreen = () => {
             tutorialStep === 2 ? translate('truco.tutorial.names') :
             translate('truco.tutorial.settings')
         }
-        onNext={tutorialStep < 3 ? advanceTutorial : undefined}
+        onNext={advanceTutorial}
+        onSkip={finishTutorial}
+        nextText={tutorialStep === 3 ? translate('common.finish_tutorial') : undefined}
       />
 
       <TrucoSettingsModal 

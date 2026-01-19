@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useRef, useMemo, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  Alert, TouchableWithoutFeedback, LayoutRectangle
+  Alert, TouchableWithoutFeedback, LayoutRectangle, useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -34,6 +34,7 @@ export const CachetaScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const horizontalScrollRef = useRef<ScrollView>(null);
+  const { width, height } = useWindowDimensions();
 
   // --- ESTADOS ---
   const [initialPoints, setInitialPoints] = useState(10);
@@ -69,7 +70,7 @@ export const CachetaScreen = () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_CACHETA);
       if (!hasSeen) {
         setTutorialActive(true);
-        setTimeout(() => setTutorialStep(1), 500);
+        setTimeout(() => setTutorialStep(1), 1500); // Increased delay for rotation
       }
     };
     checkTutorial();
@@ -106,22 +107,34 @@ export const CachetaScreen = () => {
 
       if (targetRef && targetRef.current) {
         targetRef.current.measureInWindow((x, y, width, height) => {
-          setSpotlightRect({ x, y, width, height });
+            if (width > 0 && height > 0) {
+                 setSpotlightRect({ x, y, width, height });
+            } else {
+                 // Retry if measurement failed (e.g. view not ready)
+                 setTimeout(measureTarget, 200);
+            }
         });
       } else {
-        setSpotlightRect(null);
+        // Retry logic for dynamic elements like historyRef
+        if (tutorialStep === 4 && (!targetRef || !targetRef.current)) {
+             // Keep retrying for history column
+        } else {
+             setSpotlightRect(null);
+        }
       }
     };
 
-    const timer = setTimeout(measureTarget, 100);
+    const timer = setTimeout(measureTarget, 200);
     return () => clearTimeout(timer);
-  }, [tutorialStep, tutorialActive, players]); // depend on players to remeasure if layout changes
+  }, [tutorialStep, tutorialActive, players, width, height]); // depend on players and dims
 
   const advanceTutorial = () => {
     // If step 3, user needs to click button to advance
     if (tutorialStep !== 3) {
       if (tutorialStep < 5) {
         setTutorialStep(p => p + 1);
+      } else {
+        finishTutorial();
       }
     }
   };
@@ -161,7 +174,8 @@ export const CachetaScreen = () => {
 
     // Tutorial interaction: if step 3, advance to 4 (History)
     if (tutorialActive && tutorialStep === 3) {
-      setTutorialStep(4);
+      // Need a small delay to allow history column to render
+      setTimeout(() => setTutorialStep(4), 500);
     }
   };
 
@@ -333,7 +347,9 @@ export const CachetaScreen = () => {
             tutorialStep === 4 ? translate('cacheta.tutorial.history') :
             translate('cacheta.tutorial.settings')
         }
-        onNext={tutorialStep !== 3 ? advanceTutorial : undefined} // Hide next button on step 3 (waiting for user action)
+        onNext={tutorialStep !== 3 ? advanceTutorial : undefined} // Hide next button on step 3
+        onSkip={finishTutorial}
+        nextText={tutorialStep === 5 ? translate('common.finish_tutorial') : undefined}
       />
 
       {/* NOVO MODAL DE SETTINGS */}

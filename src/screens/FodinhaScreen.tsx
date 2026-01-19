@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, LayoutRectangle } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, LayoutRectangle, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +29,7 @@ export const FodinhaScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const horizontalScrollRef = useRef<ScrollView>(null);
+  const { width, height } = useWindowDimensions();
 
   // --- ESTADOS ---
   const [initialLives, setInitialLives] = useState(10);
@@ -70,7 +71,7 @@ export const FodinhaScreen = () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_FODINHA);
       if (!hasSeen) {
         setTutorialActive(true);
-        setTimeout(() => setTutorialStep(1), 500);
+        setTimeout(() => setTutorialStep(1), 1500); // Increased delay
       }
     };
     checkTutorial();
@@ -106,21 +107,32 @@ export const FodinhaScreen = () => {
 
       if (targetRef && targetRef.current) {
         targetRef.current.measureInWindow((x, y, width, height) => {
-          setSpotlightRect({ x, y, width, height });
+            if (width > 0 && height > 0) {
+                 setSpotlightRect({ x, y, width, height });
+            } else {
+                 setTimeout(measureTarget, 200);
+            }
         });
       } else {
-        setSpotlightRect(null);
+        // Retry logic for dynamic elements like historyRef
+        if (tutorialStep === 4 && (!targetRef || !targetRef.current)) {
+             // Keep retrying for history column
+        } else {
+             setSpotlightRect(null);
+        }
       }
     };
 
-    const timer = setTimeout(measureTarget, 100);
+    const timer = setTimeout(measureTarget, 200);
     return () => clearTimeout(timer);
-  }, [tutorialStep, tutorialActive, players]);
+  }, [tutorialStep, tutorialActive, players, width, height]);
 
   const advanceTutorial = () => {
     if (tutorialStep !== 3) {
       if (tutorialStep < 5) {
         setTutorialStep(p => p + 1);
+      } else {
+        finishTutorial();
       }
     }
   };
@@ -185,7 +197,7 @@ export const FodinhaScreen = () => {
 
     // If tutorial is active, now history is available
     if (tutorialActive && tutorialStep === 3) {
-        setTutorialStep(4);
+        setTimeout(() => setTutorialStep(4), 500);
     }
   };
 
@@ -567,7 +579,9 @@ export const FodinhaScreen = () => {
             tutorialStep === 4 ? translate('fodinha.tutorial.history') :
             translate('fodinha.tutorial.settings')
         }
-        onNext={tutorialStep !== 3 ? advanceTutorial : undefined} // Step 3 requires user action
+        onNext={tutorialStep !== 3 ? advanceTutorial : undefined}
+        onSkip={finishTutorial}
+        nextText={tutorialStep === 5 ? translate('common.finish_tutorial') : undefined}
       />
     </View>
   );
