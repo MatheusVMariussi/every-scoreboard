@@ -23,20 +23,6 @@ Este projeto é um marcador de pontos multi-jogos projetado para facilitar a con
 - **Async Storage** (Persistência de dados)
 - **i18n-js** (Internacionalização)
 
-## 🛠️ Instalação e Execução
-
-Pré-requisitos: Node.js instalado.
-
-1.  **Instale as dependências**:
-    ```bash
-    npm install
-    ```
-2.  **Execute o projeto**:
-    ```bash
-    npx expo start
-    ```
-    Isso iniciará o servidor de desenvolvimento do Expo. Você pode abrir o app no seu dispositivo físico usando o aplicativo Expo Go ou em um emulador (Android Studio / Xcode).
-
 ## 📂 Estrutura do Projeto
 
 A estrutura de pastas em `src/` é organizada da seguinte forma:
@@ -56,6 +42,11 @@ A estrutura de pastas em `src/` é organizada da seguinte forma:
 - **Internacionalização**: Suporte automático a Português e Inglês.
 - **Histórico**: Visualização gráfica do histórico de partidas (no Truco).
 
-## ⚠️ Status
+## ⚠️ Status e Próximos Passos
 
 A tela de **Canastra** está atualmente em construção e será implementada em atualizações futuras.
+
+Planejamento para as próximas versões:
+- Adicionar nos ajustes de cada jogo, instruções das regras do jogo (padrão que encontramos na internet).
+- Adicionar para a primeira entrada em cada jogo, um tutorial de como cada um dos placares funciona.
+- Adicionar propagandas, e juntamente com isso, a funcionalidade do botão "Remover ADS" do menu principal, que irá remover essas propagandas.
