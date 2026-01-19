@@ -52,12 +52,9 @@ export const TrucoScreen = () => {
 
   // Tutorial State
   const [tutorialActive, setTutorialActive] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
 
   // Custom hooks for targeting
-  const scoreTarget = useTutorialTarget(tutorialActive && tutorialStep === 1);
-  const nameTarget = useTutorialTarget(tutorialActive && tutorialStep === 2);
-  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 3);
+  const scoreTarget = useTutorialTarget(tutorialActive);
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
@@ -67,7 +64,6 @@ export const TrucoScreen = () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_TRUCO);
       if (!hasSeen) {
         setTutorialActive(true);
-        setTimeout(() => setTutorialStep(1), 1000); // Increased delay
       }
     };
     checkTutorial();
@@ -101,14 +97,6 @@ export const TrucoScreen = () => {
   }, [gameMode, maxScore]);
 
   // --- TUTORIAL LOGIC ---
-  const advanceTutorial = () => {
-    if (tutorialStep < 3) {
-      setTutorialStep(p => p + 1);
-    } else {
-      finishTutorial();
-    }
-  };
-
   const finishTutorial = async () => {
       setTutorialActive(false);
       await saveData(STORAGE_KEYS.TUTORIAL_TRUCO, true);
@@ -121,11 +109,6 @@ export const TrucoScreen = () => {
     setScoreUs(0); setScoreThem(0);
     setPointHistory([]);
     if (fullReset) { setMatchWinsUs(0); setMatchWinsThem(0); }
-
-    // Se o reset acontecer durante o tutorial (passo 3), finaliza
-    if (tutorialActive && tutorialStep === 3) {
-        finishTutorial();
-    }
   };
 
   const handlePointChange = (team: 'us' | 'them', pointsToAdd: number) => {
@@ -227,7 +210,7 @@ export const TrucoScreen = () => {
       <View style={styles.teamColumn}>
         <View style={[styles.colorBar, { backgroundColor: color }]} />
 
-        <View ref={nameTargetProp?.ref} collapsable={false}>
+        <View>
             <TouchableOpacity
                 onPress={() => { setEditingTeam(team); setEditNameVisible(true); }}
                 style={styles.nameContainer}
@@ -280,7 +263,7 @@ export const TrucoScreen = () => {
             <Ionicons name="arrow-back" size={24} color={theme.colors.text.inverse} />
           </TouchableOpacity>
           <Text style={styles.gameTitle}>TRUCO {gameMode.toUpperCase()}</Text>
-          <View ref={settingsTarget.ref} collapsable={false}>
+          <View>
               <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
                 <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
               </TouchableOpacity>
@@ -297,7 +280,6 @@ export const TrucoScreen = () => {
             wins={matchWinsUs}
             color={COLOR_US}
             scoreTargetProp={scoreTarget}
-            nameTargetProp={nameTarget}
           />
         </View>
 
@@ -312,20 +294,12 @@ export const TrucoScreen = () => {
       </SafeAreaView>
 
       <TutorialOverlay
-        visible={tutorialActive && tutorialStep > 0}
-        spotlight={
-            tutorialStep === 1 ? scoreTarget.layout :
-            tutorialStep === 2 ? nameTarget.layout :
-            settingsTarget.layout
-        }
-        message={
-            tutorialStep === 1 ? translate('truco.tutorial.score') :
-            tutorialStep === 2 ? translate('truco.tutorial.names') :
-            translate('truco.tutorial.settings')
-        }
-        onNext={advanceTutorial}
+        visible={tutorialActive}
+        spotlight={scoreTarget.layout}
+        message={translate('truco.tutorial.score')}
         onSkip={finishTutorial}
-        nextText={tutorialStep === 3 ? translate('common.finish_tutorial') : undefined}
+        nextText={translate('common.got_it')}
+        onNext={finishTutorial}
       />
 
       <TrucoSettingsModal 

@@ -66,19 +66,12 @@ export default {
     max_score: 'MAXIMUM SCORE',
     tutorial: {
       score: 'Swipe UP to add TRUCO value (3/4 pts).\nSwipe DOWN to remove 1 pt.\nTap to add 1 pt.',
-      names: 'Tap on the name or trophies to edit the team name.',
-      settings: 'Access settings here.\nRESET MATCH to finish the tutorial.',
     },
   },
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      player: 'Tap here to edit name or remove player.',
       actions: 'Set the result for each player:\n(F)olded, (L)ost, or (W)on.',
-      button: 'Tap here to confirm the round and apply damage.',
-      history: 'Tap the round column to fix past mistakes.',
-      edit_modal: 'Here you can change who won/lost or delete the round.',
-      settings: 'Access settings.\nRESET MATCH to finish the tutorial.',
     },
     player_name: 'Player {{index}}',
     initial_points: 'Initial Points',
@@ -96,12 +89,7 @@ export default {
   },
   fodinha: {
     tutorial: {
-      player: 'Tap name to edit.\nHere you see remaining lives.',
       actions: 'Use buttons to set each player\'s bet (or wins).',
-      button: 'Confirm bets or finish round here.',
-      history: 'Tap on the round to fix past mistakes.',
-      edit_modal: 'Here you can change bets/wins or delete the round.',
-      settings: 'Access settings.\nRESET MATCH to finish the tutorial.',
     },
   },
 };

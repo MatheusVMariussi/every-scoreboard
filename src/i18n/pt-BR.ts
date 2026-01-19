@@ -66,19 +66,12 @@ export default {
     max_score: 'PONTUAÇÃO MÁXIMA',
     tutorial: {
       score: 'Arraste para CIMA para somar o valor do TRUCO (3/4 pts).\nArraste para BAIXO para remover 1 pt.\nToque para somar 1 pt.',
-      names: 'Toque no nome ou nos troféus para editar o nome do time.',
-      settings: 'Acesse as configurações aqui.\nREINICIE A PARTIDA para concluir o tutorial.',
     },
   },
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      player: 'Toque aqui para editar o nome ou remover o jogador.',
       actions: 'Defina o resultado de cada jogador na rodada:\n(C)orreu, (P)erdeu ou (G)anhou.',
-      button: 'Toque aqui para confirmar a rodada e aplicar os danos.',
-      history: 'Toque na coluna da rodada para corrigir erros passados.',
-      edit_modal: 'Aqui você pode alterar quem ganhou/perdeu ou excluir a rodada.',
-      settings: 'Acesse as configurações.\nREINICIE A PARTIDA para concluir o tutorial.',
     },
     player_name: 'Jogador {{index}}',
     initial_points: 'Pontos Iniciais',
@@ -96,12 +89,7 @@ export default {
   },
   fodinha: {
     tutorial: {
-      player: 'Toque no nome para editar.\nAqui você vê as vidas restantes.',
       actions: 'Use os botões para definir a aposta (ou vitórias) de cada jogador.',
-      button: 'Confirme as apostas ou finalize a rodada aqui.',
-      history: 'Toque na rodada para corrigir erros passados.',
-      edit_modal: 'Aqui você pode alterar as apostas/vitórias ou excluir a rodada.',
-      settings: 'Acesse as configurações.\nREINICIE A PARTIDA para concluir o tutorial.',
     },
   },
 };
