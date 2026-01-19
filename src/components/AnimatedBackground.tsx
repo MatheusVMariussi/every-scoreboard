@@ -40,7 +40,7 @@ export const AnimatedBackground = () => {
   }
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <Canvas style={{ flex: 1 }}>
         {/* Fundo Sólido */}
         <Rect x={0} y={0} width={width} height={height} color={bgDark} />

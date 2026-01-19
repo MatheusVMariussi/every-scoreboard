@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { Canvas, DiffRect, rrect, rect } from '@shopify/react-native-skia';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS, useDerivedValue } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
@@ -41,7 +42,7 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
     } else {
       opacity.value = withTiming(0, { duration: 300 }, (finished) => {
         if (finished) {
-          runOnJS(setIsRendered)(false);
+          scheduleOnRN(setIsRendered, false);
         }
       });
     }
