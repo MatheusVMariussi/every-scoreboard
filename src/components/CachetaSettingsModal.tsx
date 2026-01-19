@@ -26,7 +26,7 @@ export const CachetaSettingsModal = ({
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+        <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           <TouchableWithoutFeedback>
             <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
               
@@ -43,23 +43,23 @@ export const CachetaSettingsModal = ({
                 <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('cacheta.initial_points')}</Text>
                 
                 <View style={styles.counterRow}>
-                  <TouchableOpacity onPress={() => adjustPoints(-1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary }]}>
+                  <TouchableOpacity onPress={() => adjustPoints(-1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay }]}>
                     <Ionicons name="remove" size={24} color={theme.colors.text.primary} />
                   </TouchableOpacity>
 
                   <Text style={[styles.pointsValue, { color: theme.colors.truco.scoreText }]}>{initialPoints}</Text>
 
-                  <TouchableOpacity onPress={() => adjustPoints(1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary }]}>
+                  <TouchableOpacity onPress={() => adjustPoints(1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay }]}>
                     <Ionicons name="add" size={24} color={theme.colors.text.primary} />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
 
               {/* Botão de Reset */}
               <TouchableOpacity style={[styles.resetBtn, { backgroundColor: theme.colors.status.error }]} onPress={() => { onReset(); onClose(); }}>
-                <Text style={styles.resetText}>{translate('common.reset_match').toUpperCase()}</Text>
+                <Text style={[styles.resetText, { color: theme.colors.text.white }]}>{translate('common.reset_match').toUpperCase()}</Text>
               </TouchableOpacity>
 
             </View>
@@ -79,10 +79,10 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, fontFamily: 'Minecraft', marginBottom: 10, opacity: 0.8 },
   
   counterRow: { flexDirection: 'row', alignItems: 'center', gap: 20 },
-  counterBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' },
+  counterBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
   pointsValue: { fontFamily: 'Minecraft', fontSize: 32 },
 
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginBottom: 20 },
+  divider: { height: 1, marginBottom: 20 },
   resetBtn: { padding: 12, borderRadius: 10, alignItems: 'center' },
-  resetText: { color: '#FFF', fontFamily: 'Minecraft', fontSize: 14 }
+  resetText: { fontFamily: 'Minecraft', fontSize: 14 }
 });

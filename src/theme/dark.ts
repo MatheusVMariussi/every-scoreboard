@@ -7,11 +7,14 @@ export const darkTheme: Theme = {
       primary: palette.gray900,     // Fundo padrão ESCURO (Configurações, etc)
       secondary: palette.gray800,   // Cards levemente mais claros
       darkVoid: palette.deepBlueVoid,
+      overlay: palette.overlay80,
     },
     text: {
       primary: palette.white,       // Texto principal BRANCO
       secondary: palette.gray100,   // Texto secundário cinza claro
       inverse: palette.gray900,     // Texto para botões claros
+      white: palette.white,
+      black: palette.black,
     },
     brand: {
       primary: palette.blue500,
@@ -19,6 +22,7 @@ export const darkTheme: Theme = {
     status: {
       error: palette.red500,
       success: palette.green500,
+      warning: palette.yellowFold,
     },
 
     neon: {
@@ -31,6 +35,10 @@ export const darkTheme: Theme = {
       titleOutline: palette.brownDark,
       buttonBackground: palette.orangePrimary,
       buttonBorder: palette.orangeDark,
+      buttonSecondary: palette.yellow500,
+      buttonSecondaryBorder: palette.yellowDark,
+      buttonDestructive: palette.red500,
+      buttonDestructiveBorder: palette.redDark,
       titleBackground: palette.darkOverlay,
     },
     icon: {
@@ -59,6 +67,9 @@ export const darkTheme: Theme = {
       graphBarUs: palette.goldAccent,
       graphBarThem: palette.cardWhite,
       trophy: palette.goldAccent,
+      teamUs: palette.systemGreen,
+      teamThem: palette.systemRed,
+      divider: palette.white10,
     },
     cacheta: {
       win: palette.green500,        // Ganhou
@@ -66,7 +77,16 @@ export const darkTheme: Theme = {
       loss: palette.orangePrimary,  // Perdeu
       playerCard: 'rgba(255,255,255,0.05)',
       activeRound: 'rgba(0,240,255,0.1)', // Um leve brilho neon para a rodada ativa
+      text: palette.white,
     },
+    fodinha: {
+      cardBackground: palette.white15,
+      damageText: palette.systemRed,
+      safeDot: palette.systemGreen,
+      eliminated: palette.red500,
+      divider: palette.white10,
+      countColor: palette.white,
+    }
   },
   // Espaçamento e tipografia se mantêm
   spacing: {

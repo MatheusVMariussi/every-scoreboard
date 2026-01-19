@@ -24,7 +24,7 @@ export const TrucoSettingsModal = ({
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+        <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           <TouchableWithoutFeedback>
             <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
               
@@ -40,13 +40,13 @@ export const TrucoSettingsModal = ({
                 <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('truco.game_mode')}</Text>
                 <View style={styles.row}>
                   <OptionBtn 
-                    label="PAULISTA" 
+                    label={translate('truco.paulista').toUpperCase()}
                     active={gameMode === 'paulista'} 
                     onPress={() => setGameMode('paulista')} 
                     theme={theme}
                   />
                   <OptionBtn 
-                    label="MINEIRO" 
+                    label={translate('truco.mineiro').toUpperCase()}
                     active={gameMode === 'mineiro'} 
                     onPress={() => setGameMode('mineiro')} 
                     theme={theme}
@@ -59,13 +59,13 @@ export const TrucoSettingsModal = ({
                 <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('truco.max_score')}</Text>
                 <View style={styles.row}>
                   <OptionBtn 
-                    label="12 PONTOS" 
+                    label={translate('common.points_12')}
                     active={maxScore === 12} 
                     onPress={() => setMaxScore(12)} 
                     theme={theme}
                   />
                   <OptionBtn 
-                    label="24 PONTOS" 
+                    label={translate('common.points_24')}
                     active={maxScore === 24} 
                     onPress={() => setMaxScore(24)} 
                     theme={theme}
@@ -73,10 +73,10 @@ export const TrucoSettingsModal = ({
                 </View>
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
 
               <TouchableOpacity style={[styles.resetBtn, { backgroundColor: theme.colors.status.error }]} onPress={() => { onReset(); onClose(); }}>
-                <Text style={styles.resetText}>{translate('common.reset_match').toUpperCase()}</Text>
+                <Text style={[styles.resetText, { color: theme.colors.text.white }]}>{translate('common.reset_match').toUpperCase()}</Text>
               </TouchableOpacity>
 
             </View>
@@ -98,7 +98,7 @@ const OptionBtn = ({ label, active, onPress, theme }: any) => (
       }
     ]}
   >
-    <Text style={[styles.optText, { color: active ? '#FFF' : theme.colors.text.secondary }]}>
+    <Text style={[styles.optText, { color: active ? theme.colors.text.white : theme.colors.text.secondary }]}>
       {label}
     </Text>
   </TouchableOpacity>
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10 },
   optBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
   optText: { fontFamily: 'Minecraft', fontSize: 12 },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 15 },
+  divider: { height: 1, marginVertical: 15 },
   resetBtn: { padding: 15, borderRadius: 10, alignItems: 'center' },
-  resetText: { color: '#FFF', fontFamily: 'Minecraft', fontSize: 14 }
+  resetText: { fontFamily: 'Minecraft', fontSize: 14 }
 });

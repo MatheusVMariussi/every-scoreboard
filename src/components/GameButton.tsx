@@ -28,19 +28,19 @@ export const GameButton = ({
   switch (variant) {
     case 'secondary':
       // Amarelo/Dourado (Fase de Apostas)
-      bgColor = '#F1C40F';
-      borderColor = '#B7950B';
+      bgColor = theme.colors.home.buttonSecondary;
+      borderColor = theme.colors.home.buttonSecondaryBorder;
       break;
     case 'destructive':
       // Vermelho (Perigo/Reset)
-      bgColor = theme.colors.status.error; // ex: #FF3B30
-      borderColor = '#99221C';
+      bgColor = theme.colors.home.buttonDestructive;
+      borderColor = theme.colors.home.buttonDestructiveBorder;
       break;
     case 'primary':
     default:
       // Laranja Padrão (Fase de Resultados / Ação Principal)
-      bgColor = theme.colors.home.buttonBackground || '#FF9F00';
-      borderColor = theme.colors.home.buttonBorder || '#CC7A00';
+      bgColor = theme.colors.home.buttonBackground;
+      borderColor = theme.colors.home.buttonBorder;
       break;
   }
   

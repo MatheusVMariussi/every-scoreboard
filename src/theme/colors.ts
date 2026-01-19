@@ -21,6 +21,13 @@ export const palette = {
   blue500: '#007AFF',
   red500: '#FF3B30',
   green500: '#34C759',
+  yellow500: '#F1C40F',
+  yellowDark: '#B7950B',
+  redDark: '#99221C',
+
+  // System Colors (iOS-like)
+  systemRed: '#FF453A',
+  systemGreen: '#32D74B',
   
   // Overlays (Transparências)
   darkOverlay: 'rgba(9, 9, 16, 0.7)',
@@ -37,4 +44,13 @@ export const palette = {
   // Cores da Cacheta
   yellowFold: '#FFD700',      // Amarelo para "Correu"
   orangeLost: '#FF8C00',      // Laranja para "Perdeu"
+
+  // Common transparent
+  white10: 'rgba(255,255,255,0.1)',
+  white15: 'rgba(255,255,255,0.15)',
+  white20: 'rgba(255,255,255,0.2)',
+  white30: 'rgba(255,255,255,0.3)',
+  black20: 'rgba(0,0,0,0.2)',
+  black30: 'rgba(0,0,0,0.3)',
+  overlay80: 'rgba(0,0,0,0.8)',
 };
