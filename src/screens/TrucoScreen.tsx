@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, LayoutRectangle, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ import { TutorialOverlay } from '../components/TutorialOverlay';
 import { MatchHistoryGraph, HistoryItem } from '../components/MatchHistoryGraph';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
+import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
 export const TrucoScreen = () => {
   useScreenOrientation('PORTRAIT');
@@ -52,12 +53,11 @@ export const TrucoScreen = () => {
   // Tutorial State
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  const [spotlightRect, setSpotlightRect] = useState<LayoutRectangle | null>(null);
 
-  // Refs for Tutorial
-  const scoreRef = useRef<View>(null);
-  const nameRef = useRef<View>(null);
-  const settingsBtnRef = useRef<View>(null);
+  // Custom hooks for targeting
+  const scoreTarget = useTutorialTarget(tutorialActive && tutorialStep === 1);
+  const nameTarget = useTutorialTarget(tutorialActive && tutorialStep === 2);
+  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 3);
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
@@ -101,29 +101,6 @@ export const TrucoScreen = () => {
   }, [gameMode, maxScore]);
 
   // --- TUTORIAL LOGIC ---
-  useEffect(() => {
-    if (!tutorialActive) return;
-
-    const measureTarget = () => {
-      let targetRef;
-      if (tutorialStep === 1) targetRef = scoreRef;
-      else if (tutorialStep === 2) targetRef = nameRef;
-      else if (tutorialStep === 3) targetRef = settingsBtnRef;
-
-      if (targetRef && targetRef.current) {
-        targetRef.current.measureInWindow((x, y, width, height) => {
-          setSpotlightRect({ x, y, width, height });
-        });
-      } else {
-          setSpotlightRect(null);
-      }
-    };
-
-    // Small delay to ensure layout is ready or updated
-    const timer = setTimeout(measureTarget, 200);
-    return () => clearTimeout(timer);
-  }, [tutorialStep, tutorialActive, width, height]); // Trigger on rotation
-
   const advanceTutorial = () => {
     if (tutorialStep < 3) {
       setTutorialStep(p => p + 1);
@@ -213,7 +190,7 @@ export const TrucoScreen = () => {
   };
 
   // --- COMPONENTES VISUAIS INTERNOS ---
-  const TeamScoreArea = ({ team, score, name, wins, color, scoreRefProp, nameRefProp }: any) => {
+  const TeamScoreArea = ({ team, score, name, wins, color, scoreTargetProp, nameTargetProp }: any) => {
     const scale = useSharedValue(1);
     const translateY = useSharedValue(0);
 
@@ -250,7 +227,7 @@ export const TrucoScreen = () => {
       <View style={styles.teamColumn}>
         <View style={[styles.colorBar, { backgroundColor: color }]} />
 
-        <View ref={nameRefProp} collapsable={false}>
+        <View ref={nameTargetProp?.ref} collapsable={false}>
             <TouchableOpacity
                 onPress={() => { setEditingTeam(team); setEditNameVisible(true); }}
                 style={styles.nameContainer}
@@ -269,7 +246,7 @@ export const TrucoScreen = () => {
         </View>
 
         <GestureDetector gesture={gesture}>
-          <View style={styles.gestureArea} ref={scoreRefProp} collapsable={false}>
+          <View style={styles.gestureArea} ref={scoreTargetProp?.ref} collapsable={false}>
              <Animated.View style={[styles.scoreContainer, animatedStyle]}>
                 <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
                   {score.toString().padStart(2, '0')}
@@ -303,7 +280,7 @@ export const TrucoScreen = () => {
             <Ionicons name="arrow-back" size={24} color={theme.colors.text.inverse} />
           </TouchableOpacity>
           <Text style={styles.gameTitle}>TRUCO {gameMode.toUpperCase()}</Text>
-          <View ref={settingsBtnRef} collapsable={false}>
+          <View ref={settingsTarget.ref} collapsable={false}>
               <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
                 <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
               </TouchableOpacity>
@@ -319,8 +296,8 @@ export const TrucoScreen = () => {
             name={nameUs}
             wins={matchWinsUs}
             color={COLOR_US}
-            scoreRefProp={scoreRef}
-            nameRefProp={nameRef}
+            scoreTargetProp={scoreTarget}
+            nameTargetProp={nameTarget}
           />
         </View>
 
@@ -336,7 +313,11 @@ export const TrucoScreen = () => {
 
       <TutorialOverlay
         visible={tutorialActive && tutorialStep > 0}
-        spotlight={spotlightRect}
+        spotlight={
+            tutorialStep === 1 ? scoreTarget.layout :
+            tutorialStep === 2 ? nameTarget.layout :
+            settingsTarget.layout
+        }
         message={
             tutorialStep === 1 ? translate('truco.tutorial.score') :
             tutorialStep === 2 ? translate('truco.tutorial.names') :

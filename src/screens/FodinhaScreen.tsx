@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, LayoutRectangle, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { FodinhaSettingsModal } from '../components/FodinhaSettingsModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
+import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
 interface Player {
   id: string;
@@ -29,7 +30,6 @@ export const FodinhaScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const horizontalScrollRef = useRef<ScrollView>(null);
-  const { width, height } = useWindowDimensions();
 
   // --- ESTADOS ---
   const [initialLives, setInitialLives] = useState(10);
@@ -55,14 +55,13 @@ export const FodinhaScreen = () => {
   // Tutorial State
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  const [spotlightRect, setSpotlightRect] = useState<LayoutRectangle | null>(null);
 
-  // Refs for Tutorial
-  const playerRef = useRef<View>(null);
-  const actionsRef = useRef<View>(null);
-  const buttonRef = useRef<View>(null);
-  const historyRef = useRef<View>(null);
-  const settingsBtnRef = useRef<View>(null);
+  // Custom Hooks for Tutorial
+  const playerTarget = useTutorialTarget(tutorialActive && tutorialStep === 1);
+  const actionsTarget = useTutorialTarget(tutorialActive && tutorialStep === 2);
+  const buttonTarget = useTutorialTarget(tutorialActive && tutorialStep === 3);
+  const historyTarget = useTutorialTarget(tutorialActive && tutorialStep === 4);
+  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 5);
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
@@ -71,7 +70,7 @@ export const FodinhaScreen = () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_FODINHA);
       if (!hasSeen) {
         setTutorialActive(true);
-        setTimeout(() => setTutorialStep(1), 1500); // Increased delay
+        setTimeout(() => setTutorialStep(1), 1000);
       }
     };
     checkTutorial();
@@ -94,39 +93,6 @@ export const FodinhaScreen = () => {
   }, [players, initialLives, penaltyMode, cardsInRound, roundPhase]);
 
   // --- TUTORIAL LOGIC ---
-  useEffect(() => {
-    if (!tutorialActive) return;
-
-    const measureTarget = () => {
-      let targetRef;
-      if (tutorialStep === 1) targetRef = playerRef;
-      else if (tutorialStep === 2) targetRef = actionsRef;
-      else if (tutorialStep === 3) targetRef = buttonRef;
-      else if (tutorialStep === 4) targetRef = historyRef;
-      else if (tutorialStep === 5) targetRef = settingsBtnRef;
-
-      if (targetRef && targetRef.current) {
-        targetRef.current.measureInWindow((x, y, width, height) => {
-            if (width > 0 && height > 0) {
-                 setSpotlightRect({ x, y, width, height });
-            } else {
-                 setTimeout(measureTarget, 200);
-            }
-        });
-      } else {
-        // Retry logic for dynamic elements like historyRef
-        if (tutorialStep === 4 && (!targetRef || !targetRef.current)) {
-             // Keep retrying for history column
-        } else {
-             setSpotlightRect(null);
-        }
-      }
-    };
-
-    const timer = setTimeout(measureTarget, 200);
-    return () => clearTimeout(timer);
-  }, [tutorialStep, tutorialActive, players, width, height]);
-
   const advanceTutorial = () => {
     if (tutorialStep !== 3) {
       if (tutorialStep < 5) {
@@ -358,7 +324,7 @@ export const FodinhaScreen = () => {
                 );
             })()}
 
-            <View ref={settingsBtnRef} collapsable={false}>
+            <View ref={settingsTarget.ref} collapsable={false}>
                 <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
                     <Ionicons name="settings-sharp" size={24} color="#FFF" />
                 </TouchableOpacity>
@@ -373,7 +339,7 @@ export const FodinhaScreen = () => {
             <View style={styles.namesColumn}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>JOGADOR</Text></View>
               {players.map((p, index) => (
-                <View key={p.id} ref={index === 0 ? playerRef : undefined} collapsable={false}>
+                <View key={p.id} ref={index === 0 ? playerTarget.ref : undefined} collapsable={false}>
                     <TouchableOpacity
                         style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]}
                         onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
@@ -394,7 +360,7 @@ export const FodinhaScreen = () => {
             {/* HISTÓRICO */}
             <View style={{ flexDirection: 'row' }}>
               {players.length > 0 && players[0].history.map((_, rIdx) => (
-                <View key={rIdx} ref={rIdx === 0 && tutorialStep === 4 ? historyRef : undefined} collapsable={false}>
+                <View key={rIdx} ref={rIdx === 0 && tutorialStep === 4 ? historyTarget.ref : undefined} collapsable={false}>
                     <TouchableOpacity
                         style={styles.historyColumn}
                         onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}
@@ -431,7 +397,7 @@ export const FodinhaScreen = () => {
                   const projectedDamage = getProjectedDamage(p);
 
                   return (
-                    <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsRef : undefined} collapsable={false}>
+                    <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsTarget.ref : undefined} collapsable={false}>
                         <View style={styles.stepperContainer}>
                             <TouchableOpacity onPress={() => adjustValue(p.id, -1)} style={styles.stepBtn}>
                                 <Ionicons name="remove" size={16} color="#FFF" />
@@ -469,7 +435,7 @@ export const FodinhaScreen = () => {
         </ScrollView>
 
         <View style={styles.footer}>
-          <View style={{ width: 250, height: 50 }} ref={buttonRef} collapsable={false}>
+          <View style={{ width: 250, height: 50 }} ref={buttonTarget.ref} collapsable={false}>
             <GameButton 
                 title={roundPhase === 'betting' ? "CONFIRMAR APOSTAS" : "FINALIZAR RODADA"} 
                 onPress={handlePhaseChange} 
@@ -571,7 +537,13 @@ export const FodinhaScreen = () => {
 
       <TutorialOverlay
         visible={tutorialActive && tutorialStep > 0}
-        spotlight={spotlightRect}
+        spotlight={
+            tutorialStep === 1 ? playerTarget.layout :
+            tutorialStep === 2 ? actionsTarget.layout :
+            tutorialStep === 3 ? buttonTarget.layout :
+            tutorialStep === 4 ? historyTarget.layout :
+            settingsTarget.layout
+        }
         message={
             tutorialStep === 1 ? translate('fodinha.tutorial.player') :
             tutorialStep === 2 ? translate('fodinha.tutorial.actions') :

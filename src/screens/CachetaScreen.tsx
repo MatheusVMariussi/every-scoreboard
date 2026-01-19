@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useRef, useMemo, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  Alert, TouchableWithoutFeedback, LayoutRectangle, useWindowDimensions
+  Alert, TouchableWithoutFeedback
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +16,7 @@ import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { CachetaSettingsModal } from '../components/CachetaSettingsModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
+import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
 // --- INTERFACES ---
 type Action = 'won' | 'fold' | 'lost' | null;
@@ -34,7 +35,6 @@ export const CachetaScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const horizontalScrollRef = useRef<ScrollView>(null);
-  const { width, height } = useWindowDimensions();
 
   // --- ESTADOS ---
   const [initialPoints, setInitialPoints] = useState(10);
@@ -56,21 +56,20 @@ export const CachetaScreen = () => {
   // Tutorial State
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  const [spotlightRect, setSpotlightRect] = useState<LayoutRectangle | null>(null);
 
-  // Refs for Tutorial
-  const playerRef = useRef<View>(null);
-  const actionsRef = useRef<View>(null);
-  const buttonRef = useRef<View>(null);
-  const historyRef = useRef<View>(null);
-  const settingsBtnRef = useRef<View>(null);
+  // Custom Hooks for Tutorial
+  const playerTarget = useTutorialTarget(tutorialActive && tutorialStep === 1);
+  const actionsTarget = useTutorialTarget(tutorialActive && tutorialStep === 2);
+  const buttonTarget = useTutorialTarget(tutorialActive && tutorialStep === 3);
+  const historyTarget = useTutorialTarget(tutorialActive && tutorialStep === 4);
+  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 5);
 
   useEffect(() => {
     const checkTutorial = async () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_CACHETA);
       if (!hasSeen) {
         setTutorialActive(true);
-        setTimeout(() => setTutorialStep(1), 1500); // Increased delay for rotation
+        setTimeout(() => setTutorialStep(1), 1000);
       }
     };
     checkTutorial();
@@ -94,40 +93,6 @@ export const CachetaScreen = () => {
   }, [navigation]);
 
   // --- TUTORIAL LOGIC ---
-  useEffect(() => {
-    if (!tutorialActive) return;
-
-    const measureTarget = () => {
-      let targetRef;
-      if (tutorialStep === 1) targetRef = playerRef;
-      else if (tutorialStep === 2) targetRef = actionsRef;
-      else if (tutorialStep === 3) targetRef = buttonRef;
-      else if (tutorialStep === 4) targetRef = historyRef;
-      else if (tutorialStep === 5) targetRef = settingsBtnRef;
-
-      if (targetRef && targetRef.current) {
-        targetRef.current.measureInWindow((x, y, width, height) => {
-            if (width > 0 && height > 0) {
-                 setSpotlightRect({ x, y, width, height });
-            } else {
-                 // Retry if measurement failed (e.g. view not ready)
-                 setTimeout(measureTarget, 200);
-            }
-        });
-      } else {
-        // Retry logic for dynamic elements like historyRef
-        if (tutorialStep === 4 && (!targetRef || !targetRef.current)) {
-             // Keep retrying for history column
-        } else {
-             setSpotlightRect(null);
-        }
-      }
-    };
-
-    const timer = setTimeout(measureTarget, 200);
-    return () => clearTimeout(timer);
-  }, [tutorialStep, tutorialActive, players, width, height]); // depend on players and dims
-
   const advanceTutorial = () => {
     // If step 3, user needs to click button to advance
     if (tutorialStep !== 3) {
@@ -264,7 +229,7 @@ export const CachetaScreen = () => {
           
           <View style={[styles.headerSide, { justifyContent: 'flex-end' }]}>
             {/* Botão de Settings (Engrenagem) */}
-            <View ref={settingsBtnRef} collapsable={false}>
+            <View ref={settingsTarget.ref} collapsable={false}>
                 <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
                     <Ionicons name="settings-sharp" size={24} color="#FFF" />
                 </TouchableOpacity>
@@ -278,7 +243,7 @@ export const CachetaScreen = () => {
             <View style={styles.namesColumn}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>JOGADOR</Text></View>
               {playersWithPoints.map((p, index) => (
-                <View key={p.id} ref={index === 0 ? playerRef : undefined} collapsable={false}>
+                <View key={p.id} ref={index === 0 ? playerTarget.ref : undefined} collapsable={false}>
                     <TouchableOpacity
                         style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]}
                         onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
@@ -295,7 +260,7 @@ export const CachetaScreen = () => {
 
             <View style={{ flexDirection: 'row' }}>
               {players.length > 0 && players[0].history.map((_, rIdx) => (
-                <View key={rIdx} ref={rIdx === 0 && tutorialStep === 4 ? historyRef : undefined} collapsable={false}>
+                <View key={rIdx} ref={rIdx === 0 && tutorialStep === 4 ? historyTarget.ref : undefined} collapsable={false}>
                     <TouchableOpacity style={styles.historyColumn} onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}>
                     <View style={styles.cellHeader}><Text style={styles.headerText}>R{rIdx + 1}</Text></View>
                     {playersWithPoints.map(p => (
@@ -313,7 +278,7 @@ export const CachetaScreen = () => {
                 <Text style={[styles.headerText, { color: theme.colors.neon.primary }]}>ATUAL</Text>
               </View>
               {playersWithPoints.map((p, index) => (
-                <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsRef : undefined} collapsable={false}>
+                <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsTarget.ref : undefined} collapsable={false}>
                   {p.currentPoints > 0 ? (
                     <View style={styles.actionRow}>
                       <ActionCircle label="C" color="#FFD700" active={p.currentAction === 'fold'} onPress={() => updateAction(p.id, 'fold')} />
@@ -330,7 +295,7 @@ export const CachetaScreen = () => {
         </ScrollView>
 
         <View style={styles.footer}>
-          <View style={{ width: 220, height: 50 }} ref={buttonRef} collapsable={false}>
+          <View style={{ width: 220, height: 50 }} ref={buttonTarget.ref} collapsable={false}>
             <GameButton title={translate('cacheta.next_round')} onPress={handleNextRound} />
           </View>
         </View>
@@ -339,7 +304,13 @@ export const CachetaScreen = () => {
 
       <TutorialOverlay
         visible={tutorialActive && tutorialStep > 0}
-        spotlight={spotlightRect}
+        spotlight={
+            tutorialStep === 1 ? playerTarget.layout :
+            tutorialStep === 2 ? actionsTarget.layout :
+            tutorialStep === 3 ? buttonTarget.layout :
+            tutorialStep === 4 ? historyTarget.layout :
+            settingsTarget.layout
+        }
         message={
             tutorialStep === 1 ? translate('cacheta.tutorial.player') :
             tutorialStep === 2 ? translate('cacheta.tutorial.actions') :
