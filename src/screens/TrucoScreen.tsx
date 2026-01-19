@@ -23,7 +23,6 @@ export const TrucoScreen = () => {
   
   const { theme } = useTheme();
   const navigation = useNavigation();
-  const { width, height } = useWindowDimensions();
 
   // CORES DOS TIMES
   const COLOR_THEM = '#FF453A';
@@ -229,11 +228,13 @@ export const TrucoScreen = () => {
         </View>
 
         <GestureDetector gesture={gesture}>
-          <View style={styles.gestureArea} ref={scoreTargetProp?.ref} collapsable={false}>
+          <View style={styles.gestureArea} collapsable={false}>
              <Animated.View style={[styles.scoreContainer, animatedStyle]}>
-                <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
-                  {score.toString().padStart(2, '0')}
-                </Text>
+                <View ref={scoreTargetProp?.ref} collapsable={false}>
+                  <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
+                    {score.toString().padStart(2, '0')}
+                  </Text>
+                </View>
 
                 <View style={styles.hintsOverlay}>
                    <View style={styles.hintBox}>
@@ -297,7 +298,6 @@ export const TrucoScreen = () => {
         visible={tutorialActive}
         spotlight={scoreTarget.layout}
         message={translate('truco.tutorial.score')}
-        onSkip={finishTutorial}
         nextText={translate('common.got_it')}
         onNext={finishTutorial}
       />
@@ -341,7 +341,6 @@ const styles = StyleSheet.create({
     fontSize: 90, 
     includeFontPadding: false, 
     textAlign: 'center',
-    width: '100%', 
     textShadowColor: 'rgba(0,0,0,0.3)', 
     textShadowOffset: {width: 4, height: 4}, 
     textShadowRadius: 1 

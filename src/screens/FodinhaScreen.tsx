@@ -504,7 +504,6 @@ export const FodinhaScreen = () => {
         visible={tutorialActive}
         spotlight={actionsTarget.layout}
         message={translate('fodinha.tutorial.actions')}
-        onSkip={finishTutorial}
         onNext={finishTutorial}
         nextText={translate('common.got_it')}
       />

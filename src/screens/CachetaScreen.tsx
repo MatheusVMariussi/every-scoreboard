@@ -309,7 +309,6 @@ export const CachetaScreen = () => {
         visible={tutorialActive}
         spotlight={actionsTarget.layout}
         message={translate('cacheta.tutorial.actions')}
-        onSkip={finishTutorial}
         onNext={finishTutorial}
         nextText={translate('common.got_it')}
       />

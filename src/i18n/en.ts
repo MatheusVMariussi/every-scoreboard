@@ -71,7 +71,7 @@ export default {
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      actions: 'Set the result for each player:\n(F)olded, (L)ost, or (W)on.',
+      actions: 'Set the result (Fold/Lost/Won), confirm on "NEXT ROUND", and repeat to see results.',
     },
     player_name: 'Player {{index}}',
     initial_points: 'Initial Points',
@@ -89,7 +89,7 @@ export default {
   },
   fodinha: {
     tutorial: {
-      actions: 'Use buttons to set each player\'s bet (or wins).',
+      actions: 'Set each player\'s bet or wins, confirm below, and repeat for each phase.',
     },
   },
 };

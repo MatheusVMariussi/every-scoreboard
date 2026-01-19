@@ -71,7 +71,7 @@ export default {
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      actions: 'Defina o resultado de cada jogador na rodada:\n(C)orreu, (P)erdeu ou (G)anhou.',
+      actions: 'Defina o resultado (Correu/Perdeu/Ganhou), confirme em "PRÓXIMA RODADA" e repita para ver os resultados.',
     },
     player_name: 'Jogador {{index}}',
     initial_points: 'Pontos Iniciais',
@@ -89,7 +89,7 @@ export default {
   },
   fodinha: {
     tutorial: {
-      actions: 'Use os botões para definir a aposta (ou vitórias) de cada jogador.',
+      actions: 'Defina a aposta ou vitórias de cada jogador, confirme no botão abaixo e repita a cada fase.',
     },
   },
 };
