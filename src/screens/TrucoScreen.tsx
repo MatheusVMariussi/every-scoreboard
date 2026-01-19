@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, LayoutRectangle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { TrucoSettingsModal } from '../components/TrucoSettingsModal';
 import { EditNameModal } from '../components/EditNameModal';
-import { TutorialModal } from '../components/TutorialModal';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 import { MatchHistoryGraph, HistoryItem } from '../components/MatchHistoryGraph';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
@@ -45,9 +45,18 @@ export const TrucoScreen = () => {
   // Modais
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [editNameVisible, setEditNameVisible] = useState(false);
-  const [tutorialVisible, setTutorialVisible] = useState(false);
   const [editingTeam, setEditingTeam] = useState<'us' | 'them'>('us');
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Tutorial State
+  const [tutorialActive, setTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [spotlightRect, setSpotlightRect] = useState<LayoutRectangle | null>(null);
+
+  // Refs for Tutorial
+  const scoreRef = useRef<View>(null);
+  const nameRef = useRef<View>(null);
+  const settingsBtnRef = useRef<View>(null);
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
@@ -56,7 +65,8 @@ export const TrucoScreen = () => {
     const checkTutorial = async () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_TRUCO);
       if (!hasSeen) {
-        setTutorialVisible(true);
+        setTutorialActive(true);
+        setTimeout(() => setTutorialStep(1), 500); // Start tutorial after a delay
       }
     };
     checkTutorial();
@@ -89,6 +99,41 @@ export const TrucoScreen = () => {
     if (isLoaded && scoreUs === 0 && scoreThem === 0) resetGame(true); 
   }, [gameMode, maxScore]);
 
+  // --- TUTORIAL LOGIC ---
+  useEffect(() => {
+    if (!tutorialActive) return;
+
+    const measureTarget = () => {
+      let targetRef;
+      if (tutorialStep === 1) targetRef = scoreRef;
+      else if (tutorialStep === 2) targetRef = nameRef;
+      else if (tutorialStep === 3) targetRef = settingsBtnRef;
+
+      if (targetRef && targetRef.current) {
+        targetRef.current.measureInWindow((x, y, width, height) => {
+          setSpotlightRect({ x, y, width, height });
+        });
+      } else {
+          setSpotlightRect(null);
+      }
+    };
+
+    // Small delay to ensure layout is ready or updated
+    const timer = setTimeout(measureTarget, 100);
+    return () => clearTimeout(timer);
+  }, [tutorialStep, tutorialActive]);
+
+  const advanceTutorial = () => {
+    if (tutorialStep < 3) {
+      setTutorialStep(p => p + 1);
+    }
+  };
+
+  const finishTutorial = async () => {
+      setTutorialActive(false);
+      await saveData(STORAGE_KEYS.TUTORIAL_TRUCO, true);
+  };
+
   // --- LÓGICA DE PONTUAÇÃO ---
   const getBasePoints = () => gameMode === 'paulista' ? 1 : 2;
 
@@ -96,6 +141,11 @@ export const TrucoScreen = () => {
     setScoreUs(0); setScoreThem(0);
     setPointHistory([]);
     if (fullReset) { setMatchWinsUs(0); setMatchWinsThem(0); }
+
+    // Se o reset acontecer durante o tutorial (passo 3), finaliza
+    if (tutorialActive && tutorialStep === 3) {
+        finishTutorial();
+    }
   };
 
   const handlePointChange = (team: 'us' | 'them', pointsToAdd: number) => {
@@ -159,13 +209,8 @@ export const TrucoScreen = () => {
     }, 100);
   };
 
-  const handleCloseTutorial = () => {
-    setTutorialVisible(false);
-    saveData(STORAGE_KEYS.TUTORIAL_TRUCO, true);
-  };
-
   // --- COMPONENTES VISUAIS INTERNOS ---
-  const TeamScoreArea = ({ team, score, name, wins, color }: any) => {
+  const TeamScoreArea = ({ team, score, name, wins, color, scoreRefProp, nameRefProp }: any) => {
     const scale = useSharedValue(1);
     const translateY = useSharedValue(0);
 
@@ -184,7 +229,6 @@ export const TrucoScreen = () => {
         .onUpdate((e) => { translateY.value = e.translationY * 0.1; })
         .onEnd((e) => {
           if (e.translationY < -40) {
-             // CORREÇÃO: scheduleOnRN(funcao, argumento1, argumento2)
              scheduleOnRN(handlePointChange, team, trucoValue); 
           } else if (e.translationY > 40) {
              scheduleOnRN(handlePointChange, team, -baseValue);
@@ -203,24 +247,26 @@ export const TrucoScreen = () => {
       <View style={styles.teamColumn}>
         <View style={[styles.colorBar, { backgroundColor: color }]} />
 
-        <TouchableOpacity 
-            onPress={() => { setEditingTeam(team); setEditNameVisible(true); }} 
-            style={styles.nameContainer}
-            activeOpacity={0.6}
-            hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
-        >
-            <Text style={[styles.teamName, { color: theme.colors.text.inverse }]}>
-                {name} <Ionicons name="pencil" size={12} color={theme.colors.text.secondary} />
-            </Text>
-            <View style={styles.trophyContainer}>
-                {Array.from({ length: wins }).map((_, i) => (
-                    <Ionicons key={i} name="trophy" size={12} color={color} />
-                ))}
-            </View>
-        </TouchableOpacity>
+        <View ref={nameRefProp} collapsable={false}>
+            <TouchableOpacity
+                onPress={() => { setEditingTeam(team); setEditNameVisible(true); }}
+                style={styles.nameContainer}
+                activeOpacity={0.6}
+                hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
+            >
+                <Text style={[styles.teamName, { color: theme.colors.text.inverse }]}>
+                    {name} <Ionicons name="pencil" size={12} color={theme.colors.text.secondary} />
+                </Text>
+                <View style={styles.trophyContainer}>
+                    {Array.from({ length: wins }).map((_, i) => (
+                        <Ionicons key={i} name="trophy" size={12} color={color} />
+                    ))}
+                </View>
+            </TouchableOpacity>
+        </View>
 
         <GestureDetector gesture={gesture}>
-          <View style={styles.gestureArea}>
+          <View style={styles.gestureArea} ref={scoreRefProp} collapsable={false}>
              <Animated.View style={[styles.scoreContainer, animatedStyle]}>
                 <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
                   {score.toString().padStart(2, '0')}
@@ -254,15 +300,25 @@ export const TrucoScreen = () => {
             <Ionicons name="arrow-back" size={24} color={theme.colors.text.inverse} />
           </TouchableOpacity>
           <Text style={styles.gameTitle}>TRUCO {gameMode.toUpperCase()}</Text>
-          <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-            <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
-          </TouchableOpacity>
+          <View ref={settingsBtnRef} collapsable={false}>
+              <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+                <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
+              </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.scoreboardRow}>
           <TeamScoreArea team="them" score={scoreThem} name={nameThem} wins={matchWinsThem} color={COLOR_THEM} />
           <View style={styles.verticalDivider} />
-          <TeamScoreArea team="us" score={scoreUs} name={nameUs} wins={matchWinsUs} color={COLOR_US} />
+          <TeamScoreArea
+            team="us"
+            score={scoreUs}
+            name={nameUs}
+            wins={matchWinsUs}
+            color={COLOR_US}
+            scoreRefProp={scoreRef}
+            nameRefProp={nameRef}
+          />
         </View>
 
         <View style={styles.footerHistory}>
@@ -274,6 +330,17 @@ export const TrucoScreen = () => {
         </View>
 
       </SafeAreaView>
+
+      <TutorialOverlay
+        visible={tutorialActive && tutorialStep > 0}
+        spotlight={spotlightRect}
+        message={
+            tutorialStep === 1 ? translate('truco.tutorial.score') :
+            tutorialStep === 2 ? translate('truco.tutorial.names') :
+            translate('truco.tutorial.settings')
+        }
+        onNext={tutorialStep < 3 ? advanceTutorial : undefined}
+      />
 
       <TrucoSettingsModal 
         visible={settingsVisible} 
@@ -292,26 +359,6 @@ export const TrucoScreen = () => {
         onSave={(n) => { if (n.trim()) editingTeam === 'us' ? setNameUs(n) : setNameThem(n); }} 
       />
 
-      <TutorialModal
-        visible={tutorialVisible}
-        onClose={handleCloseTutorial}
-        title={translate('home.truco')}
-      >
-        <View style={{ gap: 10 }}>
-            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
-                • {translate('truco.tutorial.step1')}
-            </Text>
-            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
-                • {translate('truco.tutorial.step2')}
-            </Text>
-            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
-                • {translate('truco.tutorial.step3')}
-            </Text>
-            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
-                • {translate('truco.tutorial.step4')}
-            </Text>
-        </View>
-      </TutorialModal>
     </GestureHandlerRootView>
   );
 };

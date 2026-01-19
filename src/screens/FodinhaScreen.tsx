@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, LayoutRectangle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { FodinhaSettingsModal } from '../components/FodinhaSettingsModal';
-import { TutorialModal } from '../components/TutorialModal';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 
 interface Player {
   id: string;
@@ -46,11 +46,22 @@ export const FodinhaScreen = () => {
   const [showEditName, setShowEditName] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
-  const [tutorialVisible, setTutorialVisible] = useState(false);
   
   // MODAL DE EDIÇÃO DE HISTÓRICO
   const [showEditHistory, setShowEditHistory] = useState(false);
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
+
+  // Tutorial State
+  const [tutorialActive, setTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [spotlightRect, setSpotlightRect] = useState<LayoutRectangle | null>(null);
+
+  // Refs for Tutorial
+  const playerRef = useRef<View>(null);
+  const actionsRef = useRef<View>(null);
+  const buttonRef = useRef<View>(null);
+  const historyRef = useRef<View>(null);
+  const settingsBtnRef = useRef<View>(null);
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
@@ -58,7 +69,8 @@ export const FodinhaScreen = () => {
     const checkTutorial = async () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_FODINHA);
       if (!hasSeen) {
-        setTutorialVisible(true);
+        setTutorialActive(true);
+        setTimeout(() => setTutorialStep(1), 500);
       }
     };
     checkTutorial();
@@ -80,6 +92,44 @@ export const FodinhaScreen = () => {
     saveData(STORAGE_KEYS.FODINHA_DATA, { players, initialLives, penaltyMode, cardsInRound, roundPhase });
   }, [players, initialLives, penaltyMode, cardsInRound, roundPhase]);
 
+  // --- TUTORIAL LOGIC ---
+  useEffect(() => {
+    if (!tutorialActive) return;
+
+    const measureTarget = () => {
+      let targetRef;
+      if (tutorialStep === 1) targetRef = playerRef;
+      else if (tutorialStep === 2) targetRef = actionsRef;
+      else if (tutorialStep === 3) targetRef = buttonRef;
+      else if (tutorialStep === 4) targetRef = historyRef;
+      else if (tutorialStep === 5) targetRef = settingsBtnRef;
+
+      if (targetRef && targetRef.current) {
+        targetRef.current.measureInWindow((x, y, width, height) => {
+          setSpotlightRect({ x, y, width, height });
+        });
+      } else {
+        setSpotlightRect(null);
+      }
+    };
+
+    const timer = setTimeout(measureTarget, 100);
+    return () => clearTimeout(timer);
+  }, [tutorialStep, tutorialActive, players]);
+
+  const advanceTutorial = () => {
+    if (tutorialStep !== 3) {
+      if (tutorialStep < 5) {
+        setTutorialStep(p => p + 1);
+      }
+    }
+  };
+
+  const finishTutorial = async () => {
+      setTutorialActive(false);
+      await saveData(STORAGE_KEYS.TUTORIAL_FODINHA, true);
+  };
+
   // --- LÓGICA DE JOGO ---
   
   const totalBids = useMemo(() => players.reduce((acc, p) => acc + p.currentBid, 0), [players]);
@@ -98,6 +148,17 @@ export const FodinhaScreen = () => {
         return;
       }
       finishRound();
+    }
+    // Tutorial interaction (Advance from step 3 if user clicked button)
+    // Note: This button is used for both confirming bets (phase 1) and finishing round (phase 2)
+    // We want to explain history after round finishes.
+    if (tutorialActive && tutorialStep === 3) {
+        // If we just finished round (went to betting of next round)
+        // But handlePhaseChange logic is: Betting -> Results -> Finish(Betting)
+        // So we need to wait until the round is actually finished.
+        // However, if we just confirm bets, we can also advance?
+        // User wants "finalizar uma rodada para assim mostrar que dá pra alterar o historico".
+        // So we should probably wait until `finishRound` is called.
     }
   };
 
@@ -121,6 +182,11 @@ export const FodinhaScreen = () => {
     setCardsInRound(prev => prev + 1); 
     setRoundPhase('betting');
     setTimeout(() => horizontalScrollRef.current?.scrollToEnd({ animated: true }), 200);
+
+    // If tutorial is active, now history is available
+    if (tutorialActive && tutorialStep === 3) {
+        setTutorialStep(4);
+    }
   };
 
   const adjustValue = (playerId: string, delta: number) => {
@@ -195,6 +261,8 @@ export const FodinhaScreen = () => {
     })));
     setCardsInRound(1);
     setRoundPhase('betting');
+
+    if (tutorialActive) finishTutorial();
   };
 
   const handleAddPlayer = () => {
@@ -223,11 +291,6 @@ export const FodinhaScreen = () => {
     const diff = Math.abs(p.currentBid - p.currentWon);
     if (diff === 0) return 0;
     return penaltyMode === 'fixed' ? 1 : diff;
-  };
-
-  const handleCloseTutorial = () => {
-    setTutorialVisible(false);
-    saveData(STORAGE_KEYS.TUTORIAL_FODINHA, true);
   };
 
   return (
@@ -283,9 +346,11 @@ export const FodinhaScreen = () => {
                 );
             })()}
 
-            <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-                <Ionicons name="settings-sharp" size={24} color="#FFF" />
-            </TouchableOpacity>
+            <View ref={settingsBtnRef} collapsable={false}>
+                <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+                    <Ionicons name="settings-sharp" size={24} color="#FFF" />
+                </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -295,18 +360,19 @@ export const FodinhaScreen = () => {
             {/* COLUNA NOMES */}
             <View style={styles.namesColumn}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>JOGADOR</Text></View>
-              {players.map(p => (
-                <TouchableOpacity 
-                    key={p.id} 
-                    style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]} 
-                    onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
-                >
-                  <Text style={[styles.playerName, p.lives <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
-                  <View style={styles.livesContainer}>
-                     <Ionicons name="heart" size={12} color={theme.colors.status.error} />
-                     <Text style={[styles.playerPoints, { color: '#FFF' }]}>{p.lives}</Text>
-                  </View>
-                </TouchableOpacity>
+              {players.map((p, index) => (
+                <View key={p.id} ref={index === 0 ? playerRef : undefined} collapsable={false}>
+                    <TouchableOpacity
+                        style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]}
+                        onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
+                    >
+                    <Text style={[styles.playerName, p.lives <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
+                    <View style={styles.livesContainer}>
+                        <Ionicons name="heart" size={12} color={theme.colors.status.error} />
+                        <Text style={[styles.playerPoints, { color: '#FFF' }]}>{p.lives}</Text>
+                    </View>
+                    </TouchableOpacity>
+                </View>
               ))}
               <TouchableOpacity style={styles.addBtn} onPress={handleAddPlayer}>
                 <Ionicons name="add-circle" size={26} color={theme.colors.neon.primary} />
@@ -316,26 +382,27 @@ export const FodinhaScreen = () => {
             {/* HISTÓRICO */}
             <View style={{ flexDirection: 'row' }}>
               {players.length > 0 && players[0].history.map((_, rIdx) => (
-                <TouchableOpacity 
-                    key={rIdx} 
-                    style={styles.historyColumn}
-                    onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}
-                >
-                  <View style={styles.cellHeader}><Text style={styles.headerText}>{rIdx + 1}</Text></View>
-                  {players.map(p => {
-                      const damage = p.history[rIdx];
-                      const isSafe = damage === 0;
-                      return (
-                        <View key={p.id} style={[styles.historyCell, { backgroundColor: 'rgba(0,0,0,0.2)' }]}>
-                           {isSafe ? (
-                               <View style={styles.safeDot} />
-                           ) : (
-                               <Text style={styles.damageText}>-{damage}</Text>
-                           )}
-                        </View>
-                      );
-                  })}
-                </TouchableOpacity>
+                <View key={rIdx} ref={rIdx === 0 && tutorialStep === 4 ? historyRef : undefined} collapsable={false}>
+                    <TouchableOpacity
+                        style={styles.historyColumn}
+                        onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}
+                    >
+                    <View style={styles.cellHeader}><Text style={styles.headerText}>{rIdx + 1}</Text></View>
+                    {players.map(p => {
+                        const damage = p.history[rIdx];
+                        const isSafe = damage === 0;
+                        return (
+                            <View key={p.id} style={[styles.historyCell, { backgroundColor: 'rgba(0,0,0,0.2)' }]}>
+                            {isSafe ? (
+                                <View style={styles.safeDot} />
+                            ) : (
+                                <Text style={styles.damageText}>-{damage}</Text>
+                            )}
+                            </View>
+                        );
+                    })}
+                    </TouchableOpacity>
+                </View>
               ))}
             </View>
 
@@ -347,12 +414,12 @@ export const FodinhaScreen = () => {
                 </Text>
               </View>
 
-              {players.map(p => {
+              {players.map((p, index) => {
                   if (p.lives <= 0) return <View key={p.id} style={styles.activeCell}><Text style={styles.outLabel}>ELIMINADO</Text></View>;
                   const projectedDamage = getProjectedDamage(p);
 
                   return (
-                    <View key={p.id} style={styles.activeCell}>
+                    <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsRef : undefined} collapsable={false}>
                         <View style={styles.stepperContainer}>
                             <TouchableOpacity onPress={() => adjustValue(p.id, -1)} style={styles.stepBtn}>
                                 <Ionicons name="remove" size={16} color="#FFF" />
@@ -390,7 +457,7 @@ export const FodinhaScreen = () => {
         </ScrollView>
 
         <View style={styles.footer}>
-          <View style={{ width: 250, height: 50 }}>
+          <View style={{ width: 250, height: 50 }} ref={buttonRef} collapsable={false}>
             <GameButton 
                 title={roundPhase === 'betting' ? "CONFIRMAR APOSTAS" : "FINALIZAR RODADA"} 
                 onPress={handlePhaseChange} 
@@ -490,15 +557,18 @@ export const FodinhaScreen = () => {
         onDelete={handleDeletePlayer}
       />
 
-      <TutorialModal
-        visible={tutorialVisible}
-        onClose={handleCloseTutorial}
-        title={translate('home.fodinha')}
-      >
-        <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12, lineHeight: 18 }}>
-            {translate('fodinha.tutorial.text')}
-        </Text>
-      </TutorialModal>
+      <TutorialOverlay
+        visible={tutorialActive && tutorialStep > 0}
+        spotlight={spotlightRect}
+        message={
+            tutorialStep === 1 ? translate('fodinha.tutorial.player') :
+            tutorialStep === 2 ? translate('fodinha.tutorial.actions') :
+            tutorialStep === 3 ? translate('fodinha.tutorial.button') :
+            tutorialStep === 4 ? translate('fodinha.tutorial.history') :
+            translate('fodinha.tutorial.settings')
+        }
+        onNext={tutorialStep !== 3 ? advanceTutorial : undefined} // Step 3 requires user action
+      />
     </View>
   );
 };

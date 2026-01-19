@@ -44,6 +44,8 @@ export default {
     confirm_reset_message: 'Do you really want to reset the score for this match?',
     confirm: 'CONFIRM',
     got_it: 'GOT IT',
+    next: 'NEXT',
+    finish_tutorial: 'FINISH',
   },
   truco: {
     us: 'US',
@@ -63,16 +65,19 @@ export default {
     game_mode: 'GAME MODE',
     max_score: 'MAXIMUM SCORE',
     tutorial: {
-      step1: 'Swipe up on score to add TRUCO value.',
-      step2: 'Swipe down to remove points.',
-      step3: 'Tap to add 1 point.',
-      step4: 'Edit names by tapping on them.',
+      score: 'Swipe UP to add TRUCO value (3/4 pts).\nSwipe DOWN to remove 1 pt.\nTap to add 1 pt.',
+      names: 'Tap on the name or trophies to edit the team name.',
+      settings: 'Access settings here.\nRESET MATCH to finish the tutorial.',
     },
   },
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      text: 'Manage each player\'s lives. Add players, edit names, and mark who won, folded, or lost the round. The app calculates lives automatically.',
+      player: 'Tap here to edit name or remove player.',
+      actions: 'Set the result for each player:\n(F)olded, (L)ost, or (W)on.',
+      button: 'Tap here to confirm the round and apply damage.',
+      history: 'Tap the round column to fix past mistakes.',
+      settings: 'Access settings.\nRESET MATCH to finish the tutorial.',
     },
     player_name: 'Player {{index}}',
     initial_points: 'Initial Points',
@@ -90,7 +95,11 @@ export default {
   },
   fodinha: {
     tutorial: {
-      text: 'First, each player bets how many tricks they will win. Then, enter how many they actually won. Anyone who misses their bet loses lives equal to the difference.',
+      player: 'Tap name to edit.\nHere you see remaining lives.',
+      actions: 'Use buttons to set each player\'s bet (or wins).',
+      button: 'Confirm bets or finish round here.',
+      history: 'Tap on the round to edit past damage.',
+      settings: 'Access settings.\nRESET MATCH to finish the tutorial.',
     },
   },
 };

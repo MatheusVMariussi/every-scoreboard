@@ -44,6 +44,8 @@ export default {
     confirm_reset_message: 'Deseja realmente zerar o placar desta partida?',
     confirm: 'CONFIRMAR',
     got_it: 'ENTENDIDO',
+    next: 'PRÓXIMO',
+    finish_tutorial: 'FINALIZAR',
   },
   truco: {
     us: 'NÓS',
@@ -63,16 +65,19 @@ export default {
     game_mode: 'MODO DE JOGO',
     max_score: 'PONTUAÇÃO MÁXIMA',
     tutorial: {
-      step1: 'Arraste para cima na pontuação para adicionar o valor do TRUCO.',
-      step2: 'Arraste para baixo para remover pontos.',
-      step3: 'Toque simples para adicionar 1 ponto.',
-      step4: 'Edite os nomes tocando neles.',
+      score: 'Arraste para CIMA para somar o valor do TRUCO (3/4 pts).\nArraste para BAIXO para remover 1 pt.\nToque para somar 1 pt.',
+      names: 'Toque no nome ou nos troféus para editar o nome do time.',
+      settings: 'Acesse as configurações aqui.\nREINICIE A PARTIDA para concluir o tutorial.',
     },
   },
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      text: 'Gerencie as vidas de cada jogador. Adicione jogadores, edite nomes e marque quem ganhou, correu ou perdeu a rodada. O app calcula as vidas automaticamente.',
+      player: 'Toque aqui para editar o nome ou remover o jogador.',
+      actions: 'Defina o resultado de cada jogador na rodada:\n(C)orreu, (P)erdeu ou (G)anhou.',
+      button: 'Toque aqui para confirmar a rodada e aplicar os danos.',
+      history: 'Toque na coluna da rodada para corrigir erros passados.',
+      settings: 'Acesse as configurações.\nREINICIE A PARTIDA para concluir o tutorial.',
     },
     player_name: 'Jogador {{index}}',
     initial_points: 'Pontos Iniciais',
@@ -90,7 +95,11 @@ export default {
   },
   fodinha: {
     tutorial: {
-      text: 'Primeiro, cada jogador faz sua aposta de quantas vazas fará. Depois, informe quantas cada um realmente fez. Quem errar a aposta perde vidas igual a diferença.',
+      player: 'Toque no nome para editar.\nAqui você vê as vidas restantes.',
+      actions: 'Use os botões para definir a aposta (ou vitórias) de cada jogador.',
+      button: 'Confirme as apostas ou finalize a rodada aqui.',
+      history: 'Toque na rodada para editar danos passados.',
+      settings: 'Acesse as configurações.\nREINICIE A PARTIDA para concluir o tutorial.',
     },
   },
 };
