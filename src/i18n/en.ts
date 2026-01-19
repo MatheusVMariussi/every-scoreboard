@@ -43,6 +43,9 @@ export default {
     confirm_reset_title: 'RESET?',
     confirm_reset_message: 'Do you really want to reset the score for this match?',
     confirm: 'CONFIRM',
+    got_it: 'GOT IT',
+    next: 'NEXT',
+    finish_tutorial: 'FINISH',
   },
   truco: {
     us: 'US',
@@ -61,9 +64,15 @@ export default {
     value_12: 'VALUE 12',
     game_mode: 'GAME MODE',
     max_score: 'MAXIMUM SCORE',
+    tutorial: {
+      score: 'Swipe UP to add TRUCO value (3/4 pts).\nSwipe DOWN to remove 1 pt.\nTap to add 1 pt.',
     },
+  },
   cacheta: {
     title: 'Cacheta',
+    tutorial: {
+      actions: 'Set the result (Fold/Lost/Won), confirm on "NEXT ROUND", and repeat to see results.',
+    },
     player_name: 'Player {{index}}',
     initial_points: 'Initial Points',
     won: 'WON',
@@ -77,5 +86,10 @@ export default {
     confirm_delete_round: 'Do you want to permanently delete this round?',
     delete_round: 'DELETE ROUND',
     need_winner: 'Someone needs to have won the round!',
+  },
+  fodinha: {
+    tutorial: {
+      actions: 'Set each player\'s bet or wins, confirm below, and repeat for each phase.',
+    },
   },
 };

@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useRef, useMemo, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  Alert, TouchableWithoutFeedback 
+  Alert, TouchableWithoutFeedback
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +15,8 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { CachetaSettingsModal } from '../components/CachetaSettingsModal';
+import { TutorialOverlay } from '../components/TutorialOverlay';
+import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
 // --- INTERFACES ---
 type Action = 'won' | 'fold' | 'lost' | null;
@@ -49,9 +51,23 @@ export const CachetaScreen = () => {
   const [showEditHistory, setShowEditHistory] = useState(false);
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
-  const [settingsVisible, setSettingsVisible] = useState(false); // <--- NOVO ESTADO
+  const [settingsVisible, setSettingsVisible] = useState(false);
+
+  // Tutorial State
+  const [tutorialActive, setTutorialActive] = useState(false);
+
+  // Custom Hooks for Tutorial
+  const actionsTarget = useTutorialTarget(tutorialActive);
 
   useEffect(() => {
+    const checkTutorial = async () => {
+      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_CACHETA);
+      if (!hasSeen) {
+        setTutorialActive(true);
+      }
+    };
+    checkTutorial();
+
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.CACHETA_DATA);
       if (saved) {
@@ -70,6 +86,12 @@ export const CachetaScreen = () => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
+  // --- TUTORIAL LOGIC ---
+  const finishTutorial = async () => {
+      setTutorialActive(false);
+      await saveData(STORAGE_KEYS.TUTORIAL_CACHETA, true);
+  };
+
   const playersWithPoints = useMemo(() => {
     return players.map(p => {
       let pts = initialPoints;
@@ -82,15 +104,43 @@ export const CachetaScreen = () => {
   }, [players, initialPoints]);
 
   const handleNextRound = () => {
-    const hasWinner = players.some(p => p.currentAction === 'won');
+    // 1. AUTO-FILL LOSERS
+    // If a player has no action set, assume they lost (unless they are already out of the game? No, if they are active and null -> lost)
+    // Actually, we should only affect players who are still "alive" (points > 0).
+
+    // We need to calculate points first to know who is alive?
+    // playersWithPoints depends on history, not currentAction. So it's safe.
+
+    const playersToUpdate = players.map((p, idx) => {
+        const pWithPts = playersWithPoints[idx]; // Same order
+        if (pWithPts.currentPoints > 0 && p.currentAction === null) {
+            return { ...p, currentAction: 'lost' as Action };
+        }
+        return p;
+    });
+
+    // Check for winner among the UPDATED players
+    const hasWinner = playersToUpdate.some(p => p.currentAction === 'won');
     const alive = playersWithPoints.filter(p => p.currentPoints > 0);
 
+    // If there are alive players but no winner, show error
     if (!hasWinner && alive.length > 0) {
       Alert.alert(translate('common.error'), translate('cacheta.need_winner'));
+      // We do NOT update state if validation fails, because we don't want to force 'lost' if the user just forgot to mark 'won'.
+      // Wait, if the user forgot to mark 'won', and we auto-filled 'lost', then everyone lost.
+      // So checking `playersToUpdate` is correct. If everyone is 'lost' or 'fold', hasWinner is false.
+      // The user will get an alert.
+      // Should we persist the 'lost' auto-fill?
+      // User asked: "se algum jogador nao foi dado uma pontuação ... ficará marcado como se a pessoa tenha perdido a rodada"
+      // "assim facilita quem sabe da regra, se ninguém correu, preenche só quem ganhou a rodada e finaliza"
+      // So if I mark Winner, everyone else becomes Loser.
+      // If I mark Winner + Folder, everyone else becomes Loser.
+      // So, if I proceed, I should use `playersToUpdate`.
       return;
     }
 
-    setPlayers(prev => prev.map(p => ({
+    // Apply the update (commit the history) using the auto-filled actions
+    setPlayers(prev => playersToUpdate.map(p => ({
       ...p,
       history: [...p.history, p.currentAction],
       currentAction: null
@@ -100,7 +150,6 @@ export const CachetaScreen = () => {
   };
 
   const handleReset = () => {
-    // A lógica de confirmação já está dentro do modal, mas podemos manter uma verificação extra se quiser
     setPlayers(prev => prev.map(p => ({ ...p, history: [], currentAction: null })));
   };
 
@@ -183,9 +232,11 @@ export const CachetaScreen = () => {
           
           <View style={[styles.headerSide, { justifyContent: 'flex-end' }]}>
             {/* Botão de Settings (Engrenagem) */}
-            <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-                <Ionicons name="settings-sharp" size={24} color="#FFF" />
-            </TouchableOpacity>
+            <View>
+                <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+                    <Ionicons name="settings-sharp" size={24} color="#FFF" />
+                </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -194,15 +245,16 @@ export const CachetaScreen = () => {
             
             <View style={styles.namesColumn}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>JOGADOR</Text></View>
-              {playersWithPoints.map(p => (
-                <TouchableOpacity 
-                    key={p.id} 
-                    style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]} 
-                    onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
-                >
-                  <Text style={[styles.playerName, p.currentPoints <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
-                  <Text style={[styles.playerPoints, { color: theme.colors.truco.scoreText }]}>{p.currentPoints}</Text>
-                </TouchableOpacity>
+              {playersWithPoints.map((p, index) => (
+                <View key={p.id}>
+                    <TouchableOpacity
+                        style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]}
+                        onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
+                    >
+                    <Text style={[styles.playerName, p.currentPoints <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
+                    <Text style={[styles.playerPoints, { color: theme.colors.truco.scoreText }]}>{p.currentPoints}</Text>
+                    </TouchableOpacity>
+                </View>
               ))}
               <TouchableOpacity style={styles.addBtn} onPress={handleAddPlayer}>
                 <Ionicons name="add-circle" size={26} color={theme.colors.neon.primary} />
@@ -211,14 +263,16 @@ export const CachetaScreen = () => {
 
             <View style={{ flexDirection: 'row' }}>
               {players.length > 0 && players[0].history.map((_, rIdx) => (
-                <TouchableOpacity key={rIdx} style={styles.historyColumn} onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}>
-                  <View style={styles.cellHeader}><Text style={styles.headerText}>R{rIdx + 1}</Text></View>
-                  {playersWithPoints.map(p => (
-                    <View key={p.id} style={[styles.historyCell, { backgroundColor: getActionColor(p.history[rIdx]) + '22' }]}>
-                      <View style={[styles.dot, { backgroundColor: getActionColor(p.history[rIdx]) || 'rgba(255,255,255,0.1)' }]} />
-                    </View>
-                  ))}
-                </TouchableOpacity>
+                <View key={rIdx}>
+                    <TouchableOpacity style={styles.historyColumn} onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}>
+                    <View style={styles.cellHeader}><Text style={styles.headerText}>R{rIdx + 1}</Text></View>
+                    {playersWithPoints.map(p => (
+                        <View key={p.id} style={[styles.historyCell, { backgroundColor: getActionColor(p.history[rIdx]) + '22' }]}>
+                        <View style={[styles.dot, { backgroundColor: getActionColor(p.history[rIdx]) || 'rgba(255,255,255,0.1)' }]} />
+                        </View>
+                    ))}
+                    </TouchableOpacity>
+                </View>
               ))}
             </View>
 
@@ -226,8 +280,8 @@ export const CachetaScreen = () => {
               <View style={[styles.cellHeaderActive, { backgroundColor: theme.colors.neon.primary + '22' }]}>
                 <Text style={[styles.headerText, { color: theme.colors.neon.primary }]}>ATUAL</Text>
               </View>
-              {playersWithPoints.map(p => (
-                <View key={p.id} style={styles.activeCell}>
+              {playersWithPoints.map((p, index) => (
+                <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsTarget.ref : undefined} collapsable={false}>
                   {p.currentPoints > 0 ? (
                     <View style={styles.actionRow}>
                       <ActionCircle label="C" color="#FFD700" active={p.currentAction === 'fold'} onPress={() => updateAction(p.id, 'fold')} />
@@ -250,6 +304,14 @@ export const CachetaScreen = () => {
         </View>
 
       </SafeAreaView>
+
+      <TutorialOverlay
+        visible={tutorialActive}
+        spotlight={actionsTarget.layout}
+        message={translate('cacheta.tutorial.actions')}
+        onNext={finishTutorial}
+        nextText={translate('common.got_it')}
+      />
 
       {/* NOVO MODAL DE SETTINGS */}
       <CachetaSettingsModal 

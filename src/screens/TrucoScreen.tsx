@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,9 +12,11 @@ import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { TrucoSettingsModal } from '../components/TrucoSettingsModal';
 import { EditNameModal } from '../components/EditNameModal';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 import { MatchHistoryGraph, HistoryItem } from '../components/MatchHistoryGraph';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
+import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
 export const TrucoScreen = () => {
   useScreenOrientation('PORTRAIT');
@@ -47,10 +49,24 @@ export const TrucoScreen = () => {
   const [editingTeam, setEditingTeam] = useState<'us' | 'them'>('us');
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Tutorial State
+  const [tutorialActive, setTutorialActive] = useState(false);
+
+  // Custom hooks for targeting
+  const scoreTarget = useTutorialTarget(tutorialActive);
+
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
   // --- PERSISTÊNCIA ---
   useEffect(() => {
+    const checkTutorial = async () => {
+      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_TRUCO);
+      if (!hasSeen) {
+        setTutorialActive(true);
+      }
+    };
+    checkTutorial();
+
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.TRUCO_DATA);
       if (saved) {
@@ -78,6 +94,12 @@ export const TrucoScreen = () => {
   useEffect(() => { 
     if (isLoaded && scoreUs === 0 && scoreThem === 0) resetGame(true); 
   }, [gameMode, maxScore]);
+
+  // --- TUTORIAL LOGIC ---
+  const finishTutorial = async () => {
+      setTutorialActive(false);
+      await saveData(STORAGE_KEYS.TUTORIAL_TRUCO, true);
+  };
 
   // --- LÓGICA DE PONTUAÇÃO ---
   const getBasePoints = () => gameMode === 'paulista' ? 1 : 2;
@@ -150,7 +172,7 @@ export const TrucoScreen = () => {
   };
 
   // --- COMPONENTES VISUAIS INTERNOS ---
-  const TeamScoreArea = ({ team, score, name, wins, color }: any) => {
+  const TeamScoreArea = ({ team, score, name, wins, color, scoreTargetProp, nameTargetProp }: any) => {
     const scale = useSharedValue(1);
     const translateY = useSharedValue(0);
 
@@ -169,7 +191,6 @@ export const TrucoScreen = () => {
         .onUpdate((e) => { translateY.value = e.translationY * 0.1; })
         .onEnd((e) => {
           if (e.translationY < -40) {
-             // CORREÇÃO: scheduleOnRN(funcao, argumento1, argumento2)
              scheduleOnRN(handlePointChange, team, trucoValue); 
           } else if (e.translationY > 40) {
              scheduleOnRN(handlePointChange, team, -baseValue);
@@ -188,28 +209,32 @@ export const TrucoScreen = () => {
       <View style={styles.teamColumn}>
         <View style={[styles.colorBar, { backgroundColor: color }]} />
 
-        <TouchableOpacity 
-            onPress={() => { setEditingTeam(team); setEditNameVisible(true); }} 
-            style={styles.nameContainer}
-            activeOpacity={0.6}
-            hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
-        >
-            <Text style={[styles.teamName, { color: theme.colors.text.inverse }]}>
-                {name} <Ionicons name="pencil" size={12} color={theme.colors.text.secondary} />
-            </Text>
-            <View style={styles.trophyContainer}>
-                {Array.from({ length: wins }).map((_, i) => (
-                    <Ionicons key={i} name="trophy" size={12} color={color} />
-                ))}
-            </View>
-        </TouchableOpacity>
+        <View>
+            <TouchableOpacity
+                onPress={() => { setEditingTeam(team); setEditNameVisible(true); }}
+                style={styles.nameContainer}
+                activeOpacity={0.6}
+                hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
+            >
+                <Text style={[styles.teamName, { color: theme.colors.text.inverse }]}>
+                    {name} <Ionicons name="pencil" size={12} color={theme.colors.text.secondary} />
+                </Text>
+                <View style={styles.trophyContainer}>
+                    {Array.from({ length: wins }).map((_, i) => (
+                        <Ionicons key={i} name="trophy" size={12} color={color} />
+                    ))}
+                </View>
+            </TouchableOpacity>
+        </View>
 
         <GestureDetector gesture={gesture}>
-          <View style={styles.gestureArea}>
+          <View style={styles.gestureArea} collapsable={false}>
              <Animated.View style={[styles.scoreContainer, animatedStyle]}>
-                <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
-                  {score.toString().padStart(2, '0')}
-                </Text>
+                <View ref={scoreTargetProp?.ref} collapsable={false}>
+                  <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
+                    {score.toString().padStart(2, '0')}
+                  </Text>
+                </View>
 
                 <View style={styles.hintsOverlay}>
                    <View style={styles.hintBox}>
@@ -239,15 +264,24 @@ export const TrucoScreen = () => {
             <Ionicons name="arrow-back" size={24} color={theme.colors.text.inverse} />
           </TouchableOpacity>
           <Text style={styles.gameTitle}>TRUCO {gameMode.toUpperCase()}</Text>
-          <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-            <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
-          </TouchableOpacity>
+          <View>
+              <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+                <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
+              </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.scoreboardRow}>
           <TeamScoreArea team="them" score={scoreThem} name={nameThem} wins={matchWinsThem} color={COLOR_THEM} />
           <View style={styles.verticalDivider} />
-          <TeamScoreArea team="us" score={scoreUs} name={nameUs} wins={matchWinsUs} color={COLOR_US} />
+          <TeamScoreArea
+            team="us"
+            score={scoreUs}
+            name={nameUs}
+            wins={matchWinsUs}
+            color={COLOR_US}
+            scoreTargetProp={scoreTarget}
+          />
         </View>
 
         <View style={styles.footerHistory}>
@@ -259,6 +293,14 @@ export const TrucoScreen = () => {
         </View>
 
       </SafeAreaView>
+
+      <TutorialOverlay
+        visible={tutorialActive}
+        spotlight={scoreTarget.layout}
+        message={translate('truco.tutorial.score')}
+        nextText={translate('common.got_it')}
+        onNext={finishTutorial}
+      />
 
       <TrucoSettingsModal 
         visible={settingsVisible} 
@@ -276,6 +318,7 @@ export const TrucoScreen = () => {
         onClose={() => setEditNameVisible(false)} 
         onSave={(n) => { if (n.trim()) editingTeam === 'us' ? setNameUs(n) : setNameThem(n); }} 
       />
+
     </GestureHandlerRootView>
   );
 };
@@ -298,7 +341,6 @@ const styles = StyleSheet.create({
     fontSize: 90, 
     includeFontPadding: false, 
     textAlign: 'center',
-    width: '100%', 
     textShadowColor: 'rgba(0,0,0,0.3)', 
     textShadowOffset: {width: 4, height: 4}, 
     textShadowRadius: 1 

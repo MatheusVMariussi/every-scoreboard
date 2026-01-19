@@ -12,6 +12,8 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { FodinhaSettingsModal } from '../components/FodinhaSettingsModal';
+import { TutorialOverlay } from '../components/TutorialOverlay';
+import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
 interface Player {
   id: string;
@@ -50,9 +52,23 @@ export const FodinhaScreen = () => {
   const [showEditHistory, setShowEditHistory] = useState(false);
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
+  // Tutorial State
+  const [tutorialActive, setTutorialActive] = useState(false);
+
+  // Custom Hooks for Tutorial
+  const actionsTarget = useTutorialTarget(tutorialActive);
+
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
   useEffect(() => {
+    const checkTutorial = async () => {
+      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_FODINHA);
+      if (!hasSeen) {
+        setTutorialActive(true);
+      }
+    };
+    checkTutorial();
+
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.FODINHA_DATA);
       if (saved) {
@@ -69,6 +85,12 @@ export const FodinhaScreen = () => {
   useEffect(() => {
     saveData(STORAGE_KEYS.FODINHA_DATA, { players, initialLives, penaltyMode, cardsInRound, roundPhase });
   }, [players, initialLives, penaltyMode, cardsInRound, roundPhase]);
+
+  // --- TUTORIAL LOGIC ---
+  const finishTutorial = async () => {
+      setTutorialActive(false);
+      await saveData(STORAGE_KEYS.TUTORIAL_FODINHA, true);
+  };
 
   // --- LÓGICA DE JOGO ---
   
@@ -171,9 +193,6 @@ export const FodinhaScreen = () => {
                 return { ...p, history: newHistory, lives: newLives };
             }));
             
-            // Se deletou uma rodada, talvez queira diminuir o numero de cartas da atual?
-            // Opcional: setCardsInRound(prev => Math.max(1, prev - 1));
-            
             setShowEditHistory(false);
         }}
     ]);
@@ -185,6 +204,8 @@ export const FodinhaScreen = () => {
     })));
     setCardsInRound(1);
     setRoundPhase('betting');
+
+    if (tutorialActive) finishTutorial();
   };
 
   const handleAddPlayer = () => {
@@ -268,9 +289,11 @@ export const FodinhaScreen = () => {
                 );
             })()}
 
-            <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-                <Ionicons name="settings-sharp" size={24} color="#FFF" />
-            </TouchableOpacity>
+            <View>
+                <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+                    <Ionicons name="settings-sharp" size={24} color="#FFF" />
+                </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -280,18 +303,19 @@ export const FodinhaScreen = () => {
             {/* COLUNA NOMES */}
             <View style={styles.namesColumn}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>JOGADOR</Text></View>
-              {players.map(p => (
-                <TouchableOpacity 
-                    key={p.id} 
-                    style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]} 
-                    onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
-                >
-                  <Text style={[styles.playerName, p.lives <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
-                  <View style={styles.livesContainer}>
-                     <Ionicons name="heart" size={12} color={theme.colors.status.error} />
-                     <Text style={[styles.playerPoints, { color: '#FFF' }]}>{p.lives}</Text>
-                  </View>
-                </TouchableOpacity>
+              {players.map((p, index) => (
+                <View key={p.id}>
+                    <TouchableOpacity
+                        style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]}
+                        onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
+                    >
+                    <Text style={[styles.playerName, p.lives <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
+                    <View style={styles.livesContainer}>
+                        <Ionicons name="heart" size={12} color={theme.colors.status.error} />
+                        <Text style={[styles.playerPoints, { color: '#FFF' }]}>{p.lives}</Text>
+                    </View>
+                    </TouchableOpacity>
+                </View>
               ))}
               <TouchableOpacity style={styles.addBtn} onPress={handleAddPlayer}>
                 <Ionicons name="add-circle" size={26} color={theme.colors.neon.primary} />
@@ -301,26 +325,27 @@ export const FodinhaScreen = () => {
             {/* HISTÓRICO */}
             <View style={{ flexDirection: 'row' }}>
               {players.length > 0 && players[0].history.map((_, rIdx) => (
-                <TouchableOpacity 
-                    key={rIdx} 
-                    style={styles.historyColumn}
-                    onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}
-                >
-                  <View style={styles.cellHeader}><Text style={styles.headerText}>{rIdx + 1}</Text></View>
-                  {players.map(p => {
-                      const damage = p.history[rIdx];
-                      const isSafe = damage === 0;
-                      return (
-                        <View key={p.id} style={[styles.historyCell, { backgroundColor: 'rgba(0,0,0,0.2)' }]}>
-                           {isSafe ? (
-                               <View style={styles.safeDot} />
-                           ) : (
-                               <Text style={styles.damageText}>-{damage}</Text>
-                           )}
-                        </View>
-                      );
-                  })}
-                </TouchableOpacity>
+                <View key={rIdx}>
+                    <TouchableOpacity
+                        style={styles.historyColumn}
+                        onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}
+                    >
+                    <View style={styles.cellHeader}><Text style={styles.headerText}>{rIdx + 1}</Text></View>
+                    {players.map(p => {
+                        const damage = p.history[rIdx];
+                        const isSafe = damage === 0;
+                        return (
+                            <View key={p.id} style={[styles.historyCell, { backgroundColor: 'rgba(0,0,0,0.2)' }]}>
+                            {isSafe ? (
+                                <View style={styles.safeDot} />
+                            ) : (
+                                <Text style={styles.damageText}>-{damage}</Text>
+                            )}
+                            </View>
+                        );
+                    })}
+                    </TouchableOpacity>
+                </View>
               ))}
             </View>
 
@@ -332,12 +357,12 @@ export const FodinhaScreen = () => {
                 </Text>
               </View>
 
-              {players.map(p => {
+              {players.map((p, index) => {
                   if (p.lives <= 0) return <View key={p.id} style={styles.activeCell}><Text style={styles.outLabel}>ELIMINADO</Text></View>;
                   const projectedDamage = getProjectedDamage(p);
 
                   return (
-                    <View key={p.id} style={styles.activeCell}>
+                    <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsTarget.ref : undefined} collapsable={false}>
                         <View style={styles.stepperContainer}>
                             <TouchableOpacity onPress={() => adjustValue(p.id, -1)} style={styles.stepBtn}>
                                 <Ionicons name="remove" size={16} color="#FFF" />
@@ -393,7 +418,7 @@ export const FodinhaScreen = () => {
             <TouchableOpacity 
                 style={StyleSheet.absoluteFill} 
                 activeOpacity={1} 
-                onPress={() => setShowEditHistory(false)} 
+                onPress={() => setShowEditHistory(false)}
             />
 
             <View style={[styles.overlayContent, { width: '50%', maxHeight: '85%', backgroundColor: theme.colors.background.secondary }]}>
@@ -473,6 +498,14 @@ export const FodinhaScreen = () => {
         onClose={() => setShowEditName(false)} 
         onSave={(n) => { if(n.trim() && editingPlayerId) setPlayers(prev => prev.map(p => p.id === editingPlayerId ? { ...p, name: n } : p)); }}
         onDelete={handleDeletePlayer}
+      />
+
+      <TutorialOverlay
+        visible={tutorialActive}
+        spotlight={actionsTarget.layout}
+        message={translate('fodinha.tutorial.actions')}
+        onNext={finishTutorial}
+        nextText={translate('common.got_it')}
       />
     </View>
   );

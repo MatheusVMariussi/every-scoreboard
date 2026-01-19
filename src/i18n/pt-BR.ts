@@ -43,6 +43,9 @@ export default {
     confirm_reset_title: 'REINICIAR?',
     confirm_reset_message: 'Deseja realmente zerar o placar desta partida?',
     confirm: 'CONFIRMAR',
+    got_it: 'ENTENDIDO',
+    next: 'PRÓXIMO',
+    finish_tutorial: 'FINALIZAR',
   },
   truco: {
     us: 'NÓS',
@@ -61,9 +64,15 @@ export default {
     value_12: 'VALE 12',
     game_mode: 'MODO DE JOGO',
     max_score: 'PONTUAÇÃO MÁXIMA',
+    tutorial: {
+      score: 'Arraste para CIMA para somar o valor do TRUCO (3/4 pts).\nArraste para BAIXO para remover 1 pt.\nToque para somar 1 pt.',
     },
+  },
   cacheta: {
     title: 'Cacheta',
+    tutorial: {
+      actions: 'Defina o resultado (Correu/Perdeu/Ganhou), confirme em "PRÓXIMA RODADA" e repita para ver os resultados.',
+    },
     player_name: 'Jogador {{index}}',
     initial_points: 'Pontos Iniciais',
     won: 'GANHOU',
@@ -77,5 +86,10 @@ export default {
     confirm_delete_round: 'Deseja excluir esta rodada permanentemente?',
     delete_round: 'EXCLUIR RODADA',
     need_winner: 'Alguém precisa ter vencido a rodada!',
+  },
+  fodinha: {
+    tutorial: {
+      actions: 'Defina a aposta ou vitórias de cada jogador, confirme no botão abaixo e repita a cada fase.',
+    },
   },
 };
