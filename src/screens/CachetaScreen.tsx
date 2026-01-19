@@ -15,6 +15,7 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { CachetaSettingsModal } from '../components/CachetaSettingsModal';
+import { TutorialModal } from '../components/TutorialModal';
 
 // --- INTERFACES ---
 type Action = 'won' | 'fold' | 'lost' | null;
@@ -50,8 +51,17 @@ export const CachetaScreen = () => {
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
   const [settingsVisible, setSettingsVisible] = useState(false); // <--- NOVO ESTADO
+  const [tutorialVisible, setTutorialVisible] = useState(false);
 
   useEffect(() => {
+    const checkTutorial = async () => {
+      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_CACHETA);
+      if (!hasSeen) {
+        setTutorialVisible(true);
+      }
+    };
+    checkTutorial();
+
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.CACHETA_DATA);
       if (saved) {
@@ -165,6 +175,11 @@ export const CachetaScreen = () => {
     return player ? player.name : '';
   };
 
+  const handleCloseTutorial = () => {
+    setTutorialVisible(false);
+    saveData(STORAGE_KEYS.TUTORIAL_CACHETA, true);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient colors={[theme.colors.truco.backgroundTop, theme.colors.truco.backgroundBottom]} style={StyleSheet.absoluteFill} />
@@ -271,6 +286,16 @@ export const CachetaScreen = () => {
         }}
         onDelete={handleDeletePlayer}
       />
+
+      <TutorialModal
+        visible={tutorialVisible}
+        onClose={handleCloseTutorial}
+        title={translate('home.cacheta')}
+      >
+        <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12, lineHeight: 18 }}>
+            {translate('cacheta.tutorial.text')}
+        </Text>
+      </TutorialModal>
 
       {/* OVERLAY: EDIÇÃO DE HISTÓRICO */}
       {showEditHistory && editingRoundIdx !== null && (

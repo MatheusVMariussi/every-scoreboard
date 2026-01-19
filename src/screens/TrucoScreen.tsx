@@ -12,6 +12,7 @@ import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { TrucoSettingsModal } from '../components/TrucoSettingsModal';
 import { EditNameModal } from '../components/EditNameModal';
+import { TutorialModal } from '../components/TutorialModal';
 import { MatchHistoryGraph, HistoryItem } from '../components/MatchHistoryGraph';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
@@ -44,6 +45,7 @@ export const TrucoScreen = () => {
   // Modais
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [editNameVisible, setEditNameVisible] = useState(false);
+  const [tutorialVisible, setTutorialVisible] = useState(false);
   const [editingTeam, setEditingTeam] = useState<'us' | 'them'>('us');
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -51,6 +53,14 @@ export const TrucoScreen = () => {
 
   // --- PERSISTÊNCIA ---
   useEffect(() => {
+    const checkTutorial = async () => {
+      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_TRUCO);
+      if (!hasSeen) {
+        setTutorialVisible(true);
+      }
+    };
+    checkTutorial();
+
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.TRUCO_DATA);
       if (saved) {
@@ -147,6 +157,11 @@ export const TrucoScreen = () => {
         ]
       );
     }, 100);
+  };
+
+  const handleCloseTutorial = () => {
+    setTutorialVisible(false);
+    saveData(STORAGE_KEYS.TUTORIAL_TRUCO, true);
   };
 
   // --- COMPONENTES VISUAIS INTERNOS ---
@@ -276,6 +291,27 @@ export const TrucoScreen = () => {
         onClose={() => setEditNameVisible(false)} 
         onSave={(n) => { if (n.trim()) editingTeam === 'us' ? setNameUs(n) : setNameThem(n); }} 
       />
+
+      <TutorialModal
+        visible={tutorialVisible}
+        onClose={handleCloseTutorial}
+        title={translate('home.truco')}
+      >
+        <View style={{ gap: 10 }}>
+            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
+                • {translate('truco.tutorial.step1')}
+            </Text>
+            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
+                • {translate('truco.tutorial.step2')}
+            </Text>
+            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
+                • {translate('truco.tutorial.step3')}
+            </Text>
+            <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12 }}>
+                • {translate('truco.tutorial.step4')}
+            </Text>
+        </View>
+      </TutorialModal>
     </GestureHandlerRootView>
   );
 };

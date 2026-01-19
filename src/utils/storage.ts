@@ -5,6 +5,9 @@ export const STORAGE_KEYS = {
   CACHETA_DATA: '@cacheta_data',
   FODINHA_DATA: '@fodinha_data',
   SETTINGS: '@settings_data',
+  TUTORIAL_TRUCO: '@tutorial_truco',
+  TUTORIAL_CACHETA: '@tutorial_cacheta',
+  TUTORIAL_FODINHA: '@tutorial_fodinha',
 };
 
 export const saveData = async (key: string, value: any) => {

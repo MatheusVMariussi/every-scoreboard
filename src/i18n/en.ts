@@ -43,6 +43,7 @@ export default {
     confirm_reset_title: 'RESET?',
     confirm_reset_message: 'Do you really want to reset the score for this match?',
     confirm: 'CONFIRM',
+    got_it: 'GOT IT',
   },
   truco: {
     us: 'US',
@@ -61,9 +62,18 @@ export default {
     value_12: 'VALUE 12',
     game_mode: 'GAME MODE',
     max_score: 'MAXIMUM SCORE',
+    tutorial: {
+      step1: 'Swipe up on score to add TRUCO value.',
+      step2: 'Swipe down to remove points.',
+      step3: 'Tap to add 1 point.',
+      step4: 'Edit names by tapping on them.',
     },
+  },
   cacheta: {
     title: 'Cacheta',
+    tutorial: {
+      text: 'Manage each player\'s lives. Add players, edit names, and mark who won, folded, or lost the round. The app calculates lives automatically.',
+    },
     player_name: 'Player {{index}}',
     initial_points: 'Initial Points',
     won: 'WON',
@@ -77,5 +87,10 @@ export default {
     confirm_delete_round: 'Do you want to permanently delete this round?',
     delete_round: 'DELETE ROUND',
     need_winner: 'Someone needs to have won the round!',
+  },
+  fodinha: {
+    tutorial: {
+      text: 'First, each player bets how many tricks they will win. Then, enter how many they actually won. Anyone who misses their bet loses lives equal to the difference.',
+    },
   },
 };

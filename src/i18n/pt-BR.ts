@@ -43,6 +43,7 @@ export default {
     confirm_reset_title: 'REINICIAR?',
     confirm_reset_message: 'Deseja realmente zerar o placar desta partida?',
     confirm: 'CONFIRMAR',
+    got_it: 'ENTENDIDO',
   },
   truco: {
     us: 'NÓS',
@@ -61,9 +62,18 @@ export default {
     value_12: 'VALE 12',
     game_mode: 'MODO DE JOGO',
     max_score: 'PONTUAÇÃO MÁXIMA',
+    tutorial: {
+      step1: 'Arraste para cima na pontuação para adicionar o valor do TRUCO.',
+      step2: 'Arraste para baixo para remover pontos.',
+      step3: 'Toque simples para adicionar 1 ponto.',
+      step4: 'Edite os nomes tocando neles.',
     },
+  },
   cacheta: {
     title: 'Cacheta',
+    tutorial: {
+      text: 'Gerencie as vidas de cada jogador. Adicione jogadores, edite nomes e marque quem ganhou, correu ou perdeu a rodada. O app calcula as vidas automaticamente.',
+    },
     player_name: 'Jogador {{index}}',
     initial_points: 'Pontos Iniciais',
     won: 'GANHOU',
@@ -77,5 +87,10 @@ export default {
     confirm_delete_round: 'Deseja excluir esta rodada permanentemente?',
     delete_round: 'EXCLUIR RODADA',
     need_winner: 'Alguém precisa ter vencido a rodada!',
+  },
+  fodinha: {
+    tutorial: {
+      text: 'Primeiro, cada jogador faz sua aposta de quantas vazas fará. Depois, informe quantas cada um realmente fez. Quem errar a aposta perde vidas igual a diferença.',
+    },
   },
 };

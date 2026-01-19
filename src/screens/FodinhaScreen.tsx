@@ -12,6 +12,7 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { FodinhaSettingsModal } from '../components/FodinhaSettingsModal';
+import { TutorialModal } from '../components/TutorialModal';
 
 interface Player {
   id: string;
@@ -45,6 +46,7 @@ export const FodinhaScreen = () => {
   const [showEditName, setShowEditName] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [tutorialVisible, setTutorialVisible] = useState(false);
   
   // MODAL DE EDIÇÃO DE HISTÓRICO
   const [showEditHistory, setShowEditHistory] = useState(false);
@@ -53,6 +55,14 @@ export const FodinhaScreen = () => {
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
   useEffect(() => {
+    const checkTutorial = async () => {
+      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_FODINHA);
+      if (!hasSeen) {
+        setTutorialVisible(true);
+      }
+    };
+    checkTutorial();
+
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.FODINHA_DATA);
       if (saved) {
@@ -213,6 +223,11 @@ export const FodinhaScreen = () => {
     const diff = Math.abs(p.currentBid - p.currentWon);
     if (diff === 0) return 0;
     return penaltyMode === 'fixed' ? 1 : diff;
+  };
+
+  const handleCloseTutorial = () => {
+    setTutorialVisible(false);
+    saveData(STORAGE_KEYS.TUTORIAL_FODINHA, true);
   };
 
   return (
@@ -474,6 +489,16 @@ export const FodinhaScreen = () => {
         onSave={(n) => { if(n.trim() && editingPlayerId) setPlayers(prev => prev.map(p => p.id === editingPlayerId ? { ...p, name: n } : p)); }}
         onDelete={handleDeletePlayer}
       />
+
+      <TutorialModal
+        visible={tutorialVisible}
+        onClose={handleCloseTutorial}
+        title={translate('home.fodinha')}
+      >
+        <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12, lineHeight: 18 }}>
+            {translate('fodinha.tutorial.text')}
+        </Text>
+      </TutorialModal>
     </View>
   );
 };
