@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -46,7 +46,7 @@ export const FodinhaScreen = () => {
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
   
-  // MODAL DE EDIÇÃO DE HISTÓRICO (NOVO)
+  // MODAL DE EDIÇÃO DE HISTÓRICO
   const [showEditHistory, setShowEditHistory] = useState(false);
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
@@ -194,7 +194,7 @@ export const FodinhaScreen = () => {
             id: Date.now().toString(), 
             name: `JOGADOR ${prev.length + 1}`, 
             lives: initialLives, 
-            history: Array(currentRounds).fill(0), 
+            history: new Array(currentRounds).fill(0), 
             currentBid: 0, 
             currentWon: 0 
         };
@@ -223,20 +223,51 @@ export const FodinhaScreen = () => {
         
         {/* HEADER */}
         <View style={styles.header}>
+          
+          {/* LADO ESQUERDO: BOTÃO VOLTAR (Restaurado) */}
           <View style={styles.headerSide}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
               <Ionicons name="arrow-back" size={24} color="#FFF" />
             </TouchableOpacity>
           </View>
+
+          {/* CENTRO: TÍTULO */}
           <Text style={styles.headerTitle}>FODINHA</Text>
+
+          {/* LADO DIREITO: CONTROLES DE CARTAS + SETTINGS */}
           <View style={[styles.headerSide, { justifyContent: 'flex-end', gap: 10 }]}>
-            <TouchableOpacity 
-                style={styles.cardsBadge} 
-                onPress={() => Alert.prompt("Cartas na Rodada", "", (t) => { const n = parseInt(t); if(n > 0) setCardsInRound(n); }, 'plain-text', cardsInRound.toString(), 'number-pad')}
-            >
-               <Ionicons name="documents-outline" size={14} color="#FFF" style={{ marginRight: 4 }} />
-               <Text style={styles.badgeText}>{cardsInRound} CARTAS</Text>
-            </TouchableOpacity>
+
+            {(() => {
+                const isCardsLocked = roundPhase !== 'betting';
+                
+                return (
+                    <View style={[styles.cardsControlContainer, isCardsLocked && { opacity: 0.5, backgroundColor: 'rgba(0,0,0,0.3)' }]}>
+                        <TouchableOpacity 
+                            onPress={() => setCardsInRound(prev => Math.max(1, prev - 1))} 
+                            style={styles.cardsStepBtn}
+                            hitSlop={{top: 10, bottom: 10, left: 5, right: 5}}
+                            disabled={isCardsLocked}
+                        >
+                            <Ionicons name="remove" size={14} color={isCardsLocked ? "#AAA" : "#FFF"} />
+                        </TouchableOpacity>
+
+                        <View style={styles.cardsCenter}>
+                            <Ionicons name="documents-outline" size={12} color="#FFF" style={{ marginRight: 4 }} />
+                            <Text style={styles.badgeText}>{cardsInRound} CARTAS</Text>
+                        </View>
+
+                        <TouchableOpacity 
+                            onPress={() => setCardsInRound(prev => prev + 1)} 
+                            style={styles.cardsStepBtn}
+                            hitSlop={{top: 10, bottom: 10, left: 5, right: 5}}
+                            disabled={isCardsLocked}
+                        >
+                            <Ionicons name="add" size={14} color={isCardsLocked ? "#AAA" : "#FFF"} />
+                        </TouchableOpacity>
+                    </View>
+                );
+            })()}
+
             <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
                 <Ionicons name="settings-sharp" size={24} color="#FFF" />
             </TouchableOpacity>
@@ -267,10 +298,9 @@ export const FodinhaScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* HISTÓRICO - AGORA CLICÁVEL */}
+            {/* HISTÓRICO */}
             <View style={{ flexDirection: 'row' }}>
               {players.length > 0 && players[0].history.map((_, rIdx) => (
-                // ADICIONADO: onPress para abrir modal de edição
                 <TouchableOpacity 
                     key={rIdx} 
                     style={styles.historyColumn}
@@ -450,11 +480,30 @@ export const FodinhaScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, height: 50 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, height: 50 },
   headerSide: { flex: 1, flexDirection: 'row' },
   headerTitle: { fontFamily: 'Minecraft', color: '#FFF', fontSize: 16, textAlign: 'center', flex: 2 },
   iconBtn: { padding: 5 },
-  cardsBadge: { backgroundColor: 'rgba(255,255,255,0.15)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  cardsControlContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(255,255,255,0.15)', 
+    borderRadius: 10, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.1)',
+    height: 30
+  },
+  cardsStepBtn: { 
+    height: '100%', 
+    paddingHorizontal: 8, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  cardsCenter: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 4 
+  },
   badgeText: { color: '#FFF', fontFamily: 'Minecraft', fontSize: 10 },
   tableScroll: { paddingHorizontal: 20, paddingBottom: 20 },
   namesColumn: { width: 140 },

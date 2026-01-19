@@ -5,7 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, runOnJS } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
@@ -16,7 +17,6 @@ import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
 
 export const TrucoScreen = () => {
-  // Trava a orientação em Retrato
   useScreenOrientation('PORTRAIT');
   
   const { theme } = useTheme();
@@ -32,7 +32,7 @@ export const TrucoScreen = () => {
   
   // Configurações do Jogo
   const [gameMode, setGameMode] = useState<'paulista' | 'mineiro'>('paulista');
-  const [maxScore, setMaxScore] = useState(12); // Padrão 12, pode mudar para 24
+  const [maxScore, setMaxScore] = useState(12);
   
   // Metadados
   const [matchWinsUs, setMatchWinsUs] = useState(0);
@@ -56,7 +56,6 @@ export const TrucoScreen = () => {
       if (saved) {
         setScoreUs(saved.scoreUs); setScoreThem(saved.scoreThem);
         setGameMode(saved.gameMode);
-        // Recupera maxScore se existir, senão assume 12 (retrocompatibilidade)
         if (saved.maxScore) setMaxScore(saved.maxScore);
         
         setMatchWinsUs(saved.matchWinsUs); setMatchWinsThem(saved.matchWinsThem);
@@ -70,13 +69,12 @@ export const TrucoScreen = () => {
   useEffect(() => {
     if (isLoaded) {
       saveData(STORAGE_KEYS.TRUCO_DATA, { 
-        scoreUs, scoreThem, gameMode, maxScore, // Salva maxScore
+        scoreUs, scoreThem, gameMode, maxScore,
         matchWinsUs, matchWinsThem, pointHistory, nameUs, nameThem 
       });
     }
   }, [scoreUs, scoreThem, gameMode, maxScore, matchWinsUs, matchWinsThem, pointHistory, nameUs, nameThem, isLoaded]);
 
-  // Reset inteligente: Se mudar modo ou pontuação máxima, reseta a rodada
   useEffect(() => { 
     if (isLoaded && scoreUs === 0 && scoreThem === 0) resetGame(true); 
   }, [gameMode, maxScore]);
@@ -95,12 +93,9 @@ export const TrucoScreen = () => {
     setPointHistory(prev => {
       const newHist = [...prev];
       if (pointsToAdd > 0) {
-        // Adicionando ponto
         newHist.push({ team, points: pointsToAdd });
       } else {
-        // Removendo ponto (Undo inteligente)
         let foundIndex = -1;
-        // Procura o último ponto desse time
         for (let i = newHist.length - 1; i >= 0; i--) { 
             if (newHist[i].team === team) { foundIndex = i; break; } 
         }
@@ -109,8 +104,6 @@ export const TrucoScreen = () => {
           const currentPoints = newHist[foundIndex].points;
           const base = getBasePoints();
           
-          // Se o ponto registrado for maior que a base (ex: foi um Truco), reduzimos o valor dele
-          // Se for igual a base, removemos o registro do gráfico
           if (currentPoints > base && Math.abs(pointsToAdd) === base) {
              newHist[foundIndex] = { ...newHist[foundIndex], points: currentPoints - base };
           } else {
@@ -121,7 +114,6 @@ export const TrucoScreen = () => {
       return newHist;
     });
 
-    // Atualiza placar e checa vitória
     if (team === 'us') {
       const newScore = Math.max(0, scoreUs + pointsToAdd);
       if (newScore >= maxScore && pointsToAdd > 0) { 
@@ -177,9 +169,10 @@ export const TrucoScreen = () => {
         .onUpdate((e) => { translateY.value = e.translationY * 0.1; })
         .onEnd((e) => {
           if (e.translationY < -40) {
-             runOnJS(handlePointChange)(team, trucoValue); // Swipe Up: Truco
+             // CORREÇÃO: scheduleOnRN(funcao, argumento1, argumento2)
+             scheduleOnRN(handlePointChange, team, trucoValue); 
           } else if (e.translationY > 40) {
-             runOnJS(handlePointChange)(team, -baseValue); // Swipe Down: Remove Base
+             scheduleOnRN(handlePointChange, team, -baseValue);
           }
           translateY.value = withSpring(0);
         }),
@@ -187,16 +180,14 @@ export const TrucoScreen = () => {
         .onStart(() => { scale.value = withSpring(0.95); })
         .onEnd(() => { 
             scale.value = withSpring(1); 
-            runOnJS(handlePointChange)(team, baseValue); // Tap: Adiciona Base
+            scheduleOnRN(handlePointChange, team, baseValue);
         })
     );
 
     return (
       <View style={styles.teamColumn}>
-        {/* Barra Colorida no topo */}
         <View style={[styles.colorBar, { backgroundColor: color }]} />
 
-        {/* NOME (Clicável separadamente para não conflitar com gestos) */}
         <TouchableOpacity 
             onPress={() => { setEditingTeam(team); setEditNameVisible(true); }} 
             style={styles.nameContainer}
@@ -213,7 +204,6 @@ export const TrucoScreen = () => {
             </View>
         </TouchableOpacity>
 
-        {/* ÁREA DE GESTOS (Ocupa o resto da coluna) */}
         <GestureDetector gesture={gesture}>
           <View style={styles.gestureArea}>
              <Animated.View style={[styles.scoreContainer, animatedStyle]}>
@@ -221,7 +211,6 @@ export const TrucoScreen = () => {
                   {score.toString().padStart(2, '0')}
                 </Text>
 
-                {/* Dicas visuais nas extremidades */}
                 <View style={styles.hintsOverlay}>
                    <View style={styles.hintBox}>
                       <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.2)" />
@@ -245,7 +234,6 @@ export const TrucoScreen = () => {
       
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right', 'bottom']}>
         
-        {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
             <Ionicons name="arrow-back" size={24} color={theme.colors.text.inverse} />
@@ -256,19 +244,12 @@ export const TrucoScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* ÁREA CENTRAL - LADO A LADO */}
         <View style={styles.scoreboardRow}>
-          {/* ELES (Esquerda / Vermelho) */}
           <TeamScoreArea team="them" score={scoreThem} name={nameThem} wins={matchWinsThem} color={COLOR_THEM} />
-          
-          {/* Divisor Vertical */}
           <View style={styles.verticalDivider} />
-
-          {/* NÓS (Direita / Verde) */}
           <TeamScoreArea team="us" score={scoreUs} name={nameUs} wins={matchWinsUs} color={COLOR_US} />
         </View>
 
-        {/* FOOTER - HISTÓRICO */}
         <View style={styles.footerHistory}>
            <MatchHistoryGraph 
               history={pointHistory} 
@@ -279,7 +260,6 @@ export const TrucoScreen = () => {
 
       </SafeAreaView>
 
-      {/* MODAIS */}
       <TrucoSettingsModal 
         visible={settingsVisible} 
         onClose={() => setSettingsVisible(false)} 
@@ -302,23 +282,15 @@ export const TrucoScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  
-  // Header
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, height: 50 },
   gameTitle: { fontFamily: 'Minecraft', fontSize: 20, color: '#FFF', letterSpacing: 1 },
   iconBtn: { padding: 8 },
-  
-  // Layout Principal
   scoreboardRow: { flex: 1, flexDirection: 'row' },
   teamColumn: { flex: 1, height: '100%', position: 'relative' },
   colorBar: { position: 'absolute', top: 0, left: 10, right: 10, height: 4, borderRadius: 2, opacity: 0.9 },
-  
-  // Componente de Nome
   nameContainer: { alignItems: 'center', justifyContent: 'center', height: 60, marginTop: 10, zIndex: 20 },
   teamName: { fontFamily: 'Minecraft', fontSize: 18, opacity: 0.9, marginBottom: 4 },
   trophyContainer: { flexDirection: 'row', gap: 2, minHeight: 14 },
-
-  // Componente de Gesto/Placar
   gestureArea: { flex: 1, width: '100%' },
   scoreContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scoreNumber: { 
@@ -331,12 +303,8 @@ const styles = StyleSheet.create({
     textShadowOffset: {width: 4, height: 4}, 
     textShadowRadius: 1 
   },
-  
-  // Elementos Gráficos
   verticalDivider: { width: 1, height: '70%', backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'center' },
   footerHistory: { height: 80, width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', paddingBottom: 5 },
-  
-  // Dicas de Gesto
   hintsOverlay: { position: 'absolute', right: 0, left: 0, top: 40, bottom: 40, justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' },
   hintBox: { alignItems: 'center', opacity: 0.3 },
   hintText: { fontSize: 10, fontFamily: 'Minecraft', color: '#FFF' }

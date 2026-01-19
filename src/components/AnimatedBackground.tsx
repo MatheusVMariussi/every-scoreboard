@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useWindowDimensions, StyleSheet, View } from 'react-native';
 import { Canvas, Rect, Circle, BlurMask, LinearGradient, vec } from "@shopify/react-native-skia";
 import { useSharedValue, withRepeat, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';

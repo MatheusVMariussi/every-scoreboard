@@ -20,9 +20,9 @@ interface GameItem {
 
 const GAMES: GameItem[] = [
   { id: '1', labelKey: 'home.truco', route: 'Truco' },
-  { id: '2', labelKey: 'home.canastra', route: 'Canastra' },
-  { id: '3', labelKey: 'home.fodinha', route: 'Fodinha' },
-  { id: '4', labelKey: 'home.cacheta', route: 'Cacheta' },
+  { id: '2', labelKey: 'home.fodinha', route: 'Fodinha' },
+  { id: '3', labelKey: 'home.cacheta', route: 'Cacheta' },
+ // { id: '4', labelKey: 'home.canastra', route: 'Canastra' },
 ];
 
 export const HomeScreen = () => {

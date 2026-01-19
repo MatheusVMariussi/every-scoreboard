@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useEffect, useState, useMemo } from 'react';
+import React, { createContext, ReactNode, useState, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { Theme } from './types';
 import { lightTheme } from './light';
@@ -24,7 +24,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, themeName: mode, toggleTheme }}>
+    <ThemeContext.Provider value={useMemo(() => ({ theme, themeName: mode, toggleTheme }), [theme, mode, toggleTheme])}>
       {children}
     </ThemeContext.Provider>
   );

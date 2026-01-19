@@ -1,5 +1,5 @@
 import React from 'react';
-import { StatusBar, View, ViewStyle, StyleSheet } from 'react-native';
+import { StatusBar, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/useTheme';
 
@@ -9,7 +9,7 @@ interface ScreenWrapperProps {
 }
 
 export const ScreenWrapper = ({ children, style }: ScreenWrapperProps) => {
-  const { theme, themeMode } = useTheme();
+  const { theme, themeName } = useTheme();
   const insets = useSafeAreaInsets();
 
   const containerStyle = {
@@ -25,7 +25,7 @@ export const ScreenWrapper = ({ children, style }: ScreenWrapperProps) => {
     <View style={[containerStyle, style]}>
       <StatusBar
         // Lógica automática: Fundo escuro -> Texto claro. Fundo claro -> Texto escuro.
-        barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'}
+        barStyle={themeName === 'dark' ? 'light-content' : 'dark-content'}
         backgroundColor={theme.colors.background.primary}
       />
       {children}

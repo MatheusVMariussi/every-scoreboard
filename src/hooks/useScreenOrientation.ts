@@ -1,10 +1,9 @@
 import { useCallback } from 'react';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Platform } from 'react-native';
 
 export function useScreenOrientation(mode: 'PORTRAIT' | 'LANDSCAPE') {
-  const navigation = useNavigation();
 
   useFocusEffect(
     useCallback(() => {

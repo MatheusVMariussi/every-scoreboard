@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useRef, useMemo, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  Alert, Keyboard, TouchableWithoutFeedback 
+  Alert, TouchableWithoutFeedback 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -130,7 +130,7 @@ export const CachetaScreen = () => {
   const handleAddPlayer = () => {
     setPlayers(prev => {
       const currentRounds = prev.length > 0 ? prev[0].history.length : 0;
-      const penaltyHistory: Action[] = Array(currentRounds).fill('lost');
+      const penaltyHistory: Action[] = new Array(currentRounds).fill('lost');
       const newPlayer: Player = { 
         id: Date.now().toString(), 
         name: `JOGADOR ${prev.length + 1}`, 

@@ -19,7 +19,7 @@ export const saveData = async (key: string, value: any) => {
 export const getData = async (key: string) => {
   try {
     const jsonValue = await AsyncStorage.getItem(key);
-    return jsonValue != null ? JSON.parse(jsonValue) : null;
+    return jsonValue == null ? null : JSON.parse(jsonValue);
   } catch (e) {
     console.error('Erro ao carregar:', e);
   }
