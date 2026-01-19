@@ -94,8 +94,8 @@ export const CachetaScreen = () => {
 
   // --- TUTORIAL LOGIC ---
   const advanceTutorial = () => {
-    // If step 3, user needs to click button to advance
-    if (tutorialStep !== 3) {
+    // If step 3 (Finish Round) or step 4 (Delete History), user needs to perform action
+    if (tutorialStep !== 3 && tutorialStep !== 4) {
       if (tutorialStep < 5) {
         setTutorialStep(p => p + 1);
       } else {
@@ -379,6 +379,11 @@ export const CachetaScreen = () => {
                       { text: translate('common.confirm'), style: 'destructive', onPress: () => {
                           setPlayers(prev => prev.map(p => { const h = [...p.history]; h.splice(editingRoundIdx, 1); return { ...p, history: h }; }));
                           setShowEditHistory(false);
+
+                          // Advance tutorial if in deletion step
+                          if (tutorialActive && tutorialStep === 4) {
+                              setTutorialStep(5);
+                          }
                       }}
                     ]);
                   }}>

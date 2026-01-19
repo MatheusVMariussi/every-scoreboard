@@ -89,11 +89,11 @@ export const HomeScreen = () => {
           </View>
           
           <View style={[styles.footerSection, { marginTop: theme.spacing.m }]}>
-            <TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton}>
+            <TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton} hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
               <Ionicons name="settings-sharp" size={28} color={iconColor} />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleRemoveAdsPress} style={styles.iconButton}>
+            <TouchableOpacity onPress={handleRemoveAdsPress} style={styles.iconButton} hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
               <MaterialCommunityIcons name="diamond-stone" size={30} color={removeAdsColor} />
             </TouchableOpacity>
           </View>

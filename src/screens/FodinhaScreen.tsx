@@ -94,7 +94,8 @@ export const FodinhaScreen = () => {
 
   // --- TUTORIAL LOGIC ---
   const advanceTutorial = () => {
-    if (tutorialStep !== 3) {
+    // Wait for interaction on step 3 (finish round) and 4 (delete round)
+    if (tutorialStep !== 3 && tutorialStep !== 4) {
       if (tutorialStep < 5) {
         setTutorialStep(p => p + 1);
       } else {
@@ -225,10 +226,12 @@ export const FodinhaScreen = () => {
                 return { ...p, history: newHistory, lives: newLives };
             }));
             
-            // Se deletou uma rodada, talvez queira diminuir o numero de cartas da atual?
-            // Opcional: setCardsInRound(prev => Math.max(1, prev - 1));
-            
             setShowEditHistory(false);
+
+            // Advance tutorial if in deletion step
+            if (tutorialActive && tutorialStep === 4) {
+                setTutorialStep(5);
+            }
         }}
     ]);
   };
@@ -551,7 +554,7 @@ export const FodinhaScreen = () => {
             tutorialStep === 4 ? translate('fodinha.tutorial.history') :
             translate('fodinha.tutorial.settings')
         }
-        onNext={tutorialStep !== 3 ? advanceTutorial : undefined}
+        onNext={(tutorialStep !== 3 && tutorialStep !== 4) ? advanceTutorial : undefined}
         onSkip={finishTutorial}
         nextText={tutorialStep === 5 ? translate('common.finish_tutorial') : undefined}
       />
