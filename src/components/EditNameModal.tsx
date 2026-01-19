@@ -41,7 +41,7 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+        <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           <TouchableWithoutFeedback>
             <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
               
@@ -71,7 +71,7 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
                   <Text style={{ color: theme.colors.status.error, fontFamily: 'Minecraft' }}>{translate('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleSave} style={[styles.btn, styles.saveBtn, { backgroundColor: theme.colors.brand.primary }]}>
-                  <Text style={{ color: '#FFF', fontFamily: 'Minecraft' }}>{translate('common.save')}</Text>
+                  <Text style={{ color: theme.colors.text.white, fontFamily: 'Minecraft' }}>{translate('common.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

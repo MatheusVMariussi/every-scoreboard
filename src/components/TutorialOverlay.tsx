@@ -149,7 +149,7 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
         <View style={styles.buttonsRow}>
           {onSkip && (
             <TouchableOpacity onPress={onSkip} style={styles.skipBtn}>
-               <Text style={[styles.skipText, { color: theme.colors.text.secondary }]}>SKIP</Text>
+               <Text style={[styles.skipText, { color: theme.colors.text.secondary }]}>{translate('common.skip')}</Text>
             </TouchableOpacity>
           )}
 
@@ -158,7 +158,7 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
               style={[styles.nextBtn, { backgroundColor: theme.colors.brand.primary }]}
               onPress={onNext}
             >
-              <Text style={styles.nextText}>{nextText || translate('common.next')}</Text>
+              <Text style={[styles.nextText, { color: theme.colors.text.white }]}>{nextText || translate('common.next')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -217,7 +217,6 @@ const styles = StyleSheet.create({
   },
   nextText: {
     fontFamily: 'Minecraft',
-    color: '#FFF',
     fontSize: 12,
   },
 });

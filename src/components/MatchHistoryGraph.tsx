@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { useTheme } from '../theme/useTheme';
 
 export interface HistoryItem {
   team: 'us' | 'them';
@@ -14,17 +15,22 @@ interface MatchHistoryGraphProps {
 
 export const MatchHistoryGraph = ({ 
   history, 
-  colorUs = '#32D74B', 
-  colorThem = '#FF453A' 
+  colorUs,
+  colorThem
 }: MatchHistoryGraphProps) => {
+  const { theme } = useTheme();
   
+  // Use props if provided, otherwise fallback to theme colors
+  const finalColorUs = colorUs || theme.colors.truco.teamUs;
+  const finalColorThem = colorThem || theme.colors.truco.teamThem;
+
   const scrollViewRef = React.useRef<ScrollView>(null);
 
   return (
     <View style={styles.container}>
       
       {/* A LINHA CENTRAL FIXA (Agora aparece sempre) */}
-      <View style={styles.centerLine} />
+      <View style={[styles.centerLine, { backgroundColor: theme.colors.truco.divider }]} />
 
       <ScrollView 
         ref={scrollViewRef}
@@ -41,7 +47,7 @@ export const MatchHistoryGraph = ({
             <View key={index} style={[
                 styles.historyDot, 
                 { 
-                    backgroundColor: item.team === 'us' ? colorUs : colorThem,
+                    backgroundColor: item.team === 'us' ? finalColorUs : finalColorThem,
                     height: barHeight,
                     // Lógica de Deslocamento:
                     // Se for 'them' (cima), deslocamos para cima (translateY negativo)
@@ -71,7 +77,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2, // Espessura da linha
-    backgroundColor: 'rgba(255,255,255,0.15)', // Cor da linha
     zIndex: -1, // Fica atrás dos pontos
     alignSelf: 'center' // Garante o centro vertical
   },

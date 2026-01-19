@@ -53,7 +53,7 @@ export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: Set
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         {/* Usando View normal com cor em vez de BlurView para garantir visibilidade */}
-        <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.7)' }]}> 
+        <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           
           <TouchableWithoutFeedback>
             <View style={[styles.container, { 
@@ -104,10 +104,10 @@ export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: Set
                 </View>
               </View>
 
-              <View style={[styles.divider, { backgroundColor: 'rgba(255,255,255,0.1)' }]} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
 
               <TouchableOpacity style={styles.resetBtn} onPress={handleFullReset}>
-                <Text style={styles.resetText}>{translate('settings.reset_all')}</Text>
+                <Text style={[styles.resetText, { color: theme.colors.status.error }]}>{translate('settings.reset_all')}</Text>
               </TouchableOpacity>
 
               <Text style={[styles.versionText, { color: theme.colors.text.secondary }]}>
@@ -131,11 +131,11 @@ const OptionBtn = ({ label, active, onPress }: any) => {
         styles.optBtn, 
         { 
           backgroundColor: active ? theme.colors.home.buttonBackground : 'transparent',
-          borderColor: active ? theme.colors.home.buttonBorder : 'rgba(255,255,255,0.2)'
+          borderColor: active ? theme.colors.home.buttonBorder : theme.colors.modal.divider
         }
       ]}
     >
-      <Text style={[styles.optText, { color: active ? '#FFF' : theme.colors.text.secondary }]}>
+      <Text style={[styles.optText, { color: active ? theme.colors.text.white : theme.colors.text.secondary }]}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -155,6 +155,6 @@ const styles = StyleSheet.create({
   optText: { fontFamily: 'Minecraft', fontSize: 12 },
   divider: { height: 1, marginBottom: 20 },
   resetBtn: { padding: 12, alignItems: 'center', marginBottom: 15 },
-  resetText: { color: '#FF3B30', fontFamily: 'Minecraft', fontSize: 11 },
+  resetText: { fontFamily: 'Minecraft', fontSize: 11 },
   versionText: { textAlign: 'center', fontSize: 10, fontFamily: 'Minecraft', opacity: 0.5 }
 });

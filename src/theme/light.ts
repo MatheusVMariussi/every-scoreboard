@@ -7,11 +7,14 @@ export const lightTheme: Theme = {
       primary: palette.white,       // Fundo padrão de telas (Configurações, Sobre)
       secondary: palette.gray100,   // Fundo de cards ou listas
       darkVoid: palette.deepBlueVoid, // Mantemos o void disponível mesmo no light
+      overlay: palette.overlay80,
     },
     text: {
       primary: palette.gray900,     // Texto principal PRETO (para ler no fundo branco)
       secondary: palette.gray800,   // Texto secundário cinza escuro
       inverse: palette.white,       // Texto para botões escuros
+      white: palette.white,
+      black: palette.black,
     },
     brand: {
       primary: palette.blue500,
@@ -19,6 +22,7 @@ export const lightTheme: Theme = {
     status: {
       error: palette.red500,
       success: palette.green500,
+      warning: palette.yellowFold,
     },
     neon: {
       primary: palette.cyanNeon,
@@ -30,6 +34,10 @@ export const lightTheme: Theme = {
       titleOutline: palette.brownDark,
       buttonBackground: palette.orangePrimary,
       buttonBorder: palette.orangeDark,
+      buttonSecondary: palette.yellow500,
+      buttonSecondaryBorder: palette.yellowDark,
+      buttonDestructive: palette.red500,
+      buttonDestructiveBorder: palette.redDark,
       titleBackground: palette.darkOverlay, // Fundo escuro atrás do título para contraste
     },
     icon: {
@@ -58,6 +66,9 @@ export const lightTheme: Theme = {
       graphBarUs: palette.goldAccent,
       graphBarThem: palette.cardWhite,
       trophy: palette.goldAccent,
+      teamUs: palette.systemGreen,
+      teamThem: palette.systemRed,
+      divider: palette.white10,
     },
     cacheta: {
       win: palette.green500,        // Ganhou
@@ -65,7 +76,16 @@ export const lightTheme: Theme = {
       loss: palette.orangePrimary,  // Perdeu
       playerCard: 'rgba(255,255,255,0.05)',
       activeRound: 'rgba(0,240,255,0.1)', // Um leve brilho neon para a rodada ativa
+      text: palette.white,
     },
+    fodinha: {
+      cardBackground: palette.white15,
+      damageText: palette.systemRed,
+      safeDot: palette.systemGreen,
+      eliminated: palette.red500,
+      divider: palette.white10,
+      countColor: palette.white,
+    }
   },
   // Mantenha as definições de espaçamento/tipografia iguais ou importe de um common.ts
   spacing: {

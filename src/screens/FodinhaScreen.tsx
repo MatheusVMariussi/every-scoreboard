@@ -38,9 +38,9 @@ export const FodinhaScreen = () => {
   const [roundPhase, setRoundPhase] = useState<'betting' | 'results'>('betting'); 
 
   const [players, setPlayers] = useState<Player[]>([
-    { id: '1', name: 'JOGADOR 1', lives: 10, history: [], currentBid: 0, currentWon: 0 },
-    { id: '2', name: 'JOGADOR 2', lives: 10, history: [], currentBid: 0, currentWon: 0 },
-    { id: '3', name: 'JOGADOR 3', lives: 10, history: [], currentBid: 0, currentWon: 0 },
+    { id: '1', name: translate('common.player') + ' 1', lives: 10, history: [], currentBid: 0, currentWon: 0 },
+    { id: '2', name: translate('common.player') + ' 2', lives: 10, history: [], currentBid: 0, currentWon: 0 },
+    { id: '3', name: translate('common.player') + ' 3', lives: 10, history: [], currentBid: 0, currentWon: 0 },
   ]);
 
   // MODAIS
@@ -100,13 +100,19 @@ export const FodinhaScreen = () => {
   const handlePhaseChange = () => {
     if (roundPhase === 'betting') {
       if (totalBids === cardsInRound) {
-        Alert.alert("Apostas Inválidas", `A soma das apostas (${totalBids}) não pode ser igual ao número de cartas (${cardsInRound}).`);
+        Alert.alert(
+            translate('fodinha.invalid_bets_title'),
+            translate('fodinha.invalid_bets_message', { total: totalBids, cards: cardsInRound })
+        );
         return;
       }
       setRoundPhase('results');
     } else {
       if (totalWon !== cardsInRound) {
-        Alert.alert("Conta Errada", `A soma das cartas ganhas (${totalWon}) deve ser igual ao número de cartas (${cardsInRound}).`);
+        Alert.alert(
+            translate('fodinha.wrong_count_title'),
+            translate('fodinha.wrong_count_message', { total: totalWon, cards: cardsInRound })
+        );
         return;
       }
       finishRound();
@@ -213,7 +219,7 @@ export const FodinhaScreen = () => {
         const currentRounds = prev.length > 0 ? prev[0].history.length : 0;
         const newPlayer: Player = { 
             id: Date.now().toString(), 
-            name: `JOGADOR ${prev.length + 1}`, 
+            name: `${translate('common.player')} ${prev.length + 1}`,
             lives: initialLives, 
             history: new Array(currentRounds).fill(0), 
             currentBid: 0, 
@@ -248,12 +254,12 @@ export const FodinhaScreen = () => {
           {/* LADO ESQUERDO: BOTÃO VOLTAR (Restaurado) */}
           <View style={styles.headerSide}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-              <Ionicons name="arrow-back" size={24} color="#FFF" />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text.white} />
             </TouchableOpacity>
           </View>
 
           {/* CENTRO: TÍTULO */}
-          <Text style={styles.headerTitle}>FODINHA</Text>
+          <Text style={styles.headerTitle}>{translate('fodinha.title')}</Text>
 
           {/* LADO DIREITO: CONTROLES DE CARTAS + SETTINGS */}
           <View style={[styles.headerSide, { justifyContent: 'flex-end', gap: 10 }]}>
@@ -262,19 +268,19 @@ export const FodinhaScreen = () => {
                 const isCardsLocked = roundPhase !== 'betting';
                 
                 return (
-                    <View style={[styles.cardsControlContainer, isCardsLocked && { opacity: 0.5, backgroundColor: 'rgba(0,0,0,0.3)' }]}>
+                    <View style={[styles.cardsControlContainer, { backgroundColor: theme.colors.fodinha.cardBackground, borderColor: theme.colors.fodinha.divider }, isCardsLocked && { opacity: 0.5, backgroundColor: theme.colors.background.overlay }]}>
                         <TouchableOpacity 
                             onPress={() => setCardsInRound(prev => Math.max(1, prev - 1))} 
                             style={styles.cardsStepBtn}
                             hitSlop={{top: 10, bottom: 10, left: 5, right: 5}}
                             disabled={isCardsLocked}
                         >
-                            <Ionicons name="remove" size={14} color={isCardsLocked ? "#AAA" : "#FFF"} />
+                            <Ionicons name="remove" size={14} color={isCardsLocked ? theme.colors.text.secondary : theme.colors.text.white} />
                         </TouchableOpacity>
 
                         <View style={styles.cardsCenter}>
-                            <Ionicons name="documents-outline" size={12} color="#FFF" style={{ marginRight: 4 }} />
-                            <Text style={styles.badgeText}>{cardsInRound} CARTAS</Text>
+                            <Ionicons name="documents-outline" size={12} color={theme.colors.text.white} style={{ marginRight: 4 }} />
+                            <Text style={styles.badgeText}>{cardsInRound} {translate('fodinha.cards')}</Text>
                         </View>
 
                         <TouchableOpacity 
@@ -283,7 +289,7 @@ export const FodinhaScreen = () => {
                             hitSlop={{top: 10, bottom: 10, left: 5, right: 5}}
                             disabled={isCardsLocked}
                         >
-                            <Ionicons name="add" size={14} color={isCardsLocked ? "#AAA" : "#FFF"} />
+                            <Ionicons name="add" size={14} color={isCardsLocked ? theme.colors.text.secondary : theme.colors.text.white} />
                         </TouchableOpacity>
                     </View>
                 );
@@ -291,7 +297,7 @@ export const FodinhaScreen = () => {
 
             <View>
                 <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-                    <Ionicons name="settings-sharp" size={24} color="#FFF" />
+                    <Ionicons name="settings-sharp" size={24} color={theme.colors.text.white} />
                 </TouchableOpacity>
             </View>
           </View>
@@ -302,17 +308,17 @@ export const FodinhaScreen = () => {
             
             {/* COLUNA NOMES */}
             <View style={styles.namesColumn}>
-              <View style={styles.cellHeader}><Text style={styles.headerText}>JOGADOR</Text></View>
+              <View style={styles.cellHeader}><Text style={styles.headerText}>{translate('common.player').toUpperCase()}</Text></View>
               {players.map((p, index) => (
                 <View key={p.id}>
                     <TouchableOpacity
                         style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]}
                         onPress={() => { setEditingPlayerId(p.id); setShowEditName(true); }}
                     >
-                    <Text style={[styles.playerName, p.lives <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
+                    <Text style={[styles.playerName, { color: theme.colors.text.white }, p.lives <= 0 && styles.outText]} numberOfLines={1}>{p.name}</Text>
                     <View style={styles.livesContainer}>
                         <Ionicons name="heart" size={12} color={theme.colors.status.error} />
-                        <Text style={[styles.playerPoints, { color: '#FFF' }]}>{p.lives}</Text>
+                        <Text style={[styles.playerPoints, { color: theme.colors.text.white }]}>{p.lives}</Text>
                     </View>
                     </TouchableOpacity>
                 </View>
@@ -335,11 +341,11 @@ export const FodinhaScreen = () => {
                         const damage = p.history[rIdx];
                         const isSafe = damage === 0;
                         return (
-                            <View key={p.id} style={[styles.historyCell, { backgroundColor: 'rgba(0,0,0,0.2)' }]}>
+                            <View key={p.id} style={[styles.historyCell, { backgroundColor: theme.colors.fodinha.cardBackground }]}>
                             {isSafe ? (
-                                <View style={styles.safeDot} />
+                                <View style={[styles.safeDot, { backgroundColor: theme.colors.fodinha.safeDot }]} />
                             ) : (
-                                <Text style={styles.damageText}>-{damage}</Text>
+                                <Text style={[styles.damageText, { color: theme.colors.fodinha.damageText }]}>-{damage}</Text>
                             )}
                             </View>
                         );
@@ -350,35 +356,35 @@ export const FodinhaScreen = () => {
             </View>
 
             {/* COLUNA ATUAL */}
-            <View style={[styles.activeColumn, { backgroundColor: theme.colors.truco.cardBackground }]}>
-              <View style={[styles.cellHeaderActive, { backgroundColor: roundPhase === 'betting' ? '#FFD700' : theme.colors.neon.primary }]}>
-                <Text style={[styles.headerText, { color: '#000', fontWeight: 'bold' }]}>
-                    {roundPhase === 'betting' ? 'APOSTAS' : 'RESULTADO'}
+            <View style={[styles.activeColumn, { backgroundColor: theme.colors.truco.cardBackground, borderColor: theme.colors.fodinha.divider }]}>
+              <View style={[styles.cellHeaderActive, { backgroundColor: roundPhase === 'betting' ? theme.colors.status.warning : theme.colors.neon.primary }]}>
+                <Text style={[styles.headerText, { color: theme.colors.text.black, fontWeight: 'bold' }]}>
+                    {roundPhase === 'betting' ? translate('fodinha.bets') : translate('fodinha.results')}
                 </Text>
               </View>
 
               {players.map((p, index) => {
-                  if (p.lives <= 0) return <View key={p.id} style={styles.activeCell}><Text style={styles.outLabel}>ELIMINADO</Text></View>;
+                  if (p.lives <= 0) return <View key={p.id} style={styles.activeCell}><Text style={[styles.outLabel, { color: theme.colors.fodinha.eliminated }]}>{translate('fodinha.eliminated')}</Text></View>;
                   const projectedDamage = getProjectedDamage(p);
 
                   return (
-                    <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsTarget.ref : undefined} collapsable={false}>
-                        <View style={styles.stepperContainer}>
-                            <TouchableOpacity onPress={() => adjustValue(p.id, -1)} style={styles.stepBtn}>
-                                <Ionicons name="remove" size={16} color="#FFF" />
+                    <View key={p.id} style={[styles.activeCell, { borderBottomColor: theme.colors.fodinha.divider }]} ref={index === 0 ? actionsTarget.ref : undefined} collapsable={false}>
+                        <View style={[styles.stepperContainer, { backgroundColor: theme.colors.background.overlay }]}>
+                            <TouchableOpacity onPress={() => adjustValue(p.id, -1)} style={[styles.stepBtn, { backgroundColor: theme.colors.fodinha.divider }]}>
+                                <Ionicons name="remove" size={16} color={theme.colors.text.white} />
                             </TouchableOpacity>
-                            <Text style={styles.mainValue}>
+                            <Text style={[styles.mainValue, { color: theme.colors.text.white }]}>
                                 {roundPhase === 'betting' ? p.currentBid : p.currentWon}
                             </Text>
-                            <TouchableOpacity onPress={() => adjustValue(p.id, 1)} style={styles.stepBtn}>
-                                <Ionicons name="add" size={16} color="#FFF" />
+                            <TouchableOpacity onPress={() => adjustValue(p.id, 1)} style={[styles.stepBtn, { backgroundColor: theme.colors.fodinha.divider }]}>
+                                <Ionicons name="add" size={16} color={theme.colors.text.white} />
                             </TouchableOpacity>
                         </View>
                         {roundPhase === 'results' && (
                             <View style={styles.feedbackContainer}>
-                                <Text style={{ fontSize: 8, color: '#AAA', fontFamily: 'Minecraft' }}>APOSTOU: {p.currentBid}</Text>
+                                <Text style={{ fontSize: 8, color: theme.colors.text.secondary, fontFamily: 'Minecraft' }}>{translate('fodinha.bet')}: {p.currentBid}</Text>
                                 {projectedDamage > 0 ? (
-                                    <Text style={{ fontSize: 10, color: '#FF453A', fontFamily: 'Minecraft' }}>-{projectedDamage}</Text>
+                                    <Text style={{ fontSize: 10, color: theme.colors.fodinha.damageText, fontFamily: 'Minecraft' }}>-{projectedDamage}</Text>
                                 ) : (
                                     <Ionicons name="checkmark-circle" size={12} color={theme.colors.status.success} />
                                 )}
@@ -387,12 +393,12 @@ export const FodinhaScreen = () => {
                     </View>
                   );
               })}
-              <View style={styles.columnFooter}>
+              <View style={[styles.columnFooter, { backgroundColor: theme.colors.background.overlay }]}>
                   <Text style={[styles.footerInfo, { 
                       color: (roundPhase === 'betting' && totalBids === cardsInRound) || (roundPhase === 'results' && totalWon !== cardsInRound)
-                      ? '#FF453A' : '#FFF' 
+                      ? theme.colors.status.error : theme.colors.text.white
                   }]}>
-                      TOTAL: {roundPhase === 'betting' ? totalBids : totalWon}/{cardsInRound}
+                      {translate('fodinha.total')}: {roundPhase === 'betting' ? totalBids : totalWon}/{cardsInRound}
                   </Text>
               </View>
             </View>
@@ -402,7 +408,7 @@ export const FodinhaScreen = () => {
         <View style={styles.footer}>
           <View style={{ width: 250, height: 50 }}>
             <GameButton 
-                title={roundPhase === 'betting' ? "CONFIRMAR APOSTAS" : "FINALIZAR RODADA"} 
+                title={roundPhase === 'betting' ? translate('fodinha.confirm_bets') : translate('fodinha.finish_round')}
                 onPress={handlePhaseChange} 
                 variant={roundPhase === 'betting' ? 'secondary' : 'primary'}
             />
@@ -413,7 +419,7 @@ export const FodinhaScreen = () => {
 
       {/* OVERLAY: EDITAR HISTÓRICO (NOVO) */}
       {showEditHistory && editingRoundIdx !== null && (
-        <View style={styles.absoluteOverlay}>
+        <View style={[styles.absoluteOverlay, { backgroundColor: theme.colors.background.overlay }]}>
 
             <TouchableOpacity 
                 style={StyleSheet.absoluteFill} 
@@ -421,11 +427,11 @@ export const FodinhaScreen = () => {
                 onPress={() => setShowEditHistory(false)}
             />
 
-            <View style={[styles.overlayContent, { width: '50%', maxHeight: '85%', backgroundColor: theme.colors.background.secondary }]}>
+            <View style={[styles.overlayContent, { width: '50%', maxHeight: '85%', backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.text.secondary }]}>
                 
                 <View style={styles.modalHeader}>
                     <Text style={[styles.overlayTitle, { color: theme.colors.text.primary }]}>
-                        EDITAR RODADA {editingRoundIdx + 1}
+                        {translate('common.edit_round', { index: editingRoundIdx + 1 })}
                     </Text>
                     <TouchableOpacity onPress={() => setShowEditHistory(false)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
                         <Ionicons name="close" size={24} color={theme.colors.text.primary} />
@@ -433,7 +439,7 @@ export const FodinhaScreen = () => {
                 </View>
 
                 <Text style={{ color: theme.colors.text.secondary, textAlign: 'center', fontSize: 10, marginBottom: 10, fontFamily: 'Minecraft' }}>
-                    Ajuste quanto cada jogador perdeu nesta rodada.
+                    {translate('fodinha.edit_round_instruction')}
                 </Text>
 
                 {/* SCROLL AREA LIBERADA */}
@@ -446,20 +452,20 @@ export const FodinhaScreen = () => {
                         {players.map(p => {
                             const damage = p.history[editingRoundIdx] || 0;
                             return (
-                                <View key={p.id} style={styles.editHistoryRow}>
+                                <View key={p.id} style={[styles.editHistoryRow, { borderBottomColor: theme.colors.fodinha.divider }]}>
                                     <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12, flex: 1 }}>{p.name}</Text>
                                     
-                                    <View style={styles.stepperContainer}>
-                                        <TouchableOpacity onPress={() => adjustHistoryDamage(p.id, -1)} style={styles.stepBtn} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                                            <Ionicons name="remove" size={16} color="#FFF" />
+                                    <View style={[styles.stepperContainer, { backgroundColor: theme.colors.background.overlay }]}>
+                                        <TouchableOpacity onPress={() => adjustHistoryDamage(p.id, -1)} style={[styles.stepBtn, { backgroundColor: theme.colors.fodinha.divider }]} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                                            <Ionicons name="remove" size={16} color={theme.colors.text.white} />
                                         </TouchableOpacity>
                                         
-                                        <Text style={[styles.mainValue, { color: damage > 0 ? '#FF453A' : '#32D74B' }]}>
+                                        <Text style={[styles.mainValue, { color: damage > 0 ? theme.colors.fodinha.damageText : theme.colors.status.success }]}>
                                             {damage > 0 ? `-${damage}` : 'OK'}
                                         </Text>
 
-                                        <TouchableOpacity onPress={() => adjustHistoryDamage(p.id, 1)} style={styles.stepBtn} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                                            <Ionicons name="add" size={16} color="#FFF" />
+                                        <TouchableOpacity onPress={() => adjustHistoryDamage(p.id, 1)} style={[styles.stepBtn, { backgroundColor: theme.colors.fodinha.divider }]} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                                            <Ionicons name="add" size={16} color={theme.colors.text.white} />
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -468,13 +474,13 @@ export const FodinhaScreen = () => {
                     </ScrollView>
                 </View>
 
-                <View style={styles.modalFooterRow}>
+                <View style={[styles.modalFooterRow, { borderTopColor: theme.colors.fodinha.divider }]}>
                         <TouchableOpacity onPress={deleteRound} style={{ padding: 10 }}>
-                        <Text style={{ color: '#FF3B30', fontFamily: 'Minecraft', fontSize: 12, textDecorationLine: 'underline' }}>EXCLUIR RODADA</Text>
+                        <Text style={{ color: theme.colors.status.error, fontFamily: 'Minecraft', fontSize: 12, textDecorationLine: 'underline' }}>{translate('cacheta.delete_round')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={() => setShowEditHistory(false)} style={[styles.saveBtnSmall, { backgroundColor: theme.colors.brand.primary }]}>
-                        <Text style={{ color: '#FFF', fontFamily: 'Minecraft' }}>CONCLUIR</Text>
+                        <Text style={{ color: theme.colors.text.white, fontFamily: 'Minecraft' }}>{translate('common.save')}</Text>
                         </TouchableOpacity>
                 </View>
 
@@ -520,10 +526,8 @@ const styles = StyleSheet.create({
   cardsControlContainer: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: 'rgba(255,255,255,0.15)', 
     borderRadius: 10, 
     borderWidth: 1, 
-    borderColor: 'rgba(255,255,255,0.1)',
     height: 30
   },
   cardsStepBtn: { 
@@ -543,33 +547,33 @@ const styles = StyleSheet.create({
   cellHeader: { height: 30, justifyContent: 'center', alignItems: 'center' },
   headerText: { fontSize: 10, fontFamily: 'Minecraft', color: '#888' },
   playerCell: { height: 60, paddingHorizontal: 10, justifyContent: 'center', marginBottom: 4, borderRadius: 10 },
-  playerName: { color: '#FFF', fontFamily: 'Minecraft', fontSize: 11, marginBottom: 4 },
+  playerName: { fontFamily: 'Minecraft', fontSize: 11, marginBottom: 4 },
   livesContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   playerPoints: { fontSize: 14, fontFamily: 'Minecraft' },
   outText: { textDecorationLine: 'line-through', opacity: 0.5 },
   addBtn: { height: 40, justifyContent: 'center', alignItems: 'center' },
   historyColumn: { width: 40, alignItems: 'center' },
   historyCell: { width: 34, height: 60, justifyContent: 'center', alignItems: 'center', marginBottom: 4, borderRadius: 6 },
-  safeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#32D74B' }, 
-  damageText: { color: '#FF453A', fontFamily: 'Minecraft', fontSize: 12 },
-  activeColumn: { marginLeft: 15, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', alignSelf: 'flex-start', minWidth: 160 },
+  safeDot: { width: 8, height: 8, borderRadius: 4 },
+  damageText: { fontFamily: 'Minecraft', fontSize: 12 },
+  activeColumn: { marginLeft: 15, borderRadius: 12, overflow: 'hidden', borderWidth: 1, alignSelf: 'flex-start', minWidth: 160 },
   cellHeaderActive: { height: 30, justifyContent: 'center', alignItems: 'center' },
-  activeCell: { height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
-  stepperContainer: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: 4, minWidth: 120, justifyContent: 'center' },
-  stepBtn: { width: 24, height: 24, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 4 },
-  mainValue: { color: '#FFF', fontFamily: 'Minecraft', fontSize: 18, width: 50, textAlign: 'center' },
+  activeCell: { height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, marginBottom: 4, borderBottomWidth: 1 },
+  stepperContainer: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 8, padding: 4, minWidth: 120, justifyContent: 'center' },
+  stepBtn: { width: 24, height: 24, justifyContent: 'center', alignItems: 'center', borderRadius: 4 },
+  mainValue: { fontFamily: 'Minecraft', fontSize: 18, width: 50, textAlign: 'center' },
   feedbackContainer: { alignItems: 'flex-end', marginLeft: 10 },
-  outLabel: { color: '#FF3B30', fontFamily: 'Minecraft', fontSize: 10 },
-  columnFooter: { padding: 5, alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' },
+  outLabel: { fontFamily: 'Minecraft', fontSize: 10 },
+  columnFooter: { padding: 5, alignItems: 'center' },
   footerInfo: { fontFamily: 'Minecraft', fontSize: 10 },
   footer: { height: 60, justifyContent: 'center', alignItems: 'center' },
   
   // Overlay Styles
-  absoluteOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', zIndex: 999 },
-  overlayContent: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#444' },
+  absoluteOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 999 },
+  overlayContent: { padding: 20, borderRadius: 20, borderWidth: 1 },
   overlayTitle: { fontFamily: 'Minecraft', fontSize: 14, textAlign: 'center' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  editHistoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
-  modalFooterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
+  editHistoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, paddingBottom: 8, borderBottomWidth: 1 },
+  modalFooterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, paddingTop: 10, borderTopWidth: 1 },
   saveBtnSmall: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8 },
 });

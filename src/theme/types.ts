@@ -3,11 +3,14 @@ export interface ThemeColors {
     primary: string;
     secondary: string;
     darkVoid: string;
+    overlay: string; // New: for generic overlays
   };
   text: {
     primary: string;
     secondary: string;
     inverse: string;
+    white: string; // New: explicit white
+    black: string; // New: explicit black
   };
   brand: {
     primary: string;
@@ -15,6 +18,7 @@ export interface ThemeColors {
   status: {
     error: string;
     success: string;
+    warning: string; // New: for gold/yellow states
   };
   neon: {
     primary: string;
@@ -26,6 +30,10 @@ export interface ThemeColors {
     titleOutline: string;
     buttonBackground: string;
     buttonBorder: string;
+    buttonSecondary: string; // New
+    buttonSecondaryBorder: string; // New
+    buttonDestructive: string; // New
+    buttonDestructiveBorder: string; // New
     titleBackground: string;
   };
   icon: {
@@ -54,6 +62,9 @@ export interface ThemeColors {
     graphBarUs: string;
     graphBarThem: string;
     trophy: string;
+    teamUs: string; // New
+    teamThem: string; // New
+    divider: string; // New
   };
   cacheta: {
     win: string;
@@ -61,6 +72,15 @@ export interface ThemeColors {
     loss: string;
     playerCard: string;
     activeRound: string;
+    text: string; // New: for text inside cards
+  };
+  fodinha: {
+    cardBackground: string; // New
+    damageText: string; // New
+    safeDot: string; // New
+    eliminated: string; // New
+    divider: string; // New
+    countColor: string; // New: for total counts
   };
 }
 

@@ -25,8 +25,8 @@ export const TrucoScreen = () => {
   const navigation = useNavigation();
 
   // CORES DOS TIMES
-  const COLOR_THEM = '#FF453A';
-  const COLOR_US = '#32D74B';
+  const COLOR_THEM = theme.colors.truco.teamThem;
+  const COLOR_US = theme.colors.truco.teamUs;
 
   // --- ESTADOS ---
   const [scoreUs, setScoreUs] = useState(0);
@@ -238,12 +238,12 @@ export const TrucoScreen = () => {
 
                 <View style={styles.hintsOverlay}>
                    <View style={styles.hintBox}>
-                      <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.2)" />
-                      <Text style={styles.hintText}>+{trucoValue}</Text>
+                      <Ionicons name="chevron-up" size={16} color={theme.colors.truco.divider} />
+                      <Text style={[styles.hintText, { color: theme.colors.text.white }]}>+{trucoValue}</Text>
                    </View>
                    <View style={styles.hintBox}>
-                      <Text style={styles.hintText}>-{baseValue}</Text>
-                      <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.2)" />
+                      <Text style={[styles.hintText, { color: theme.colors.text.white }]}>-{baseValue}</Text>
+                      <Ionicons name="chevron-down" size={16} color={theme.colors.truco.divider} />
                    </View>
                 </View>
              </Animated.View>
@@ -263,7 +263,7 @@ export const TrucoScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
             <Ionicons name="arrow-back" size={24} color={theme.colors.text.inverse} />
           </TouchableOpacity>
-          <Text style={styles.gameTitle}>TRUCO {gameMode.toUpperCase()}</Text>
+          <Text style={[styles.gameTitle, { color: theme.colors.text.white }]}>TRUCO {translate(`truco.${gameMode}` as any).toUpperCase()}</Text>
           <View>
               <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
                 <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
@@ -273,7 +273,7 @@ export const TrucoScreen = () => {
 
         <View style={styles.scoreboardRow}>
           <TeamScoreArea team="them" score={scoreThem} name={nameThem} wins={matchWinsThem} color={COLOR_THEM} />
-          <View style={styles.verticalDivider} />
+          <View style={[styles.verticalDivider, { backgroundColor: theme.colors.truco.divider }]} />
           <TeamScoreArea
             team="us"
             score={scoreUs}
@@ -284,7 +284,7 @@ export const TrucoScreen = () => {
           />
         </View>
 
-        <View style={styles.footerHistory}>
+        <View style={[styles.footerHistory, { borderTopColor: theme.colors.truco.divider }]}>
            <MatchHistoryGraph 
               history={pointHistory} 
               colorThem={COLOR_THEM}
@@ -326,7 +326,7 @@ export const TrucoScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, height: 50 },
-  gameTitle: { fontFamily: 'Minecraft', fontSize: 20, color: '#FFF', letterSpacing: 1 },
+  gameTitle: { fontFamily: 'Minecraft', fontSize: 20, letterSpacing: 1 },
   iconBtn: { padding: 8 },
   scoreboardRow: { flex: 1, flexDirection: 'row' },
   teamColumn: { flex: 1, height: '100%', position: 'relative' },
@@ -345,9 +345,9 @@ const styles = StyleSheet.create({
     textShadowOffset: {width: 4, height: 4}, 
     textShadowRadius: 1 
   },
-  verticalDivider: { width: 1, height: '70%', backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'center' },
-  footerHistory: { height: 80, width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', paddingBottom: 5 },
+  verticalDivider: { width: 1, height: '70%', alignSelf: 'center' },
+  footerHistory: { height: 80, width: '100%', borderTopWidth: 1, justifyContent: 'center', paddingBottom: 5 },
   hintsOverlay: { position: 'absolute', right: 0, left: 0, top: 40, bottom: 40, justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' },
   hintBox: { alignItems: 'center', opacity: 0.3 },
-  hintText: { fontSize: 10, fontFamily: 'Minecraft', color: '#FFF' }
+  hintText: { fontSize: 10, fontFamily: 'Minecraft' }
 });
