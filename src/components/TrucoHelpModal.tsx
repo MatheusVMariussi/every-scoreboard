@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
+import { translate } from '../i18n';
 
 interface TrucoHelpModalProps {
   visible: boolean;
@@ -27,23 +28,23 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
 
   const steps = [
     {
-      title: 'OBJETIVO',
+      title: translate('truco.help.objective_title'),
       content: (
         <View style={styles.stepContainer}>
           <Text style={styles.text}>
-            O Truco é disputado em duplas. O objetivo é ser a primeira dupla a alcançar 12 ou 24 pontos.
+            {translate('truco.help.objective_text_1', { points: '12' })}
           </Text>
           <Text style={styles.text}>
-            A partida é dividida em "Mãos". Cada mão vale inicialmente 1 ponto no truco Paulista, e 2 pontos no truco Mineiro, e é geralmente disputada em uma "melhor de três" rodadas.
+             {translate('truco.help.objective_text_2', { points: gameMode === 'paulista' ? '1' : '2' })}
           </Text>
           <View style={styles.exampleRow}>
             <View style={styles.miniScoreboard}>
-                <Text style={styles.miniScoreTitle}>NÓS</Text>
+                <Text style={styles.miniScoreTitle}>{translate('truco.us')}</Text>
                 <Text style={styles.miniScoreVal}>09</Text>
             </View>
             <Text style={styles.vs}>VS</Text>
             <View style={styles.miniScoreboard}>
-                <Text style={styles.miniScoreTitle}>ELES</Text>
+                <Text style={styles.miniScoreTitle}>{translate('truco.them')}</Text>
                 <Text style={styles.miniScoreVal}>11</Text>
             </View>
           </View>
@@ -51,11 +52,11 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
       )
     },
     {
-      title: 'FORÇA DAS CARTAS',
+      title: translate('truco.help.cards_title'),
       content: (
         <View style={styles.stepContainer}>
           <Text style={styles.text}>
-            A hierarquia básica das cartas (da mais forte para a mais fraca) é:
+            {translate('truco.help.cards_text')}
           </Text>
           <View style={styles.cardsRow}>
             <Card value="3" suit="♣" highlight />
@@ -72,43 +73,47 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
             <Card value="4" suit="♦" />
           </View>
           <Text style={styles.note}>
-            * No "Baralho Comum", retiram-se as cartas 8, 9 e 10, e os coringas.
+            {translate('truco.help.cards_note')}
           </Text>
         </View>
       )
     },
     {
-      title: 'MANILHAS',
+      title: translate('truco.help.manilhas_title'),
       content: (
         <View style={styles.stepContainer}>
           <Text style={styles.text}>
-            As Manilhas são as cartas mais fortes do jogo, superando qualquer outra (inclusive o 3).
+            {translate('truco.help.manilhas_text')}
           </Text>
 
-                <Text style={styles.subTitle}>Manilha Variável (Vira)</Text>
+          {gameMode === 'paulista' ? (
+             <>
+                <Text style={styles.subTitle}>{translate('truco.help.manilha_variable_title')}</Text>
                 <Text style={styles.text}>
-                  No Truco Paulista, vira-se uma carta. A manilha será a carta imediatamente superior a ela.
+                  {translate('truco.help.manilha_variable_text')}
                 </Text>
                 <View style={styles.exampleBox}>
-                   <Text style={styles.exampleText}>Se virar um:</Text>
+                   <Text style={styles.exampleText}>{translate('truco.help.manilha_example_if')}</Text>
                    <Card value="A" suit="♥" />
-                   <Text style={styles.exampleText}>A manilha é:</Text>
+                   <Text style={styles.exampleText}>{translate('truco.help.manilha_example_is')}</Text>
                    <Card value="2" suit="♣" isManilha />
                 </View>
-                <Text style={styles.text}>Ordem de força (Nipes):</Text>
+                <Text style={styles.text}>{translate('truco.help.suits_order')}</Text>
                 <View style={styles.suitsOrder}>
-                    <Text style={styles.suitIcon}>♣ Paus</Text>
-                    <Ionicons name="chevron-forward" size={8} color="#666" />
-                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♥ Copas</Text>
-                    <Ionicons name="chevron-forward" size={8} color="#666" />
-                    <Text style={styles.suitIcon}>♠ Espadas</Text>
-                    <Ionicons name="chevron-forward" size={8} color="#666" />
-                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♦ Ouro</Text>
+                    <Text style={styles.suitIcon}>♣ (Zap)</Text>
+                    <Ionicons name="chevron-forward" size={16} color="#666" />
+                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♥ (Copas)</Text>
+                    <Ionicons name="chevron-forward" size={16} color="#666" />
+                    <Text style={styles.suitIcon}>♠ (Espadilha)</Text>
+                    <Ionicons name="chevron-forward" size={16} color="#666" />
+                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♦ (Pica-Fumo)</Text>
                 </View>
-                <Text> </Text>
-                <Text style={styles.subTitle}>Manilhas Fixas</Text>
+             </>
+          ) : (
+             <>
+                <Text style={styles.subTitle}>{translate('truco.help.manilha_fixed_title')}</Text>
                 <Text style={styles.text}>
-                  No Truco Mineiro, as manilhas são sempre as mesmas:
+                  {translate('truco.help.manilha_fixed_text')}
                 </Text>
                 <View style={styles.cardsRow}>
                   <Card value="4" suit="♣" isManilha />
@@ -119,44 +124,46 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
                 <Text style={styles.text}>
                    (Zap &gt; 7 Copas &gt; Espadilha &gt; 7 Ouros)
                 </Text>
-
+             </>
+          )}
         </View>
       )
     },
     {
-      title: 'PEDIDOS E PONTOS',
+      title: translate('truco.help.points_title'),
       content: (
         <View style={styles.stepContainer}>
           <Text style={styles.text}>
-            A qualquer momento na sua vez, um jogador pode pedir "TRUCO" (ou aumentar a aposta).
+             {translate('truco.help.points_text')}
           </Text>
           <View style={styles.tablePoints}>
             <View style={styles.rowPoint}>
-               <Text style={styles.lbl}>Mão Normal:</Text>
-               <Text style={styles.val}>{'1 tento'}</Text>
+               <Text style={styles.lbl}>{translate('truco.help.points_table_hand')}</Text>
+               <Text style={styles.val}>
+                   {gameMode === 'paulista'
+                     ? translate('truco.help.tento_one')
+                     : translate('truco.help.tentos', { count: 2 })}
+               </Text>
             </View>
             <View style={styles.rowPoint}>
-               <Text style={styles.lbl}>Truco:</Text>
-               <Text style={styles.val}>{'3 tentos'}</Text>
+               <Text style={styles.lbl}>{translate('truco.help.points_table_truco')}</Text>
+               <Text style={styles.val}>{translate('truco.help.tentos', { count: gameMode === 'paulista' ? 3 : 4 })}</Text>
             </View>
             <View style={styles.rowPoint}>
-               <Text style={styles.lbl}>Seis:</Text>
-               <Text style={styles.val}>{'8 tentos'}</Text>
+               <Text style={styles.lbl}>{translate('truco.help.points_table_six')}</Text>
+               <Text style={styles.val}>{translate('truco.help.tentos', { count: 6 })}</Text>
             </View>
             <View style={styles.rowPoint}>
-               <Text style={styles.lbl}>Nove:</Text>
-               <Text style={styles.val}>{'9 tentos'}</Text>
+               <Text style={styles.lbl}>{translate('truco.help.points_table_nine')}</Text>
+               <Text style={styles.val}>{translate('truco.help.tentos', { count: gameMode === 'paulista' ? 9 : 10 })}</Text>
             </View>
             <View style={styles.rowPoint}>
-               <Text style={styles.lbl}>Doze:</Text>
-               <Text style={styles.val}>{'12 tentos'}</Text>
+               <Text style={styles.lbl}>{translate('truco.help.points_table_twelve')}</Text>
+               <Text style={styles.val}>{translate('truco.help.tentos', { count: 12 })}</Text>
             </View>
           </View>
           <Text style={styles.text}>
-            Se a dupla adversária recusar o pedido, eles perdem a mão e a dupla que pediu ganha os pontos que estavam valendo antes do aumento.
-          </Text>
-          <Text style={styles.text}>
-            No Truco mineiro, os valores são dobrados (Mão Normal vale 2, Truco vale 4, na sequencia 6, 8, 10..).
+            {translate('truco.help.points_refuse_text')}
           </Text>
         </View>
       )
@@ -179,7 +186,7 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>COMO JOGAR</Text>
+            <Text style={styles.headerTitle}>{translate('truco.help.title')}</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close-circle" size={32} color="#333" />
             </TouchableOpacity>
@@ -198,7 +205,7 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
                 onPress={handleBack}
                 disabled={step === 0}
              >
-                <Text style={styles.navText}>Anterior</Text>
+                <Text style={styles.navText}>{translate('common.previous')}</Text>
              </TouchableOpacity>
 
              <View style={styles.dots}>
@@ -209,7 +216,7 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
 
              <TouchableOpacity style={[styles.navBtn, styles.primaryBtn]} onPress={handleNext}>
                 <Text style={[styles.navText, styles.primaryText]}>
-                    {step === steps.length - 1 ? 'Entendi' : 'Próximo'}
+                    {step === steps.length - 1 ? translate('common.got_it') : translate('common.next')}
                 </Text>
              </TouchableOpacity>
           </View>
