@@ -15,6 +15,7 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { CachetaSettingsModal } from '../components/CachetaSettingsModal';
+import { CachetaHelpModal } from '../components/CachetaHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
@@ -52,6 +53,7 @@ export const CachetaScreen = () => {
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
 
   // Tutorial State
   const [tutorialActive, setTutorialActive] = useState(false);
@@ -301,8 +303,14 @@ export const CachetaScreen = () => {
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
         onReset={handleReset}
+        onOpenHelp={() => { setSettingsVisible(false); setHelpVisible(true); }}
         initialPoints={initialPoints}
         setInitialPoints={setInitialPoints}
+      />
+
+      <CachetaHelpModal
+        visible={helpVisible}
+        onClose={() => { setHelpVisible(false); setSettingsVisible(true); }}
       />
 
       <EditNameModal 

@@ -128,6 +128,21 @@ export default {
       fold: 'F',
       lost: 'L',
       won: 'W'
+    },
+    help: {
+      title: 'HOW TO PLAY',
+      objective_title: 'OBJECTIVE',
+      objective_text: 'The goal is to keep your score above zero. The game ends when only one player remains with points.',
+      scoring_title: 'SCORING',
+      scoring_text: 'Each round, points are deducted according to the player\'s result:',
+      won_title: 'WON',
+      won_text: 'The winner of the round loses no points.',
+      fold_title: 'FOLDED',
+      fold_text: 'Who folds (gives up the hand) loses 1 point.',
+      lost_title: 'LOST',
+      lost_text: 'Who plays the hand to the end and does not win, loses 2 points.',
+      elimination_title: 'ELIMINATION',
+      elimination_text: 'When a player\'s score reaches 0, they are eliminated from the game.',
     }
   },
   fodinha: {

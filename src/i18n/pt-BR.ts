@@ -128,6 +128,21 @@ export default {
       fold: 'C',
       lost: 'P',
       won: 'G'
+    },
+    help: {
+      title: 'COMO JOGAR',
+      objective_title: 'OBJETIVO',
+      objective_text: 'O objetivo é manter sua pontuação acima de zero. O jogo termina quando restar apenas um jogador com pontos.',
+      scoring_title: 'PONTUAÇÃO',
+      scoring_text: 'A cada rodada, os pontos são descontados de acordo com o resultado do jogador:',
+      won_title: 'GANHOU',
+      won_text: 'Quem bate (ganha a rodada) não perde pontos.',
+      fold_title: 'CORREU',
+      fold_text: 'Quem corre (desiste da mão) perde 1 ponto.',
+      lost_title: 'PERDEU',
+      lost_text: 'Quem joga a mão até o fim e não ganha, perde 2 pontos.',
+      elimination_title: 'ELIMINAÇÃO',
+      elimination_text: 'Quando a pontuação de um jogador chega a 0, ele é eliminado do jogo.',
     }
   },
   fodinha: {
