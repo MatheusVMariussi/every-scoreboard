@@ -12,6 +12,7 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { FodinhaSettingsModal } from '../components/FodinhaSettingsModal';
+import { FodinhaHelpModal } from '../components/FodinhaHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 
@@ -46,7 +47,9 @@ export const FodinhaScreen = () => {
   // MODAIS
   const [showEditName, setShowEditName] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
   
   // MODAL DE EDIÇÃO DE HISTÓRICO
   const [showEditHistory, setShowEditHistory] = useState(false);
@@ -492,10 +495,16 @@ export const FodinhaScreen = () => {
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
         onReset={handleReset}
+        onOpenHelp={() => { setSettingsVisible(false); setHelpVisible(true); }}
         initialLives={initialLives}
         setInitialLives={setInitialLives}
         penaltyMode={penaltyMode}
         setPenaltyMode={setPenaltyMode}
+      />
+
+      <FodinhaHelpModal
+        visible={helpVisible}
+        onClose={() => { setHelpVisible(false); setSettingsVisible(true); }}
       />
 
       <EditNameModal 
