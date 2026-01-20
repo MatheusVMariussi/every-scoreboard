@@ -31,10 +31,10 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
       content: (
         <View style={styles.stepContainer}>
           <Text style={styles.text}>
-            O Truco é disputado em duplas. O objetivo é ser a primeira dupla a alcançar {gameMode === 'paulista' ? '12' : '12'} pontos.
+            O Truco é disputado em duplas. O objetivo é ser a primeira dupla a alcançar 12 ou 24 pontos.
           </Text>
           <Text style={styles.text}>
-            A partida é dividida em "Mãos". Cada mão vale inicialmente {gameMode === 'paulista' ? '1' : '2'} ponto(s) e é disputada em uma "melhor de três" rodadas.
+            A partida é dividida em "Mãos". Cada mão vale inicialmente 1 ponto no truco Paulista, e 2 pontos no truco Mineiro, e é geralmente disputada em uma "melhor de três" rodadas.
           </Text>
           <View style={styles.exampleRow}>
             <View style={styles.miniScoreboard}>
@@ -72,7 +72,7 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
             <Card value="4" suit="♦" />
           </View>
           <Text style={styles.note}>
-            * No "Baralho Limpo", retiram-se os 7, 6, 5 e 4 (exceto se forem manilhas).
+            * No "Baralho Comum", retiram-se as cartas 8, 9 e 10, e os coringas.
           </Text>
         </View>
       )
@@ -85,8 +85,6 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
             As Manilhas são as cartas mais fortes do jogo, superando qualquer outra (inclusive o 3).
           </Text>
 
-          {gameMode === 'paulista' ? (
-             <>
                 <Text style={styles.subTitle}>Manilha Variável (Vira)</Text>
                 <Text style={styles.text}>
                   No Truco Paulista, vira-se uma carta. A manilha será a carta imediatamente superior a ela.
@@ -99,17 +97,15 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
                 </View>
                 <Text style={styles.text}>Ordem de força (Nipes):</Text>
                 <View style={styles.suitsOrder}>
-                    <Text style={styles.suitIcon}>♣ (Zap)</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#666" />
-                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♥ (Copas)</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#666" />
-                    <Text style={styles.suitIcon}>♠ (Espadilha)</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#666" />
-                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♦ (Pica-Fumo)</Text>
+                    <Text style={styles.suitIcon}>♣ Paus</Text>
+                    <Ionicons name="chevron-forward" size={8} color="#666" />
+                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♥ Copas</Text>
+                    <Ionicons name="chevron-forward" size={8} color="#666" />
+                    <Text style={styles.suitIcon}>♠ Espadas</Text>
+                    <Ionicons name="chevron-forward" size={8} color="#666" />
+                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♦ Ouro</Text>
                 </View>
-             </>
-          ) : (
-             <>
+                <Text> </Text>
                 <Text style={styles.subTitle}>Manilhas Fixas</Text>
                 <Text style={styles.text}>
                   No Truco Mineiro, as manilhas são sempre as mesmas:
@@ -123,8 +119,7 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
                 <Text style={styles.text}>
                    (Zap &gt; 7 Copas &gt; Espadilha &gt; 7 Ouros)
                 </Text>
-             </>
-          )}
+
         </View>
       )
     },
@@ -138,27 +133,30 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
           <View style={styles.tablePoints}>
             <View style={styles.rowPoint}>
                <Text style={styles.lbl}>Mão Normal:</Text>
-               <Text style={styles.val}>{gameMode === 'paulista' ? '1 tento' : '2 tentos'}</Text>
+               <Text style={styles.val}>{'1 tento'}</Text>
             </View>
             <View style={styles.rowPoint}>
                <Text style={styles.lbl}>Truco:</Text>
-               <Text style={styles.val}>{gameMode === 'paulista' ? '3 tentos' : '4 tentos'}</Text>
+               <Text style={styles.val}>{'3 tentos'}</Text>
             </View>
             <View style={styles.rowPoint}>
                <Text style={styles.lbl}>Seis:</Text>
-               <Text style={styles.val}>{gameMode === 'paulista' ? '6 tentos' : '6 tentos'}</Text>
+               <Text style={styles.val}>{'8 tentos'}</Text>
             </View>
             <View style={styles.rowPoint}>
                <Text style={styles.lbl}>Nove:</Text>
-               <Text style={styles.val}>{gameMode === 'paulista' ? '9 tentos' : '10 tentos'}</Text>
+               <Text style={styles.val}>{'9 tentos'}</Text>
             </View>
             <View style={styles.rowPoint}>
                <Text style={styles.lbl}>Doze:</Text>
-               <Text style={styles.val}>12 tentos</Text>
+               <Text style={styles.val}>{'12 tentos'}</Text>
             </View>
           </View>
           <Text style={styles.text}>
             Se a dupla adversária recusar o pedido, eles perdem a mão e a dupla que pediu ganha os pontos que estavam valendo antes do aumento.
+          </Text>
+          <Text style={styles.text}>
+            No Truco mineiro, os valores são dobrados (Mão Normal vale 2, Truco vale 4, na sequencia 6, 8, 10..).
           </Text>
         </View>
       )
