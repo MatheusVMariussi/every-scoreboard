@@ -36,11 +36,15 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
     {
       title: translate('cacheta.help.objective_title'),
       content: (
-        <View style={styles.stepContainer}>
-          <Ionicons name="shield-checkmark-outline" size={60} color={theme.colors.brand.primary} style={{ marginBottom: 20 }} />
-          <Text style={[styles.text, { color: theme.colors.text.primary }]}>
-            {translate('cacheta.help.objective_text')}
-          </Text>
+        <View style={styles.stepContainerRow}>
+          <View style={styles.iconColumn}>
+            <Ionicons name="shield-checkmark-outline" size={80} color={theme.colors.brand.primary} />
+          </View>
+          <View style={styles.textColumn}>
+            <Text style={[styles.text, { color: theme.colors.text.primary }]}>
+              {translate('cacheta.help.objective_text')}
+            </Text>
+          </View>
         </View>
       )
     },
@@ -48,27 +52,34 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
       title: translate('cacheta.help.hands_title'),
       content: (
         <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary }]}>
+          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: 20 }]}>
             {translate('cacheta.help.hands_text')}
           </Text>
 
-          <View style={styles.handsContainer}>
-            <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('cacheta.help.sets_title')}</Text>
-            <Text style={[styles.subText, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.sets_text')}</Text>
-            <View style={styles.cardsRow}>
-              <Card value="7" suit="♥" />
-              <Card value="7" suit="♣" />
-              <Card value="7" suit="♠" />
+          <View style={styles.handsRow}>
+            {/* Column 1: Sets */}
+            <View style={styles.handColumn}>
+              <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('cacheta.help.sets_title')}</Text>
+              <Text style={[styles.subText, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.sets_text')}</Text>
+              <View style={styles.cardsRow}>
+                <Card value="7" suit="♥" />
+                <Card value="7" suit="♣" />
+                <Card value="7" suit="♠" />
+              </View>
             </View>
 
-            <View style={styles.divider} />
+            {/* Divider */}
+            <View style={styles.verticalDivider} />
 
-            <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('cacheta.help.runs_title')}</Text>
-            <Text style={[styles.subText, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.runs_text')}</Text>
-            <View style={styles.cardsRow}>
-              <Card value="4" suit="♦" />
-              <Card value="5" suit="♦" />
-              <Card value="6" suit="♦" />
+            {/* Column 2: Runs */}
+            <View style={styles.handColumn}>
+              <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('cacheta.help.runs_title')}</Text>
+              <Text style={[styles.subText, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.runs_text')}</Text>
+              <View style={styles.cardsRow}>
+                <Card value="4" suit="♦" />
+                <Card value="5" suit="♦" />
+                <Card value="6" suit="♦" />
+              </View>
             </View>
           </View>
         </View>
@@ -78,12 +89,12 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
       title: translate('cacheta.help.scoring_title'),
       content: (
         <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary }]}>
+          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: 20 }]}>
             {translate('cacheta.help.scoring_text')}
           </Text>
 
-          <View style={styles.scoringList}>
-              <View style={styles.scoringRow}>
+          <View style={styles.scoringGrid}>
+              <View style={styles.scoringItem}>
                   <Text style={[styles.scoringLabel, { color: theme.colors.cacheta.win }]}>{translate('cacheta.help.won_title')}</Text>
                   <ActionDisplay
                     label={translate('cacheta.actions.won')}
@@ -94,9 +105,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
                   <Text style={[styles.scoringDesc, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.won_text')}</Text>
               </View>
 
-              <View style={styles.divider} />
-
-              <View style={styles.scoringRow}>
+              <View style={styles.scoringItem}>
                   <Text style={[styles.scoringLabel, { color: theme.colors.cacheta.fold }]}>{translate('cacheta.help.fold_title')}</Text>
                   <ActionDisplay
                     label={translate('cacheta.actions.fold')}
@@ -107,9 +116,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
                   <Text style={[styles.scoringDesc, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.fold_text')}</Text>
               </View>
 
-              <View style={styles.divider} />
-
-              <View style={styles.scoringRow}>
+              <View style={styles.scoringItem}>
                   <Text style={[styles.scoringLabel, { color: theme.colors.cacheta.loss }]}>{translate('cacheta.help.lost_title')}</Text>
                   <ActionDisplay
                     label={translate('cacheta.actions.lost')}
@@ -126,18 +133,22 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
     {
       title: translate('cacheta.help.elimination_title'),
       content: (
-        <View style={styles.stepContainer}>
-           <Ionicons name="skull-outline" size={60} color={theme.colors.status.error} style={{ marginBottom: 20 }} />
-           <Text style={[styles.text, { color: theme.colors.text.primary }]}>
-             {translate('cacheta.help.elimination_text')}
-           </Text>
+        <View style={styles.stepContainerRow}>
+           <View style={styles.iconColumn}>
+             <Ionicons name="skull-outline" size={80} color={theme.colors.status.error} />
+           </View>
+           <View style={styles.textColumn}>
+             <Text style={[styles.text, { color: theme.colors.text.primary }]}>
+               {translate('cacheta.help.elimination_text')}
+             </Text>
 
-           <View style={styles.exampleBox}>
-               <Text style={[styles.exampleText, { color: theme.colors.text.secondary }]}>Ex: 10 Pts</Text>
-               <Ionicons name="arrow-forward" size={16} color={theme.colors.text.secondary} />
-               <Text style={[styles.exampleText, { color: theme.colors.status.error }]}>0 Pts</Text>
-               <Ionicons name="arrow-forward" size={16} color={theme.colors.text.secondary} />
-               <Text style={[styles.eliminatedText, { color: theme.colors.status.error }]}>{translate('cacheta.out_of_game')}</Text>
+             <View style={styles.exampleBox}>
+                 <Text style={[styles.exampleText, { color: theme.colors.text.secondary }]}>10 Pts</Text>
+                 <Ionicons name="arrow-forward" size={16} color={theme.colors.text.secondary} />
+                 <Text style={[styles.exampleText, { color: theme.colors.status.error }]}>0 Pts</Text>
+                 <Ionicons name="arrow-forward" size={16} color={theme.colors.text.secondary} />
+                 <Text style={[styles.eliminatedText, { color: theme.colors.status.error }]}>{translate('cacheta.out_of_game')}</Text>
+             </View>
            </View>
         </View>
       )
@@ -213,27 +224,34 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold' },
   scrollContent: { padding: 20 },
-  stepTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
+  stepTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
   stepContainer: { alignItems: 'center' },
-  text: { fontSize: 16, lineHeight: 24, marginBottom: 15, textAlign: 'center' },
 
-  // Hands
-  handsContainer: { width: '100%', alignItems: 'center', marginTop: 10 },
-  subTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
-  subText: { fontSize: 14, marginBottom: 10, textAlign: 'center', fontStyle: 'italic' },
+  // Row Layout Steps (Objective / Elimination)
+  stepContainerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, paddingHorizontal: 20 },
+  iconColumn: { width: '30%', alignItems: 'center' },
+  textColumn: { width: '70%' },
+  text: { fontSize: 16, lineHeight: 24, textAlign: 'center' },
+
+  // Hands Grid
+  handsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' },
+  handColumn: { flex: 1, alignItems: 'center', paddingHorizontal: 5 },
+  verticalDivider: { width: 1, backgroundColor: '#E0E0E0', height: '100%', marginHorizontal: 10 },
+
+  subTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
+  subText: { fontSize: 13, marginBottom: 10, textAlign: 'center', fontStyle: 'italic', minHeight: 40 },
   cardsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
 
-  // Scoring
-  scoringList: { width: '100%', marginTop: 10 },
-  scoringRow: { alignItems: 'center', marginBottom: 10 },
+  // Scoring Grid
+  scoringGrid: { flexDirection: 'row', width: '100%', justifyContent: 'space-around', alignItems: 'flex-start' },
+  scoringItem: { flex: 1, alignItems: 'center', paddingHorizontal: 5 },
   scoringLabel: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  scoringDesc: { fontSize: 14, textAlign: 'center', marginTop: 5 },
-  actionItem: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 5 },
+  scoringDesc: { fontSize: 13, textAlign: 'center', marginTop: 5 },
+  actionItem: { flexDirection: 'row', alignItems: 'center', gap: 5, marginVertical: 5 },
   pointsText: { fontSize: 24, fontWeight: 'bold', fontFamily: 'Minecraft' },
-  divider: { height: 1, backgroundColor: '#E0E0E0', width: '50%', alignSelf: 'center', marginVertical: 10 },
 
   // Elimination
-  exampleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20, padding: 15, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.05)' },
+  exampleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 15, padding: 10, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.05)', justifyContent: 'center' },
   exampleText: { fontSize: 16, fontWeight: 'bold', fontFamily: 'Minecraft' },
   eliminatedText: { fontSize: 16, fontWeight: 'bold', fontFamily: 'Minecraft' },
 
