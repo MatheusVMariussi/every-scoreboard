@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
+import { FodinhaHelpModal } from './FodinhaHelpModal';
 
 interface FodinhaSettingsModalProps {
   visible: boolean;
@@ -20,67 +21,89 @@ export const FodinhaSettingsModal = ({
   penaltyMode, setPenaltyMode
 }: FodinhaSettingsModalProps) => {
   const { theme } = useTheme();
+  const [showHelp, setShowHelp] = useState(false);
 
   const adjustLives = (amount: number) => {
     setInitialLives(Math.max(1, Math.min(50, initialLives + amount)));
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
-          <TouchableWithoutFeedback>
-            <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
-              
-              <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.colors.text.primary }]}>{translate('fodinha.settings_title')}</Text>
-                <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={theme.colors.text.primary} /></TouchableOpacity>
-              </View>
+    <>
+      <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
 
-              {/* VIDAS INICIAIS */}
-              <View style={styles.section}>
-                <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('fodinha.initial_lives')}</Text>
-                <View style={styles.counterRow}>
-                  <TouchableOpacity onPress={() => adjustLives(-1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay }]}>
-                    <Ionicons name="remove" size={24} color={theme.colors.text.primary} />
+                <View style={styles.header}>
+                  <Text style={[styles.title, { color: theme.colors.text.primary }]}>{translate('fodinha.settings_title')}</Text>
+                  <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={theme.colors.text.primary} /></TouchableOpacity>
+                </View>
+
+                {/* VIDAS INICIAIS */}
+                <View style={styles.section}>
+                  <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('fodinha.initial_lives')}</Text>
+                  <View style={styles.counterRow}>
+                    <TouchableOpacity onPress={() => adjustLives(-1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay }]}>
+                      <Ionicons name="remove" size={24} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
+                    <Text style={[styles.pointsValue, { color: theme.colors.truco.scoreText }]}>{initialLives}</Text>
+                    <TouchableOpacity onPress={() => adjustLives(1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay }]}>
+                      <Ionicons name="add" size={24} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* MODO DE PUNIÇÃO */}
+                <View style={styles.section}>
+                  <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('fodinha.penalty_mode')}</Text>
+                  <View style={styles.row}>
+                    <OptionBtn
+                      label={translate('fodinha.fixed')}
+                      subLabel={translate('fodinha.fixed_desc')}
+                      active={penaltyMode === 'fixed'}
+                      onPress={() => setPenaltyMode('fixed')}
+                      theme={theme}
+                    />
+                    <OptionBtn
+                      label={translate('fodinha.difference')}
+                      subLabel={translate('fodinha.difference_desc')}
+                      active={penaltyMode === 'difference'}
+                      onPress={() => setPenaltyMode('difference')}
+                      theme={theme}
+                    />
+                  </View>
+                </View>
+
+                <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
+
+                <View style={styles.actionsRow}>
+                  <TouchableOpacity
+                      style={[styles.actionBtn, { borderColor: theme.colors.text.secondary, borderWidth: 1 }]}
+                      onPress={() => setShowHelp(true)}
+                  >
+                      <Ionicons name="book-outline" size={20} color={theme.colors.text.primary} style={{ marginRight: 8 }} />
+                      <Text style={[styles.actionText, { color: theme.colors.text.primary }]}>
+                          {translate('common.how_to_play')}
+                      </Text>
                   </TouchableOpacity>
-                  <Text style={[styles.pointsValue, { color: theme.colors.truco.scoreText }]}>{initialLives}</Text>
-                  <TouchableOpacity onPress={() => adjustLives(1)} style={[styles.counterBtn, { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay }]}>
-                    <Ionicons name="add" size={24} color={theme.colors.text.primary} />
+
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: theme.colors.status.error }]}
+                    onPress={() => { onReset(); onClose(); }}
+                  >
+                    <Text style={[styles.actionText, { color: theme.colors.text.white }]}>{translate('common.reset_match').toUpperCase()}</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
 
-              {/* MODO DE PUNIÇÃO */}
-              <View style={styles.section}>
-                <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('fodinha.penalty_mode')}</Text>
-                <View style={styles.row}>
-                  <OptionBtn 
-                    label={translate('fodinha.fixed')}
-                    subLabel={translate('fodinha.fixed_desc')}
-                    active={penaltyMode === 'fixed'} 
-                    onPress={() => setPenaltyMode('fixed')} 
-                    theme={theme}
-                  />
-                  <OptionBtn 
-                    label={translate('fodinha.difference')}
-                    subLabel={translate('fodinha.difference_desc')}
-                    active={penaltyMode === 'difference'} 
-                    onPress={() => setPenaltyMode('difference')} 
-                    theme={theme}
-                  />
-                </View>
               </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
-              <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
-              <TouchableOpacity style={[styles.resetBtn, { backgroundColor: theme.colors.status.error }]} onPress={() => { onReset(); onClose(); }}>
-                <Text style={[styles.resetText, { color: theme.colors.text.white }]}>{translate('common.reset_match').toUpperCase()}</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+      <FodinhaHelpModal visible={showHelp} onClose={() => setShowHelp(false)} />
+    </>
   );
 };
 
@@ -106,6 +129,9 @@ const styles = StyleSheet.create({
   optText: { fontFamily: 'Minecraft', fontSize: 12, marginBottom: 4 },
   optSubText: { fontSize: 8, fontFamily: 'Minecraft', opacity: 0.6 },
   divider: { height: 1, marginBottom: 20, width: '100%' },
+  actionsRow: { flexDirection: 'row', gap: 10 },
+  actionBtn: { flex: 1, flexDirection: 'row', padding: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  actionText: { fontFamily: 'Minecraft', fontSize: 14 },
   resetBtn: { padding: 12, borderRadius: 10, alignItems: 'center', width: '100%' },
   resetText: { fontFamily: 'Minecraft', fontSize: 14 }
 });
