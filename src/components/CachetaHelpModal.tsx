@@ -51,7 +51,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
                   <ActionDisplay
                     label={translate('cacheta.actions.won')}
                     color={theme.colors.cacheta.win}
-                    points="-0"
+                    points="0"
                     theme={theme}
                   />
                   <Text style={[styles.scoringDesc, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.won_text')}</Text>
@@ -117,7 +117,13 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+      supportedOrientations={['landscape']}
+    >
       <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
         <View style={[styles.container, { backgroundColor: theme.colors.background.secondary }]}>
 
