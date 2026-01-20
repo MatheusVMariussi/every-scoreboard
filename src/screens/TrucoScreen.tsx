@@ -12,6 +12,7 @@ import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { TrucoSettingsModal } from '../components/TrucoSettingsModal';
 import { EditNameModal } from '../components/EditNameModal';
+import { TrucoHelpModal } from '../components/TrucoHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { MatchHistoryGraph, HistoryItem } from '../components/MatchHistoryGraph';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
@@ -45,6 +46,7 @@ export const TrucoScreen = () => {
   
   // Modais
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
   const [editNameVisible, setEditNameVisible] = useState(false);
   const [editingTeam, setEditingTeam] = useState<'us' | 'them'>('us');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -306,10 +308,17 @@ export const TrucoScreen = () => {
         visible={settingsVisible} 
         onClose={() => setSettingsVisible(false)} 
         onReset={() => resetGame(true)} 
+        onOpenHelp={() => { setSettingsVisible(false); setHelpVisible(true); }}
         gameMode={gameMode} 
         setGameMode={setGameMode}
         maxScore={maxScore}
         setMaxScore={setMaxScore}
+      />
+
+      <TrucoHelpModal
+        visible={helpVisible}
+        onClose={() => { setHelpVisible(false); setSettingsVisible(true); }}
+        gameMode={gameMode}
       />
       
       <EditNameModal 
