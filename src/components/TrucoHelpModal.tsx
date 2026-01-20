@@ -100,13 +100,13 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
                 </View>
                 <Text style={styles.text}>{translate('truco.help.suits_order')}</Text>
                 <View style={styles.suitsOrder}>
-                    <Text style={styles.suitIcon}>♣ (Zap)</Text>
+                    <Text style={styles.suitIcon}>♣ PAUS</Text>
                     <Ionicons name="chevron-forward" size={16} color="#666" />
-                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♥ (Copas)</Text>
+                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♥ COPAS</Text>
                     <Ionicons name="chevron-forward" size={16} color="#666" />
-                    <Text style={styles.suitIcon}>♠ (Espadilha)</Text>
+                    <Text style={styles.suitIcon}>♠ ESPADA</Text>
                     <Ionicons name="chevron-forward" size={16} color="#666" />
-                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♦ (Pica-Fumo)</Text>
+                    <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♦ OURO</Text>
                 </View>
              </>
           ) : (
@@ -151,7 +151,7 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
             </View>
             <View style={styles.rowPoint}>
                <Text style={styles.lbl}>{translate('truco.help.points_table_six')}</Text>
-               <Text style={styles.val}>{translate('truco.help.tentos', { count: 6 })}</Text>
+               <Text style={styles.val}>{translate('truco.help.tentos', { count: gameMode === 'paulista' ? 6 : 8 })}</Text>
             </View>
             <View style={styles.rowPoint}>
                <Text style={styles.lbl}>{translate('truco.help.points_table_nine')}</Text>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   exampleText: { fontSize: 14, color: '#333' },
 
   suitsOrder: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 },
-  suitIcon: { fontSize: 16, fontWeight: 'bold' },
+  suitIcon: { fontSize: 12, fontWeight: 'bold' },
 
   // Points Table
   tablePoints: { width: '100%', backgroundColor: '#FFF', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#E0E0E0' },
