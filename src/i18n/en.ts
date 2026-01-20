@@ -24,6 +24,7 @@ export default {
     confirm_reset_all: 'This will permanently delete all team names and histories. Continue?'
   },
   common: {
+    how_to_play: 'HOW TO PLAY',
     loading: 'Loading...',
     error: 'Something went wrong',
 

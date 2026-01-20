@@ -24,6 +24,7 @@ export default {
     confirm_reset_all: 'Isso apagará permanentemente todos os nomes de times e históricos. Continuar?'
   },
   common: {
+    how_to_play: 'COMO JOGAR',
     loading: 'Carregando...',
     error: 'Algo deu errado',
 
