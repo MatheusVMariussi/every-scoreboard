@@ -8,12 +8,13 @@ interface CachetaSettingsModalProps {
   visible: boolean;
   onClose: () => void;
   onReset: () => void;
+  onOpenHelp: () => void;
   initialPoints: number;
   setInitialPoints: (points: number) => void;
 }
 
 export const CachetaSettingsModal = ({ 
-  visible, onClose, onReset, 
+  visible, onClose, onReset, onOpenHelp,
   initialPoints, setInitialPoints 
 }: CachetaSettingsModalProps) => {
   const { theme } = useTheme();
@@ -57,10 +58,26 @@ export const CachetaSettingsModal = ({
 
               <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
 
-              {/* Botão de Reset */}
-              <TouchableOpacity style={[styles.resetBtn, { backgroundColor: theme.colors.status.error }]} onPress={() => { onReset(); onClose(); }}>
-                <Text style={[styles.resetText, { color: theme.colors.text.white }]}>{translate('common.reset_match').toUpperCase()}</Text>
-              </TouchableOpacity>
+              <View style={styles.actionsRow}>
+                  <TouchableOpacity
+                      style={[styles.actionBtn, { borderColor: theme.colors.text.secondary, borderWidth: 1 }]}
+                      onPress={onOpenHelp}
+                  >
+                      <Ionicons name="book-outline" size={20} color={theme.colors.text.primary} style={{ marginRight: 8 }} />
+                      <Text style={[styles.actionText, { color: theme.colors.text.primary }]}>
+                          {translate('common.how_to_play')}
+                      </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                      style={[styles.actionBtn, { backgroundColor: theme.colors.status.error }]}
+                      onPress={() => { onReset(); onClose(); }}
+                  >
+                      <Text style={[styles.actionText, { color: theme.colors.text.white }]}>
+                          {translate('common.reset_match')}
+                      </Text>
+                  </TouchableOpacity>
+              </View>
 
             </View>
           </TouchableWithoutFeedback>
@@ -83,6 +100,7 @@ const styles = StyleSheet.create({
   pointsValue: { fontFamily: 'Minecraft', fontSize: 32 },
 
   divider: { height: 1, marginBottom: 20 },
-  resetBtn: { padding: 12, borderRadius: 10, alignItems: 'center' },
-  resetText: { fontFamily: 'Minecraft', fontSize: 14 }
+  actionsRow: { gap: 10 },
+  actionBtn: { flexDirection: 'row', padding: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  actionText: { fontFamily: 'Minecraft', fontSize: 14 }
 });

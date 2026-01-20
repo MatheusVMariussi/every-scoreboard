@@ -128,6 +128,27 @@ export default {
       fold: 'F',
       lost: 'L',
       won: 'W'
+    },
+    help: {
+      title: 'HOW TO PLAY',
+      objective_title: 'OBJECTIVE',
+      objective_text: 'The goal is to keep your score above zero. The game ends when only one player remains with points.',
+      scoring_title: 'SCORING',
+      scoring_text: 'Each round, points are deducted according to the player\'s result:',
+      won_title: 'WON',
+      won_text: 'The winner of the round loses no points.',
+      fold_title: 'FOLDED',
+      fold_text: 'Who folds (gives up the hand) loses 1 point.',
+      lost_title: 'LOST',
+      lost_text: 'Who plays the hand to the end and does not win, loses 2 points.',
+      elimination_title: 'ELIMINATION',
+      elimination_text: 'When a player\'s score reaches 0, they are eliminated from the game.',
+      hands_title: 'GAMEPLAY',
+      hands_text: 'To win, you must form sets with your 9 cards. Valid sets are:',
+      sets_title: 'SETS (TRINCAS)',
+      sets_text: '3 cards of the same rank and different suits.',
+      runs_title: 'RUNS (SEQUÊNCIAS)',
+      runs_text: '3 or more cards of the same suit in sequence.',
     }
   },
   fodinha: {
