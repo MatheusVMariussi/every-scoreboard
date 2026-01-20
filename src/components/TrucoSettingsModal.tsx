@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { TrucoHelpModal } from './TrucoHelpModal';
 
 interface TrucoSettingsModalProps {
   visible: boolean;
@@ -20,22 +21,29 @@ export const TrucoSettingsModal = ({
   maxScore, setMaxScore 
 }: TrucoSettingsModalProps) => {
   const { theme } = useTheme();
+  const [helpVisible, setHelpVisible] = useState(false);
 
   return (
-    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
-          <TouchableWithoutFeedback>
-            <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
-              
-              <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.colors.text.primary }]}>{translate('settings.title')}</Text>
-                <TouchableOpacity onPress={onClose}>
-                  <Ionicons name="close" size={24} color={theme.colors.text.primary} />
-                </TouchableOpacity>
-              </View>
+    <>
+      <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.container, { backgroundColor: theme.colors.background.secondary, borderColor: theme.colors.truco.scoreText }]}>
 
-              {/* MODO DE JOGO */}
+                <View style={styles.header}>
+                  <View style={styles.headerTitleContainer}>
+                    <Text style={[styles.title, { color: theme.colors.text.primary }]}>{translate('settings.title')}</Text>
+                    <TouchableOpacity onPress={() => setHelpVisible(true)} style={styles.infoBtn}>
+                      <Ionicons name="information-circle-outline" size={24} color={theme.colors.text.primary} />
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity onPress={onClose}>
+                    <Ionicons name="close" size={24} color={theme.colors.text.primary} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* MODO DE JOGO */}
               <View style={styles.section}>
                 <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('truco.game_mode')}</Text>
                 <View style={styles.row}>
@@ -84,6 +92,13 @@ export const TrucoSettingsModal = ({
         </View>
       </TouchableWithoutFeedback>
     </Modal>
+
+    <TrucoHelpModal
+      visible={helpVisible}
+      onClose={() => setHelpVisible(false)}
+      gameMode={gameMode}
+    />
+    </>
   );
 };
 
@@ -108,6 +123,8 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { width: '85%', padding: 24, borderRadius: 20, borderWidth: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
+  headerTitleContainer: { flexDirection: 'row', alignItems: 'center' },
+  infoBtn: { marginLeft: 10 },
   title: { fontFamily: 'Minecraft', fontSize: 18 },
   section: { marginBottom: 20 },
   label: { fontSize: 10, fontFamily: 'Minecraft', marginBottom: 10, opacity: 0.7 },
