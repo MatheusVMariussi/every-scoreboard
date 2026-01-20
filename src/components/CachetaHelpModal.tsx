@@ -21,6 +21,13 @@ const ActionDisplay = ({ label, color, points, theme }: { label: string, color: 
   </View>
 );
 
+const Card = ({ value, suit, highlight = false }: { value: string, suit: string, highlight?: boolean }) => (
+  <View style={[styles.card, highlight && styles.cardHighlight]}>
+    <Text style={[styles.cardValue, { color: suit === '♥' || suit === '♦' ? '#D32F2F' : 'black' }]}>{value}</Text>
+    <Text style={[styles.cardSuit, { color: suit === '♥' || suit === '♦' ? '#D32F2F' : 'black' }]}>{suit}</Text>
+  </View>
+);
+
 export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) => {
   const { theme } = useTheme();
   const [step, setStep] = useState(0);
@@ -34,6 +41,36 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
           <Text style={[styles.text, { color: theme.colors.text.primary }]}>
             {translate('cacheta.help.objective_text')}
           </Text>
+        </View>
+      )
+    },
+    {
+      title: translate('cacheta.help.hands_title'),
+      content: (
+        <View style={styles.stepContainer}>
+          <Text style={[styles.text, { color: theme.colors.text.primary }]}>
+            {translate('cacheta.help.hands_text')}
+          </Text>
+
+          <View style={styles.handsContainer}>
+            <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('cacheta.help.sets_title')}</Text>
+            <Text style={[styles.subText, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.sets_text')}</Text>
+            <View style={styles.cardsRow}>
+              <Card value="7" suit="♥" />
+              <Card value="7" suit="♣" />
+              <Card value="7" suit="♠" />
+            </View>
+
+            <View style={styles.divider} />
+
+            <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('cacheta.help.runs_title')}</Text>
+            <Text style={[styles.subText, { color: theme.colors.text.secondary }]}>{translate('cacheta.help.runs_text')}</Text>
+            <View style={styles.cardsRow}>
+              <Card value="4" suit="♦" />
+              <Card value="5" suit="♦" />
+              <Card value="6" suit="♦" />
+            </View>
+          </View>
         </View>
       )
     },
@@ -172,13 +209,19 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  container: { width: '100%', maxHeight: '85%', borderRadius: 16, overflow: 'hidden', elevation: 5 },
+  container: { width: '85%', maxHeight: '85%', borderRadius: 16, overflow: 'hidden', elevation: 5 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold' },
   scrollContent: { padding: 20 },
   stepTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
   stepContainer: { alignItems: 'center' },
   text: { fontSize: 16, lineHeight: 24, marginBottom: 15, textAlign: 'center' },
+
+  // Hands
+  handsContainer: { width: '100%', alignItems: 'center', marginTop: 10 },
+  subTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
+  subText: { fontSize: 14, marginBottom: 10, textAlign: 'center', fontStyle: 'italic' },
+  cardsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
 
   // Scoring
   scoringList: { width: '100%', marginTop: 10 },
@@ -197,6 +240,12 @@ const styles = StyleSheet.create({
   // Circle Component
   circle: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
   circleText: { fontFamily: 'Minecraft', fontSize: 14, fontWeight: 'bold' },
+
+  // Card
+  card: { width: 40, height: 56, backgroundColor: '#FFF', borderRadius: 4, borderWidth: 1, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center', elevation: 2 },
+  cardHighlight: { borderColor: '#333', borderWidth: 1.5 },
+  cardValue: { fontSize: 16, fontWeight: 'bold' },
+  cardSuit: { fontSize: 14 },
 
   // Footer
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderTopWidth: 1 },

@@ -143,6 +143,12 @@ export default {
       lost_text: 'Quem joga a mão até o fim e não ganha, perde 2 pontos.',
       elimination_title: 'ELIMINAÇÃO',
       elimination_text: 'Quando a pontuação de um jogador chega a 0, ele é eliminado do jogo.',
+      hands_title: 'JOGO',
+      hands_text: 'Para bater (ganhar), você deve formar jogos com suas 9 cartas. Os jogos podem ser:',
+      sets_title: 'TRINCAS',
+      sets_text: '3 cartas do mesmo valor e naipes diferentes.',
+      runs_title: 'SEQUÊNCIAS',
+      runs_text: '3 ou mais cartas do mesmo naipe em ordem.',
     }
   },
   fodinha: {

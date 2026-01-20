@@ -143,6 +143,12 @@ export default {
       lost_text: 'Who plays the hand to the end and does not win, loses 2 points.',
       elimination_title: 'ELIMINATION',
       elimination_text: 'When a player\'s score reaches 0, they are eliminated from the game.',
+      hands_title: 'GAMEPLAY',
+      hands_text: 'To win, you must form sets with your 9 cards. Valid sets are:',
+      sets_title: 'SETS (TRINCAS)',
+      sets_text: '3 cards of the same rank and different suits.',
+      runs_title: 'RUNS (SEQUÊNCIAS)',
+      runs_text: '3 or more cards of the same suit in sequence.',
     }
   },
   fodinha: {
