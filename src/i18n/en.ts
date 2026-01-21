@@ -195,6 +195,12 @@ export default {
       penalty_fixed_text: 'Lose 1 life per miss, regardless of the difference.',
       penalty_diff_title: 'Difference Mode',
       penalty_diff_text: 'Lose lives equal to the difference between bet and result (Ex: Bet 1, Won 3 = Lose 2 lives).',
+      cards_title: 'CARDS',
+      cards_text: 'Fodinha uses the full deck (with 8, 9, 10) and follows the Truco hierarchy:',
+      cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
+      cards_suit_title: 'Suits (Tiebreaker)',
+      cards_suit_text: 'If cards have the same rank, the tiebreaker is by suit:',
+      cards_suit_order: 'Diamonds > Spades > Hearts > Clubs'
     }
   },
 };

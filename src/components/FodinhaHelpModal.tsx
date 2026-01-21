@@ -89,6 +89,37 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
           </View>
         </View>
       )
+    },
+    {
+      title: translate('fodinha.help.cards_title'),
+      content: (
+        <View style={styles.stepContainer}>
+          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: 15 }]}>
+            {translate('fodinha.help.cards_text')}
+          </Text>
+
+          <View style={[styles.cardsOrderContainer, { borderColor: theme.colors.modal.divider, backgroundColor: theme.colors.background.overlay }]}>
+             <Text style={[styles.cardsOrderText, { color: theme.colors.brand.primary }]}>
+                3 {'>'} 2 {'>'} A {'>'} K {'>'} J {'>'} Q {'>'} 7 {'>'} 6 {'>'} 5 {'>'} 4
+             </Text>
+          </View>
+
+          <View style={{ width: '100%', height: 1, backgroundColor: theme.colors.modal.divider, marginVertical: 20 }} />
+
+          <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('fodinha.help.cards_suit_title')}</Text>
+          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: 10 }]}>{translate('fodinha.help.cards_suit_text')}</Text>
+
+          <View style={styles.suitsRow}>
+             <View style={styles.suitItem}><Text style={[styles.suitText, { color: '#D32F2F' }]}>♦</Text></View>
+             <Text style={{ color: theme.colors.text.secondary }}>{'>'}</Text>
+             <View style={styles.suitItem}><Text style={[styles.suitText, { color: 'black' }]}>♠</Text></View>
+             <Text style={{ color: theme.colors.text.secondary }}>{'>'}</Text>
+             <View style={styles.suitItem}><Text style={[styles.suitText, { color: '#D32F2F' }]}>♥</Text></View>
+             <Text style={{ color: theme.colors.text.secondary }}>{'>'}</Text>
+             <View style={styles.suitItem}><Text style={[styles.suitText, { color: 'black' }]}>♣</Text></View>
+          </View>
+        </View>
+      )
     }
   ];
 
@@ -189,6 +220,14 @@ const styles = StyleSheet.create({
   verticalDivider: { width: 1, height: '80%', marginHorizontal: 10 },
   penaltyTitle: { fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
   penaltyText: { fontSize: 12, textAlign: 'center' },
+
+  // Cards Step
+  cardsOrderContainer: { padding: 15, borderRadius: 8, borderWidth: 1, width: '100%', alignItems: 'center' },
+  cardsOrderText: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', fontFamily: 'Minecraft' },
+  subTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
+  suitsRow: { flexDirection: 'row', alignItems: 'center', gap: 15, justifyContent: 'center' },
+  suitItem: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 5, elevation: 2 },
+  suitText: { fontSize: 24, fontWeight: 'bold' },
 
   // Footer
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderTopWidth: 1 },

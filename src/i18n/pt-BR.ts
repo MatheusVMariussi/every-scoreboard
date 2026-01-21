@@ -195,6 +195,12 @@ export default {
       penalty_fixed_text: 'Perde 1 vida por erro, não importa a diferença.',
       penalty_diff_title: 'Modo Diferença',
       penalty_diff_text: 'Perde vidas igual à diferença entre a aposta e o resultado (Ex: Apostou 1, Ganhou 3 = Perde 2 vidas).',
+      cards_title: 'CARTAS',
+      cards_text: 'A Fodinha utiliza o baralho sujo (com 8, 9, 10) e segue a hierarquia do Truco:',
+      cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
+      cards_suit_title: 'Nipes (Desempate)',
+      cards_suit_text: 'Caso as cartas tenham o mesmo valor, o desempate é pelo naipe:',
+      cards_suit_order: 'Ouros > Espadas > Copas > Paus'
     }
   },
 };

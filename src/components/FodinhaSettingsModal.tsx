@@ -53,7 +53,7 @@ export const FodinhaSettingsModal = ({
               </View>
 
               {/* MODO DE PUNIÇÃO */}
-              <View style={styles.section}>
+              <View style={[styles.section, { marginBottom: 5 }]}>
                 <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('fodinha.penalty_mode')}</Text>
                 <View style={styles.row}>
                   <OptionBtn
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   optBtn: { flex: 1, paddingVertical: 8, paddingHorizontal: 5, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
   optText: { fontFamily: 'Minecraft', fontSize: 11, marginBottom: 2 },
   optSubText: { fontSize: 7, fontFamily: 'Minecraft', opacity: 0.6 },
-  divider: { height: 1, marginBottom: 15, width: '100%' },
+  divider: { height: 1, marginBottom: 0, marginTop: 10, width: '100%' },
   actionsRow: { flexDirection: 'row', gap: 15 },
   actionBtn: { flex: 1, flexDirection: 'row', padding: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   actionText: { fontFamily: 'Minecraft', fontSize: 12 },
