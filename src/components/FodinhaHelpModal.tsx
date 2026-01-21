@@ -134,6 +134,10 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
              <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
              <View style={styles.suitItem}><Text style={[styles.suitText, { color: 'black' }]}>♣</Text></View>
           </View>
+
+          <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('fodinha.help.cards_suit_title_cancelOut')}</Text>
+          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: 10 }]}>{translate('fodinha.help.cards_suit_text_cancelOut')}</Text>
+
         </View>
       )
     }

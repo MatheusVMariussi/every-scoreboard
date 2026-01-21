@@ -196,11 +196,13 @@ export default {
       penalty_diff_title: 'Difference Mode',
       penalty_diff_text: 'Lose lives equal to the difference between bet and result (Ex: Bet 1, Won 3 = Lose 2 lives).',
       cards_title: 'CARDS',
-      cards_text: 'Fodinha uses the full deck (with 8, 9, 10) and follows the Truco hierarchy:',
+      cards_text: 'Fodinha uses and follows the Truco hierarchy:',
       cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
       cards_suit_title: 'Suits (Tiebreaker)',
       cards_suit_text: 'If cards have the same rank, the tiebreaker is by suit:',
-      cards_suit_order: 'Diamonds > Spades > Hearts > Clubs'
+      cards_suit_order: 'Diamonds > Spades > Hearts > Clubs',
+      cards_suit_title_cancelOut: 'Canceling Out',
+      cards_suit_text_cancelOut: 'Another variant of the game, cards with the same rank (except for manilhas) cancel each other out. When this happens, the remaining cards in the round are still considered valid, even if they have lower ranks. As a result, a 4 can win the round. If all cards are canceled and no card remains valid, the next round is worth double points, and this effect continues cumulatively.'
     }
   },
 };

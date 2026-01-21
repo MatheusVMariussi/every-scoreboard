@@ -196,11 +196,13 @@ export default {
       penalty_diff_title: 'Modo Diferença',
       penalty_diff_text: 'Perde vidas igual à diferença entre a aposta e o resultado (Ex: Apostou 1, Ganhou 3 = Perde 2 vidas).',
       cards_title: 'CARTAS',
-      cards_text: 'A Fodinha utiliza o baralho sujo (com 8, 9, 10) e segue a hierarquia do Truco:',
+      cards_text: 'A Fodinha utiliza o baralho e segue a hierarquia do Truco:',
       cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
       cards_suit_title: 'Nipes (Desempate)',
       cards_suit_text: 'Caso as cartas tenham o mesmo valor, o desempate é pelo naipe:',
-      cards_suit_order: 'Ouros > Espadas > Copas > Paus'
+      cards_suit_order: 'Ouros > Espadas > Copas > Paus',
+      cards_suit_title_cancelOut: 'Anulação',
+      cards_suit_text_cancelOut: 'Outra variante do jogo, cartas de mesmo valor (exceto manilhas) se anulam mutuamente. Quando isso acontece, as demais cartas da rodada continuam válidas, mesmo que tenham valores menores. Dessa forma, uma carta 4 pode vencer a rodada. Caso todas as cartas sejam anuladas e nenhuma reste válida, a próxima rodada valerá o dobro de pontos, e assim sucessivamente.',
     }
   },
 };
