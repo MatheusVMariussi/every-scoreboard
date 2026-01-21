@@ -41,12 +41,14 @@ A estrutura de pastas em `src/` é organizada da seguinte forma:
 - **Temas**: Suporte a modo claro e escuro, respeitando a preferência do sistema ou configurável pelo usuário.
 - **Internacionalização**: Suporte automático a Português e Inglês.
 - **Histórico**: Visualização gráfica do histórico de partidas (no Truco).
-- **Tutorial Interativo**: Instruções de uso ao abrir cada jogo pela primeira vez.
+- **Tutorial Interativo**: Instruções de uso ao abrir cada jogo pela primeira vez. (Em desenvolvimento)
 - **Regras Integradas**: Guia de "Como Jogar" disponível nos ajustes de cada jogo.
 
 ## ⚠️ Status e Próximos Passos
 
 A tela de **Canastra** está atualmente em construção e será implementada em atualizações futuras.
+
+Os tutoriais interativos foram implementados de maneira basica inicialmente, e continuam em desenvolvimento para ficarem mais explicativos
 
 Planejamento para as próximas versões:
 - Adicionar propagandas, e juntamente com isso, a funcionalidade do botão "Remover ADS" do menu principal, que irá remover essas propagandas.
