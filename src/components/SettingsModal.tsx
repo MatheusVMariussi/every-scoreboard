@@ -111,7 +111,7 @@ export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: Set
               </TouchableOpacity>
 
               <Text style={[styles.versionText, { color: theme.colors.text.secondary }]}>
-                {translate('settings.version')} 1.0.6
+                {translate('settings.version')} 1.1.2
               </Text>
 
             </View>

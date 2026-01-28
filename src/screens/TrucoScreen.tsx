@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,10 +14,11 @@ import { TrucoSettingsModal } from '../components/TrucoSettingsModal';
 import { EditNameModal } from '../components/EditNameModal';
 import { TrucoHelpModal } from '../components/TrucoHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
-import { MatchHistoryGraph, HistoryItem } from '../components/MatchHistoryGraph';
+import { MatchHistoryGraph } from '../components/MatchHistoryGraph';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
+import { useTrucoGame } from '../hooks/useTrucoGame';
 
 export const TrucoScreen = () => {
   useScreenOrientation('PORTRAIT');
@@ -25,156 +26,67 @@ export const TrucoScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
 
+  // --- GAME LOGIC ---
+  const game = useTrucoGame();
+
   // CORES DOS TIMES
   const COLOR_THEM = theme.colors.truco.teamThem;
   const COLOR_US = theme.colors.truco.teamUs;
-
-  // --- ESTADOS ---
-  const [scoreUs, setScoreUs] = useState(0);
-  const [scoreThem, setScoreThem] = useState(0);
   
-  // Configurações do Jogo
-  const [gameMode, setGameMode] = useState<'paulista' | 'mineiro'>('paulista');
-  const [maxScore, setMaxScore] = useState(12);
-  
-  // Metadados
-  const [matchWinsUs, setMatchWinsUs] = useState(0);
-  const [matchWinsThem, setMatchWinsThem] = useState(0);
-  const [pointHistory, setPointHistory] = useState<HistoryItem[]>([]);
-  const [nameUs, setNameUs] = useState(translate('truco.us'));
-  const [nameThem, setNameThem] = useState(translate('truco.them'));
-  
-  // Modais
+  // --- UI STATES ---
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
   const [editNameVisible, setEditNameVisible] = useState(false);
   const [editingTeam, setEditingTeam] = useState<'us' | 'them'>('us');
-  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Tutorial State
+  // --- TUTORIAL ---
   const [tutorialActive, setTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
 
-  // Custom hooks for targeting
-  const scoreTarget = useTutorialTarget(tutorialActive);
+  // Targets
+  const scoreTarget = useTutorialTarget(tutorialActive && tutorialStep === 0);
+  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 1);
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
-  // --- PERSISTÊNCIA ---
   useEffect(() => {
     const checkTutorial = async () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_TRUCO);
       if (!hasSeen) {
         setTutorialActive(true);
+        setTutorialStep(0);
       }
     };
     checkTutorial();
-
-    const loadData = async () => {
-      const saved = await getData(STORAGE_KEYS.TRUCO_DATA);
-      if (saved) {
-        setScoreUs(saved.scoreUs); setScoreThem(saved.scoreThem);
-        setGameMode(saved.gameMode);
-        if (saved.maxScore) setMaxScore(saved.maxScore);
-        
-        setMatchWinsUs(saved.matchWinsUs); setMatchWinsThem(saved.matchWinsThem);
-        setPointHistory(saved.pointHistory); setNameUs(saved.nameUs); setNameThem(saved.nameThem);
-      }
-      setIsLoaded(true);
-    };
-    loadData();
   }, []);
 
-  useEffect(() => {
-    if (isLoaded) {
-      saveData(STORAGE_KEYS.TRUCO_DATA, { 
-        scoreUs, scoreThem, gameMode, maxScore,
-        matchWinsUs, matchWinsThem, pointHistory, nameUs, nameThem 
-      });
-    }
-  }, [scoreUs, scoreThem, gameMode, maxScore, matchWinsUs, matchWinsThem, pointHistory, nameUs, nameThem, isLoaded]);
-
-  useEffect(() => { 
-    if (isLoaded && scoreUs === 0 && scoreThem === 0) resetGame(true); 
-  }, [gameMode, maxScore]);
-
-  // --- TUTORIAL LOGIC ---
-  const finishTutorial = async () => {
+  const handleNextTutorial = async () => {
+    if (tutorialStep < 1) {
+      setTutorialStep(prev => prev + 1);
+    } else {
       setTutorialActive(false);
       await saveData(STORAGE_KEYS.TUTORIAL_TRUCO, true);
-  };
-
-  // --- LÓGICA DE PONTUAÇÃO ---
-  const getBasePoints = () => gameMode === 'paulista' ? 1 : 2;
-
-  const resetGame = (fullReset = false) => {
-    setScoreUs(0); setScoreThem(0);
-    setPointHistory([]);
-    if (fullReset) { setMatchWinsUs(0); setMatchWinsThem(0); }
-  };
-
-  const handlePointChange = (team: 'us' | 'them', pointsToAdd: number) => {
-
-    setPointHistory(prev => {
-      const newHist = [...prev];
-      if (pointsToAdd > 0) {
-        newHist.push({ team, points: pointsToAdd });
-      } else {
-        let foundIndex = -1;
-        for (let i = newHist.length - 1; i >= 0; i--) { 
-            if (newHist[i].team === team) { foundIndex = i; break; } 
-        }
-        
-        if (foundIndex !== -1) {
-          const currentPoints = newHist[foundIndex].points;
-          const base = getBasePoints();
-          
-          if (currentPoints > base && Math.abs(pointsToAdd) === base) {
-             newHist[foundIndex] = { ...newHist[foundIndex], points: currentPoints - base };
-          } else {
-             newHist.splice(foundIndex, 1);
-          }
-        }
-      }
-      return newHist;
-    });
-
-    if (team === 'us') {
-      const newScore = Math.max(0, scoreUs + pointsToAdd);
-      if (newScore >= maxScore && pointsToAdd > 0) { 
-        handleVictory(nameUs, 'us'); 
-        setScoreUs(maxScore); 
-      } else {
-        setScoreUs(newScore);
-      }
-    } else {
-      const newScore = Math.max(0, scoreThem + pointsToAdd);
-      if (newScore >= maxScore && pointsToAdd > 0) { 
-        handleVictory(nameThem, 'them'); 
-        setScoreThem(maxScore); 
-      } else {
-        setScoreThem(newScore);
-      }
     }
   };
 
-  const handleVictory = (winnerName: string, winnerTeam: 'us' | 'them') => {
-    if (winnerTeam === 'us') setMatchWinsUs(prev => Math.min(prev + 1, 5));
-    else setMatchWinsThem(prev => Math.min(prev + 1, 5));
-    
-    setTimeout(() => {
-      Alert.alert(
-        translate('common.game_over'), 
-        translate('common.winner_text', { team: winnerName }), 
-        [
-            { text: translate('common.cancel'), style: "cancel" },
-            { text: translate('common.new_match'), onPress: () => resetGame(false) }
-        ]
-      );
-    }, 100);
+  const getTutorialMessage = () => {
+    switch (tutorialStep) {
+      case 0: return translate('truco.tutorial.score');
+      case 1: return translate('truco.tutorial.settings');
+      default: return "";
+    }
+  };
+
+  const getTutorialSpotlight = () => {
+    switch (tutorialStep) {
+      case 0: return scoreTarget.layout;
+      case 1: return settingsTarget.layout;
+      default: return null;
+    }
   };
 
   // --- COMPONENTES VISUAIS INTERNOS ---
-  const TeamScoreArea = ({ team, score, name, wins, color, scoreTargetProp, nameTargetProp }: any) => {
+  const TeamScoreArea = ({ team, score, name, wins, color, targetProp }: any) => {
     const scale = useSharedValue(1);
     const translateY = useSharedValue(0);
 
@@ -185,17 +97,17 @@ export const TrucoScreen = () => {
       ] as any,
     }));
 
-    const baseValue = getBasePoints();
-    const trucoValue = gameMode === 'paulista' ? 3 : 4;
+    const baseValue = game.getBasePoints();
+    const trucoValue = game.gameMode === 'paulista' ? 3 : 4;
 
     const gesture = Gesture.Race(
       Gesture.Pan()
         .onUpdate((e) => { translateY.value = e.translationY * 0.1; })
         .onEnd((e) => {
           if (e.translationY < -40) {
-             scheduleOnRN(handlePointChange, team, trucoValue); 
+             scheduleOnRN(game.handlePointChange, team, trucoValue); 
           } else if (e.translationY > 40) {
-             scheduleOnRN(handlePointChange, team, -baseValue);
+             scheduleOnRN(game.handlePointChange, team, -baseValue);
           }
           translateY.value = withSpring(0);
         }),
@@ -203,7 +115,7 @@ export const TrucoScreen = () => {
         .onStart(() => { scale.value = withSpring(0.95); })
         .onEnd(() => { 
             scale.value = withSpring(1); 
-            scheduleOnRN(handlePointChange, team, baseValue);
+            scheduleOnRN(game.handlePointChange, team, baseValue);
         })
     );
 
@@ -232,7 +144,7 @@ export const TrucoScreen = () => {
         <GestureDetector gesture={gesture}>
           <View style={styles.gestureArea} collapsable={false}>
              <Animated.View style={[styles.scoreContainer, animatedStyle]}>
-                <View ref={scoreTargetProp?.ref} collapsable={false}>
+                <View ref={targetProp?.ref} collapsable={false}>
                   <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
                     {score.toString().padStart(2, '0')}
                   </Text>
@@ -265,8 +177,8 @@ export const TrucoScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
             <Ionicons name="arrow-back" size={24} color={theme.colors.text.inverse} />
           </TouchableOpacity>
-          <Text style={[styles.gameTitle, { color: theme.colors.text.white }]}>TRUCO {translate(`truco.${gameMode}` as any).toUpperCase()}</Text>
-          <View>
+          <Text style={[styles.gameTitle, { color: theme.colors.text.white }]}>TRUCO {translate(`truco.${game.gameMode}` as any).toUpperCase()}</Text>
+          <View ref={settingsTarget.ref} collapsable={false}>
               <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
                 <Ionicons name="settings-sharp" size={24} color={theme.colors.text.inverse} />
               </TouchableOpacity>
@@ -274,21 +186,22 @@ export const TrucoScreen = () => {
         </View>
 
         <View style={styles.scoreboardRow}>
-          <TeamScoreArea team="them" score={scoreThem} name={nameThem} wins={matchWinsThem} color={COLOR_THEM} />
+          <TeamScoreArea team="them" score={game.scoreThem} name={game.nameThem} wins={game.matchWinsThem} color={COLOR_THEM} />
           <View style={[styles.verticalDivider, { backgroundColor: theme.colors.truco.divider }]} />
+          {/* Adicionamos targetProp apenas em um dos lados para o tutorial não ficar duplicado ou confuso */}
           <TeamScoreArea
             team="us"
-            score={scoreUs}
-            name={nameUs}
-            wins={matchWinsUs}
+            score={game.scoreUs}
+            name={game.nameUs}
+            wins={game.matchWinsUs}
             color={COLOR_US}
-            scoreTargetProp={scoreTarget}
+            targetProp={scoreTarget}
           />
         </View>
 
         <View style={[styles.footerHistory, { borderTopColor: theme.colors.truco.divider }]}>
            <MatchHistoryGraph 
-              history={pointHistory} 
+              history={game.pointHistory} 
               colorThem={COLOR_THEM}
               colorUs={COLOR_US}
            />
@@ -298,40 +211,41 @@ export const TrucoScreen = () => {
 
       <TutorialOverlay
         visible={tutorialActive}
-        spotlight={scoreTarget.layout}
-        message={translate('truco.tutorial.score')}
-        nextText={translate('common.got_it')}
-        onNext={finishTutorial}
+        spotlight={getTutorialSpotlight()}
+        message={getTutorialMessage()}
+        nextText={tutorialStep === 1 ? translate('common.got_it') : translate('common.next')}
+        onNext={handleNextTutorial}
       />
 
       <TrucoSettingsModal 
         visible={settingsVisible} 
         onClose={() => setSettingsVisible(false)} 
-        onReset={() => resetGame(true)} 
+        onReset={() => game.resetGame(true)} 
         onOpenHelp={() => { setSettingsVisible(false); setHelpVisible(true); }}
-        gameMode={gameMode} 
-        setGameMode={setGameMode}
-        maxScore={maxScore}
-        setMaxScore={setMaxScore}
+        gameMode={game.gameMode} 
+        setGameMode={game.setGameMode}
+        maxScore={game.maxScore}
+        setMaxScore={game.setMaxScore}
       />
 
       <TrucoHelpModal
         visible={helpVisible}
         onClose={() => { setHelpVisible(false); setSettingsVisible(true); }}
-        gameMode={gameMode}
+        gameMode={game.gameMode}
       />
       
       <EditNameModal 
         visible={editNameVisible} 
-        initialValue={editingTeam === 'us' ? nameUs : nameThem} 
+        initialValue={editingTeam === 'us' ? game.nameUs : game.nameThem} 
         onClose={() => setEditNameVisible(false)} 
-        onSave={(n) => { if (n.trim()) editingTeam === 'us' ? setNameUs(n) : setNameThem(n); }} 
+        onSave={(n) => { if (n.trim()) editingTeam === 'us' ? game.setNameUs(n) : game.setNameThem(n); }} 
       />
 
     </GestureHandlerRootView>
   );
 };
 
+// ... Styles permanecem iguais ...
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, height: 50 },

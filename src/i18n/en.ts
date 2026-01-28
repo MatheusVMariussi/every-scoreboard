@@ -103,12 +103,16 @@ export default {
     max_score: 'MAXIMUM SCORE',
     tutorial: {
       score: 'Swipe UP to add TRUCO value (3/4 pts).\nSwipe DOWN to remove 1 pt.\nTap to add 1 pt.',
+      settings: 'Tap here to switch between game modes or change max score (12/24).'
     },
   },
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      actions: 'Set the result (Fold/Lost/Won), confirm on "NEXT ROUND", and repeat to see results.',
+      step_names: 'Tap a name to edit or remove a player.',
+      step_history: 'Tap any previous round to fix mistakes.',
+      step_actions: 'Mark who Folded, Lost, or Won this round.',
+      step_button: 'Confirm to finish the round and update scores.',
     },
     player_name: 'Player {{index}}',
     initial_points: 'Initial Points',
@@ -170,7 +174,11 @@ export default {
     bet: 'BET',
     edit_round_instruction: 'Adjust how much each player lost this round.',
     tutorial: {
-      actions: 'Set each player\'s bet or wins, confirm below, and repeat for each phase.',
+      actions: 'Set each player\'s bet or wins...',
+      step_cards: 'Adjust how many cards are dealt this round.',
+      step_lives: 'Keep an eye on remaining player lives here.',
+      step_inputs: 'Set each player\'s bet or wins here.',
+      step_button: 'Confirm to proceed to the next phase.',
     },
     invalid_bets_title: 'Invalid Bets',
     invalid_bets_message: 'The sum of bets ({{total}}) cannot equal the number of cards ({{cards}}).',

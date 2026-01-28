@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, 
   Alert, TouchableWithoutFeedback
@@ -18,170 +18,96 @@ import { CachetaSettingsModal } from '../components/CachetaSettingsModal';
 import { CachetaHelpModal } from '../components/CachetaHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
+import { useCachetaGame } from '../hooks/useCachetaGame';
 
-// --- INTERFACES ---
 type Action = 'won' | 'fold' | 'lost' | null;
 
-interface Player {
-  id: string;
-  name: string;
-  history: Action[];
-  currentAction: Action;
-}
-
 export const CachetaScreen = () => {
-  // Força Landscape com segurança
   useScreenOrientation('LANDSCAPE');
   
   const { theme } = useTheme();
   const navigation = useNavigation();
   const horizontalScrollRef = useRef<ScrollView>(null);
 
-  // --- ESTADOS ---
-  const [initialPoints, setInitialPoints] = useState(10);
-  const [players, setPlayers] = useState<Player[]>([
-    { id: '1', name: translate('common.player') + ' 1', history: [], currentAction: null },
-    { id: '2', name: translate('common.player') + ' 2', history: [], currentAction: null },
-    { id: '3', name: translate('common.player') + ' 3', history: [], currentAction: null },
-  ]);
-  
-  // MODAIS
+  // --- GAME LOGIC ---
+  const game = useCachetaGame(horizontalScrollRef);
+
+  // --- UI STATES ---
   const [showEditName, setShowEditName] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
-  
   const [showEditHistory, setShowEditHistory] = useState(false);
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
-
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
 
-  // Tutorial State
+  // --- TUTORIAL & LAYOUT ---
+  const [layoutReady, setLayoutReady] = useState(false);
   const [tutorialActive, setTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
 
-  // Custom Hooks for Tutorial
-  const actionsTarget = useTutorialTarget(tutorialActive);
+  // Targets (Removi o targetHistory)
+  const targetNames = useTutorialTarget(tutorialActive && tutorialStep === 0);
+  const targetActions = useTutorialTarget(tutorialActive && tutorialStep === 1);
+  const targetButton = useTutorialTarget(tutorialActive && tutorialStep === 2);
+
+  useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
+
+  const handleLayout = (event: any) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (width > height) { 
+       setLayoutReady(true);
+    }
+  };
 
   useEffect(() => {
+    if (!layoutReady) return;
     const checkTutorial = async () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_CACHETA);
       if (!hasSeen) {
-        setTutorialActive(true);
+        setTimeout(() => {
+            setTutorialActive(true);
+            setTutorialStep(0);
+        }, 500);
       }
     };
     checkTutorial();
+  }, [layoutReady]);
 
-    const loadData = async () => {
-      const saved = await getData(STORAGE_KEYS.CACHETA_DATA);
-      if (saved) {
-        setPlayers(saved.players);
-        setInitialPoints(saved.initialPoints);
-      }
-    };
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    saveData(STORAGE_KEYS.CACHETA_DATA, { players, initialPoints });
-  }, [players, initialPoints]);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
-
-  // --- TUTORIAL LOGIC ---
-  const finishTutorial = async () => {
+  // Lógica do Tutorial atualizada para 3 passos (0, 1, 2)
+  const handleNextTutorial = async () => {
+    if (tutorialStep < 2) {
+      setTutorialStep(prev => prev + 1);
+    } else {
       setTutorialActive(false);
       await saveData(STORAGE_KEYS.TUTORIAL_CACHETA, true);
-  };
-
-  const playersWithPoints = useMemo(() => {
-    return players.map(p => {
-      let pts = initialPoints;
-      p.history.forEach(act => {
-        if (act === 'fold') pts -= 1;
-        if (act === 'lost') pts -= 2;
-      });
-      return { ...p, currentPoints: Math.max(0, pts) };
-    });
-  }, [players, initialPoints]);
-
-  const handleNextRound = () => {
-    const playersToUpdate = players.map((p, idx) => {
-        const pWithPts = playersWithPoints[idx]; // Same order
-        if (pWithPts.currentPoints > 0 && p.currentAction === null) {
-            return { ...p, currentAction: 'lost' as Action };
-        }
-        return p;
-    });
-
-    // Check for winner among the UPDATED players
-    const hasWinner = playersToUpdate.some(p => p.currentAction === 'won');
-    const alive = playersWithPoints.filter(p => p.currentPoints > 0);
-
-    // If there are alive players but no winner, show error
-    if (!hasWinner && alive.length > 0) {
-      Alert.alert(translate('common.error'), translate('cacheta.need_winner'));
-      return;
     }
-
-    // Apply the update (commit the history) using the auto-filled actions
-    setPlayers(prev => playersToUpdate.map(p => ({
-      ...p,
-      history: [...p.history, p.currentAction],
-      currentAction: null
-    })));
-
-    setTimeout(() => horizontalScrollRef.current?.scrollToEnd({ animated: true }), 200);
   };
 
-  const handleReset = () => {
-    setPlayers(prev => prev.map(p => ({ ...p, history: [], currentAction: null })));
-  };
-
-  const updateAction = (pId: string, action: Action, isHistory = false) => {
-    setPlayers(prev => prev.map(p => {
-      if (p.id !== pId) return p;
-      if (isHistory && editingRoundIdx !== null) {
-        const newH = [...p.history];
-        newH[editingRoundIdx] = action === newH[editingRoundIdx] ? null : action;
-        return { ...p, history: newH };
-      }
-      return { ...p, currentAction: action === p.currentAction ? null : action };
-    }));
-  };
-
-  const handleSaveHistory = () => {
-    if (editingRoundIdx !== null) {
-      const hasWinner = players.some(p => p.history[editingRoundIdx] === 'won');
-      if (!hasWinner) {
-        Alert.alert(translate('common.error'), translate('cacheta.need_winner'));
-        return;
-      }
+  const getTutorialMessage = () => {
+    switch (tutorialStep) {
+      case 0: return translate('cacheta.tutorial.step_names');
+      // Pulei o histórico intencionalmente
+      case 1: return translate('cacheta.tutorial.step_actions');
+      case 2: return translate('cacheta.tutorial.step_button');
+      default: return "";
     }
-    setShowEditHistory(false);
   };
 
-  const handleAddPlayer = () => {
-    setPlayers(prev => {
-      const currentRounds = prev.length > 0 ? prev[0].history.length : 0;
-      const penaltyHistory: Action[] = new Array(currentRounds).fill('lost');
-      const newPlayer: Player = { 
-        id: Date.now().toString(), 
-        name: `${translate('common.player')} ${prev.length + 1}`,
-        history: penaltyHistory, 
-        currentAction: null 
-      };
-      return [...prev, newPlayer];
-    });
+  const getTutorialSpotlight = () => {
+    switch (tutorialStep) {
+      case 0: return targetNames.layout;
+      case 1: return targetActions.layout;
+      case 2: return targetButton.layout;
+      default: return null;
+    }
   };
 
   const handleDeletePlayer = () => {
     if (!editingPlayerId) return;
-    
     Alert.alert(translate('common.delete_player'), translate('common.confirm_delete_player'), [
       { text: translate('common.cancel'), style: 'cancel' },
       { text: translate('common.confirm'), style: 'destructive', onPress: () => {
-          setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
+          game.setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
           setShowEditName(false);
       }}
     ]);
@@ -194,18 +120,27 @@ export const CachetaScreen = () => {
     return 'transparent';
   };
 
-  const getEditingPlayerName = () => {
-    const player = players.find(p => p.id === editingPlayerId);
-    return player ? player.name : '';
+  const getEditingPlayerName = () => game.players.find(p => p.id === editingPlayerId)?.name || '';
+
+  const handleSaveHistory = () => {
+    if (editingRoundIdx !== null) {
+      // Fix: Removido o ! pois o if acima já garante
+      const hasWinner = game.players.some(p => p.history[editingRoundIdx] === 'won');
+      if (!hasWinner) {
+        Alert.alert(translate('common.error'), translate('cacheta.need_winner'));
+        return;
+      }
+    }
+    setShowEditHistory(false);
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} onLayout={handleLayout}>
       <LinearGradient colors={[theme.colors.truco.backgroundTop, theme.colors.truco.backgroundBottom]} style={StyleSheet.absoluteFill} />
       
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'top']}>
         
-        {/* HEADER LIMPO E SIMÉTRICO */}
+        {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerSide}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
@@ -216,21 +151,19 @@ export const CachetaScreen = () => {
           <Text style={[styles.headerTitle, { color: theme.colors.text.white }]}>{translate('home.cacheta').toUpperCase()}</Text>
           
           <View style={[styles.headerSide, { justifyContent: 'flex-end' }]}>
-            {/* Botão de Settings (Engrenagem) */}
-            <View>
-                <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-                    <Ionicons name="settings-sharp" size={24} color={theme.colors.text.white} />
-                </TouchableOpacity>
-            </View>
+            <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+                <Ionicons name="settings-sharp" size={24} color={theme.colors.text.white} />
+            </TouchableOpacity>
           </View>
         </View>
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <ScrollView ref={horizontalScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tableScroll}>
             
-            <View style={styles.namesColumn}>
+            {/* 1. NOMES */}
+            <View style={styles.namesColumn} ref={targetNames.ref} collapsable={false}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>{translate('common.player').toUpperCase()}</Text></View>
-              {playersWithPoints.map((p, index) => (
+              {game.playersWithPoints.map((p) => (
                 <View key={p.id}>
                     <TouchableOpacity
                         style={[styles.playerCell, { backgroundColor: theme.colors.truco.cardBackground }]}
@@ -241,17 +174,18 @@ export const CachetaScreen = () => {
                     </TouchableOpacity>
                 </View>
               ))}
-              <TouchableOpacity style={styles.addBtn} onPress={handleAddPlayer}>
+              <TouchableOpacity style={styles.addBtn} onPress={game.handleAddPlayer}>
                 <Ionicons name="add-circle" size={26} color={theme.colors.neon.primary} />
               </TouchableOpacity>
             </View>
 
+            {/* 2. HISTÓRICO (Sem ref para tutorial agora) */}
             <View style={{ flexDirection: 'row' }}>
-              {players.length > 0 && players[0].history.map((_, rIdx) => (
+              {game.players.length > 0 && game.players[0].history.map((_, rIdx) => (
                 <View key={rIdx}>
                     <TouchableOpacity style={styles.historyColumn} onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}>
                     <View style={styles.cellHeader}><Text style={styles.headerText}>{translate('common.round')[0]}{rIdx + 1}</Text></View>
-                    {playersWithPoints.map(p => (
+                    {game.playersWithPoints.map(p => (
                         <View key={p.id} style={[styles.historyCell, { backgroundColor: getActionColor(p.history[rIdx]) + '22' }]}>
                         <View style={[styles.dot, { backgroundColor: getActionColor(p.history[rIdx]) || theme.colors.truco.divider }]} />
                         </View>
@@ -261,17 +195,18 @@ export const CachetaScreen = () => {
               ))}
             </View>
 
+            {/* 3. AÇÕES */}
             <View style={[styles.activeColumn, { backgroundColor: theme.colors.truco.cardBackground, borderColor: theme.colors.truco.divider }]}>
               <View style={[styles.cellHeaderActive, { backgroundColor: theme.colors.neon.primary + '22' }]}>
                 <Text style={[styles.headerText, { color: theme.colors.neon.primary }]}>{translate('cacheta.current')}</Text>
               </View>
-              {playersWithPoints.map((p, index) => (
-                <View key={p.id} style={styles.activeCell} ref={index === 0 ? actionsTarget.ref : undefined} collapsable={false}>
+              {game.playersWithPoints.map((p, index) => (
+                <View key={p.id} style={styles.activeCell} ref={index === 0 ? targetActions.ref : undefined} collapsable={false}>
                   {p.currentPoints > 0 ? (
                     <View style={styles.actionRow}>
-                      <ActionCircle theme={theme} label={translate('cacheta.actions.fold')} color={theme.colors.cacheta.fold} active={p.currentAction === 'fold'} onPress={() => updateAction(p.id, 'fold')} />
-                      <ActionCircle theme={theme} label={translate('cacheta.actions.lost')} color={theme.colors.cacheta.loss} active={p.currentAction === 'lost'} onPress={() => updateAction(p.id, 'lost')} />
-                      <ActionCircle theme={theme} label={translate('cacheta.actions.won')} color={theme.colors.cacheta.win} active={p.currentAction === 'won'} onPress={() => updateAction(p.id, 'won')} />
+                      <ActionCircle theme={theme} label={translate('cacheta.actions.fold')} color={theme.colors.cacheta.fold} active={p.currentAction === 'fold'} onPress={() => game.updateAction(p.id, 'fold')} />
+                      <ActionCircle theme={theme} label={translate('cacheta.actions.lost')} color={theme.colors.cacheta.loss} active={p.currentAction === 'lost'} onPress={() => game.updateAction(p.id, 'lost')} />
+                      <ActionCircle theme={theme} label={translate('cacheta.actions.won')} color={theme.colors.cacheta.win} active={p.currentAction === 'won'} onPress={() => game.updateAction(p.id, 'won')} />
                     </View>
                   ) : (
                     <Text style={[styles.outLabel, { color: theme.colors.status.error }]}>{translate('cacheta.out_of_game')}</Text>
@@ -282,50 +217,16 @@ export const CachetaScreen = () => {
           </ScrollView>
         </ScrollView>
 
-        <View style={styles.footer}>
+        {/* 4. BOTÃO */}
+        <View style={styles.footer} ref={targetButton.ref} collapsable={false}>
           <View style={{ width: 220, height: 50 }}>
-            <GameButton title={translate('cacheta.next_round')} onPress={handleNextRound} />
+            <GameButton title={translate('cacheta.next_round')} onPress={game.handleNextRound} />
           </View>
         </View>
 
       </SafeAreaView>
 
-      <TutorialOverlay
-        visible={tutorialActive}
-        spotlight={actionsTarget.layout}
-        message={translate('cacheta.tutorial.actions')}
-        onNext={finishTutorial}
-        nextText={translate('common.got_it')}
-      />
-
-      {/* NOVO MODAL DE SETTINGS */}
-      <CachetaSettingsModal 
-        visible={settingsVisible}
-        onClose={() => setSettingsVisible(false)}
-        onReset={handleReset}
-        onOpenHelp={() => { setSettingsVisible(false); setHelpVisible(true); }}
-        initialPoints={initialPoints}
-        setInitialPoints={setInitialPoints}
-      />
-
-      <CachetaHelpModal
-        visible={helpVisible}
-        onClose={() => { setHelpVisible(false); setSettingsVisible(true); }}
-      />
-
-      <EditNameModal 
-        visible={showEditName} 
-        initialValue={getEditingPlayerName()} 
-        onClose={() => setShowEditName(false)} 
-        onSave={(newName) => {
-            if (newName.trim() && editingPlayerId) {
-                setPlayers(prev => prev.map(p => p.id === editingPlayerId ? { ...p, name: newName } : p));
-            }
-        }}
-        onDelete={handleDeletePlayer}
-      />
-
-      {/* OVERLAY: EDIÇÃO DE HISTÓRICO */}
+      {/* OVERLAY: EDITAR HISTÓRICO */}
       {showEditHistory && editingRoundIdx !== null && (
         <TouchableWithoutFeedback onPress={handleSaveHistory}>
           <View style={[styles.absoluteOverlay, { backgroundColor: theme.colors.background.overlay }]}>
@@ -341,31 +242,24 @@ export const CachetaScreen = () => {
                 </View>
 
                 <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
-                  {players.map(p => (
+                  {game.players.map(p => (
                     <View key={p.id} style={[styles.editHistoryRow, { borderBottomColor: theme.colors.modal.divider }]}>
                       <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 10, flex: 1 }}>{p.name}</Text>
                       <View style={styles.actionRow}>
-                        <ActionCircle theme={theme} label={translate('cacheta.actions.fold')} color={theme.colors.cacheta.fold} active={p.history[editingRoundIdx] === 'fold'} onPress={() => updateAction(p.id, 'fold', true)} />
-                        <ActionCircle theme={theme} label={translate('cacheta.actions.lost')} color={theme.colors.cacheta.loss} active={p.history[editingRoundIdx] === 'lost'} onPress={() => updateAction(p.id, 'lost', true)} />
-                        <ActionCircle theme={theme} label={translate('cacheta.actions.won')} color={theme.colors.cacheta.win} active={p.history[editingRoundIdx] === 'won'} onPress={() => updateAction(p.id, 'won', true)} />
+                        {/* Fix: Removido os "!" aqui também, pois o editingRoundIdx já é garantido pelo pai */}
+                        <ActionCircle theme={theme} label={translate('cacheta.actions.fold')} color={theme.colors.cacheta.fold} active={p.history[editingRoundIdx] === 'fold'} onPress={() => game.updateHistoryAction(p.id, 'fold', editingRoundIdx)} />
+                        <ActionCircle theme={theme} label={translate('cacheta.actions.lost')} color={theme.colors.cacheta.loss} active={p.history[editingRoundIdx] === 'lost'} onPress={() => game.updateHistoryAction(p.id, 'lost', editingRoundIdx)} />
+                        <ActionCircle theme={theme} label={translate('cacheta.actions.won')} color={theme.colors.cacheta.win} active={p.history[editingRoundIdx] === 'won'} onPress={() => game.updateHistoryAction(p.id, 'won', editingRoundIdx)} />
                       </View>
                     </View>
                   ))}
                 </ScrollView>
 
                 <View style={[styles.modalFooterRow, { borderTopColor: theme.colors.modal.divider }]}>
-                  <TouchableOpacity style={styles.textBtn} onPress={() => {
-                    Alert.alert(translate('cacheta.delete_round'), translate('cacheta.confirm_delete_round'), [
-                      { text: translate('common.cancel'), style: 'cancel' },
-                      { text: translate('common.confirm'), style: 'destructive', onPress: () => {
-                          setPlayers(prev => prev.map(p => { const h = [...p.history]; h.splice(editingRoundIdx, 1); return { ...p, history: h }; }));
-                          setShowEditHistory(false);
-                      }}
-                    ]);
-                  }}>
+                  {/* Fix: Removido o "!" no deleteRound */}
+                  <TouchableOpacity style={styles.textBtn} onPress={() => game.deleteRound(editingRoundIdx, () => setShowEditHistory(false))}>
                     <Text style={[styles.deleteLinkText, { color: theme.colors.status.error }]}>{translate('cacheta.delete_round')}</Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity style={[styles.saveBtnSmall, { backgroundColor: theme.colors.brand.primary }]} onPress={handleSaveHistory}>
                     <Text style={[styles.saveBtnText, { color: theme.colors.text.white }]}>{translate('common.save')}</Text>
                   </TouchableOpacity>
@@ -375,11 +269,36 @@ export const CachetaScreen = () => {
           </View>
         </TouchableWithoutFeedback>
       )}
+
+      <CachetaSettingsModal 
+        visible={settingsVisible} onClose={() => setSettingsVisible(false)}
+        onReset={() => { game.handleReset(); if(tutorialActive) handleNextTutorial(); }}
+        onOpenHelp={() => { setSettingsVisible(false); setHelpVisible(true); }}
+        initialPoints={game.initialPoints} setInitialPoints={game.setInitialPoints}
+      />
+
+      <CachetaHelpModal visible={helpVisible} onClose={() => { setHelpVisible(false); setSettingsVisible(true); }} />
+
+      <EditNameModal 
+        visible={showEditName} initialValue={getEditingPlayerName()} 
+        onClose={() => setShowEditName(false)} 
+        onSave={(n) => { if (n.trim() && editingPlayerId) game.setPlayers(prev => prev.map(p => p.id === editingPlayerId ? { ...p, name: n } : p)); }}
+        onDelete={handleDeletePlayer}
+      />
+
+      {layoutReady && (
+        <TutorialOverlay
+            visible={tutorialActive}
+            spotlight={getTutorialSpotlight()}
+            message={getTutorialMessage()}
+            onNext={handleNextTutorial}
+            nextText={tutorialStep === 2 ? translate('common.got_it') : translate('common.next')}
+        />
+      )}
     </View>
   );
 };
 
-// --- COMPONENTES AUXILIARES ---
 const ActionCircle = ({ label, color, active, onPress, theme }: any) => (
   <TouchableOpacity onPress={onPress} style={[styles.circle, { borderColor: color, backgroundColor: active ? color : 'transparent' }]}>
     <Text style={[styles.circleText, { color: active ? theme.colors.text.black : color }]}>{label}</Text>

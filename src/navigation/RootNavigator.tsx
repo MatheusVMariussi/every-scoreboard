@@ -31,12 +31,12 @@ export const RootNavigator = () => {
         headerBackButtonDisplayMode: 'minimal',
       }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} options={{ animation: 'fade' }}/>
 
-      <Stack.Screen name="Truco" component={TrucoScreen} />
-      <Stack.Screen name="Cacheta" component={CachetaScreen} />
-      <Stack.Screen name="Canastra" component={CanastraScreen} />
-      <Stack.Screen name="Fodinha" component={FodinhaScreen} />
+      <Stack.Screen name="Truco" component={TrucoScreen} options={{ animation: 'fade' }}/>
+      <Stack.Screen name="Cacheta" component={CachetaScreen} options={{ animation: 'fade' }}/>
+      <Stack.Screen name="Canastra" component={CanastraScreen} options={{ animation: 'fade' }}/>
+      <Stack.Screen name="Fodinha" component={FodinhaScreen} options={{ animation: 'fade' }}/>
     </Stack.Navigator>
   );
 };

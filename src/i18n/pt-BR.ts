@@ -103,12 +103,16 @@ export default {
     max_score: 'PONTUAÇÃO MÁXIMA',
     tutorial: {
       score: 'Arraste para CIMA para somar o valor do TRUCO (3/4 pts).\nArraste para BAIXO para remover 1 pt.\nToque para somar 1 pt.',
+      settings: 'Toque aqui para alternar entre PAULISTA e MINEIRO ou mudar a pontuação máxima (12/24).'
     },
   },
   cacheta: {
     title: 'Cacheta',
     tutorial: {
-      actions: 'Defina o resultado (Correu/Perdeu/Ganhou), confirme em "PRÓXIMA RODADA" e repita para ver os resultados.',
+      step_names: 'Toque em um nome para editar ou remover o jogador.',
+      step_history: 'Toque em qualquer rodada anterior para corrigir erros.',
+      step_actions: 'Marque quem Correu, Perdeu ou Ganhou nesta rodada.',
+      step_button: 'Confirme para finalizar a rodada e atualizar os pontos.',
     },
     player_name: 'Jogador {{index}}',
     initial_points: 'Pontos Iniciais',
@@ -170,7 +174,11 @@ export default {
     bet: 'APOSTOU',
     edit_round_instruction: 'Ajuste quanto cada jogador perdeu nesta rodada.',
     tutorial: {
-      actions: 'Defina a aposta ou vitórias de cada jogador, confirme no botão abaixo e repita a cada fase.',
+      actions: 'Defina a aposta ou vitórias de cada jogador...',
+      step_cards: 'Ajuste quantas cartas serão distribuídas nesta rodada.',
+      step_lives: 'Acompanhe as vidas restantes de cada jogador aqui.',
+      step_inputs: 'Defina quanto cada jogador apostou ou ganhou.',
+      step_button: 'Confirme para avançar para a próxima fase.',
     },
     invalid_bets_title: 'Apostas Inválidas',
     invalid_bets_message: 'A soma das apostas ({{total}}) não pode ser igual ao número de cartas ({{cards}}).',

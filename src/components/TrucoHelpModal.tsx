@@ -10,11 +10,6 @@ interface TrucoHelpModalProps {
   gameMode: 'paulista' | 'mineiro';
 }
 
-// Custom shapes for suits might be better if Ionicons doesn't have good suit icons
-// But for now, let's stick to text or simple icons.
-// Actually, Ionicons has 'heart', 'diamond' (in MD), but 'club' and 'spade' are missing usually.
-// I will use text char for suits: ♣ ♥ ♠ ♦
-
 const Card = ({ value, suit, isManilha = false, highlight = false }: { value: string, suit: string, isManilha?: boolean, highlight?: boolean }) => (
   <View style={[styles.card, isManilha && styles.cardManilha, highlight && styles.cardHighlight]}>
     <Text style={[styles.cardValue, { color: suit === '♥' || suit === '♦' ? '#D32F2F' : 'black' }]}>{value}</Text>
