@@ -10,6 +10,17 @@ export default {
     
     settings: 'Settings',
     removeAds: 'Remove Ads',
+    update_title: 'New Version Available',
+    update_message: 'A new version is available. Update to get the best experience.',
+    cancel: 'Cancel',
+    update_now: 'Update',
+  },
+  rateModal: {
+    rate_title: 'RATE US',
+    rate_message: 'Enjoying the experience? Rate us on the store!\n\nNote: App is in Beta, bugs are expected. Improvement suggestions are very welcome! Contact me!',
+    rate_now: 'RATE',
+    rate_contact: 'CONTACT',
+    later: 'LATER',
   },
   settings: {
     title: 'CONFIGURATIONS',
@@ -127,6 +138,7 @@ export default {
     confirm_delete_round: 'Do you want to permanently delete this round?',
     delete_round: 'DELETE ROUND',
     need_winner: 'Someone needs to have won the round!',
+    multiple_winners: 'Only one player can win the round!',
     current: 'CURRENT',
     actions: {
       fold: 'F',

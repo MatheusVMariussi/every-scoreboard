@@ -12,8 +12,64 @@ interface Player {
   currentWon: number;
 }
 
+// Lógica pura para calcular dano e atualizar histórico
+
+const logicRemovePlayer = (players: Player[], pId: string) => {
+  return players.filter(p => p.id !== pId);
+};
+
+const logicUpdateHistoryDamage = (players: Player[], pId: string, delta: number, roundIdx: number, initialLives: number) => {
+  return players.map(p => {
+    if (p.id !== pId) return p;
+    const newHistory = [...p.history];
+    const currentDamage = newHistory[roundIdx] || 0;
+    const newDamage = Math.max(0, currentDamage + delta);
+    newHistory[roundIdx] = newDamage;
+    const totalDamage = newHistory.reduce((a, b) => a + b, 0);
+    return { ...p, history: newHistory, lives: initialLives - totalDamage };
+  });
+};
+
+const logicUpdateValue = (players: Player[], pId: string, delta: number, phase: 'betting' | 'results', cardsInRound: number) => {
+  return players.map(p => {
+    if (p.id !== pId) return p;
+    if (phase === 'betting') {
+      const newBid = Math.max(0, Math.min(cardsInRound, p.currentBid + delta));
+      return { ...p, currentBid: newBid };
+    } else {
+      const newWon = Math.max(0, Math.min(cardsInRound, p.currentWon + delta));
+      return { ...p, currentWon: newWon };
+    }
+  });
+};
+
+const logicRemoveRound = (players: Player[], roundIdx: number, initialLives: number) => {
+  return players.map(p => {
+    const newHistory = [...p.history];
+    newHistory.splice(roundIdx, 1);
+    const totalDamage = newHistory.reduce((a, b) => a + b, 0);
+    return { ...p, history: newHistory, lives: initialLives - totalDamage };
+  });
+};
+
+const logicFinishRound = (players: Player[], penaltyMode: 'fixed' | 'difference') => {
+  return players.map(p => {
+    if (p.lives <= 0) return p;
+    const diff = Math.abs(p.currentBid - p.currentWon);
+    let damage = 0;
+    if (diff > 0) damage = penaltyMode === 'fixed' ? 1 : diff;
+
+    return {
+      ...p,
+      lives: Math.max(0, p.lives - damage),
+      history: [...p.history, damage],
+      currentBid: 0,
+      currentWon: 0
+    };
+  });
+};
+// --- Hook principal ---
 export const useFodinhaGame = (scrollRef: RefObject<ScrollView>) => {
-  // --- STATES ---
   const [initialLives, setInitialLives] = useState(10);
   const [penaltyMode, setPenaltyMode] = useState<'fixed' | 'difference'>('fixed');
   const [cardsInRound, setCardsInRound] = useState(1);
@@ -25,7 +81,10 @@ export const useFodinhaGame = (scrollRef: RefObject<ScrollView>) => {
     { id: '3', name: translate('common.player') + ' 3', lives: 10, history: [], currentBid: 0, currentWon: 0 },
   ]);
 
-  // --- PERSISTENCE ---
+  const removePlayer = (pId: string) => {
+    setPlayers(prev => logicRemovePlayer(prev, pId));
+  };
+
   useEffect(() => {
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.FODINHA_DATA);
@@ -44,26 +103,18 @@ export const useFodinhaGame = (scrollRef: RefObject<ScrollView>) => {
     saveData(STORAGE_KEYS.FODINHA_DATA, { players, initialLives, penaltyMode, cardsInRound, roundPhase });
   }, [players, initialLives, penaltyMode, cardsInRound, roundPhase]);
 
-  // --- LOGIC ---
   const totalBids = useMemo(() => players.reduce((acc, p) => acc + p.currentBid, 0), [players]);
   const totalWon = useMemo(() => players.reduce((acc, p) => acc + p.currentWon, 0), [players]);
 
+  // Criamos um objeto rounds que tem um ID único artificial.
+  // Usamos useMemo para não recriar a cada render.
+  const rounds = useMemo(() => {
+    if (players.length === 0) return [];
+    return players[0].history.map((_, i) => ({ id: `round_${i}`, index: i }));
+  }, [players]);
+
   const finishRound = () => {
-    setPlayers(prev => prev.map(p => {
-      if (p.lives <= 0) return p;
-      const diff = Math.abs(p.currentBid - p.currentWon);
-      let damage = 0;
-      if (diff > 0) damage = penaltyMode === 'fixed' ? 1 : diff;
-
-      return {
-        ...p,
-        lives: Math.max(0, p.lives - damage),
-        history: [...p.history, damage],
-        currentBid: 0,
-        currentWon: 0
-      };
-    }));
-
+    setPlayers(prev => logicFinishRound(prev, penaltyMode)); // Chama lógica externa
     setCardsInRound(prev => prev + 1);
     setRoundPhase('betting');
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
@@ -86,43 +137,32 @@ export const useFodinhaGame = (scrollRef: RefObject<ScrollView>) => {
   };
 
   const adjustValue = (playerId: string, delta: number) => {
-    setPlayers(prev => prev.map(p => {
-      if (p.id !== playerId) return p;
-      if (roundPhase === 'betting') {
-        const newBid = Math.max(0, Math.min(cardsInRound, p.currentBid + delta));
-        return { ...p, currentBid: newBid };
-      } else {
-        const newWon = Math.max(0, Math.min(cardsInRound, p.currentWon + delta));
-        return { ...p, currentWon: newWon };
-      }
-    }));
+    setPlayers(prev => logicUpdateValue(prev, playerId, delta, roundPhase, cardsInRound));
   };
 
   const adjustHistoryDamage = (playerId: string, delta: number, roundIdx: number) => {
-    setPlayers(prev => prev.map(p => {
-      if (p.id !== playerId) return p;
-      const newHistory = [...p.history];
-      const currentDamage = newHistory[roundIdx] || 0;
-      const newDamage = Math.max(0, currentDamage + delta);
-      newHistory[roundIdx] = newDamage;
-      const totalDamage = newHistory.reduce((a, b) => a + b, 0);
-      return { ...p, history: newHistory, lives: initialLives - totalDamage };
-    }));
+    setPlayers(prev => logicUpdateHistoryDamage(prev, playerId, delta, roundIdx, initialLives));
+  };
+
+  // Função auxiliar para o Alert não ficar aninhado
+  const confirmDeleteRound = (roundIdx: number, onCloseOverlay: () => void) => {
+    setPlayers(prev => logicRemoveRound(prev, roundIdx, initialLives));
+    onCloseOverlay();
   };
 
   const deleteRound = (roundIdx: number, onCloseOverlay: () => void) => {
-    Alert.alert(translate('cacheta.delete_round'), translate('cacheta.confirm_delete_round'), [
-        { text: translate('common.cancel'), style: 'cancel' },
-        { text: translate('common.confirm'), style: 'destructive', onPress: () => {
-            setPlayers(prev => prev.map(p => {
-                const newHistory = [...p.history];
-                newHistory.splice(roundIdx, 1);
-                const totalDamage = newHistory.reduce((a, b) => a + b, 0);
-                return { ...p, history: newHistory, lives: initialLives - totalDamage };
-            }));
-            onCloseOverlay();
-        }}
-    ]);
+    Alert.alert(
+        translate('cacheta.delete_round'), 
+        translate('cacheta.confirm_delete_round'), 
+        [
+            { text: translate('common.cancel'), style: 'cancel' },
+            { 
+                text: translate('common.confirm'), 
+                style: 'destructive', 
+                onPress: () => confirmDeleteRound(roundIdx, onCloseOverlay) 
+            }
+        ]
+    );
   };
 
   const handleReset = () => {
@@ -152,7 +192,9 @@ export const useFodinhaGame = (scrollRef: RefObject<ScrollView>) => {
     cardsInRound, setCardsInRound,
     roundPhase, setRoundPhase,
     totalBids, totalWon,
+    rounds,
     handlePhaseChange, adjustValue, adjustHistoryDamage, deleteRound,
-    handleReset, handleAddPlayer
+    handleReset, handleAddPlayer,
+    removePlayer
   };
 };

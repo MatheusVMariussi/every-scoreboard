@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 
 interface TrucoHelpModalProps {
@@ -18,7 +17,6 @@ const Card = ({ value, suit, isManilha = false, highlight = false }: { value: st
 );
 
 export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalProps) => {
-  const { theme } = useTheme();
   const [step, setStep] = useState(0);
 
   const steps = [
@@ -204,13 +202,13 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
              </TouchableOpacity>
 
              <View style={styles.dots}>
-                {steps.map((_, i) => (
-                    <View key={i} style={[styles.dot, i === step && styles.activeDot]} />
+                {steps.map((stepItem, i) => (
+                    <View key={`step-${stepItem.title}`} style={[styles.dot, i === step && styles.activeDot]} />
                 ))}
              </View>
 
              <TouchableOpacity style={[styles.navBtn, styles.primaryBtn]} onPress={handleNext}>
-                <Text style={[styles.navText, styles.primaryText]}>
+                <Text style={[styles.navText, styles.primaryText ]}>
                     {step === steps.length - 1 ? translate('common.got_it') : translate('common.next')}
                 </Text>
              </TouchableOpacity>

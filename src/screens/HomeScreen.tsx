@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { FlatList, StyleSheet, View, Text, TouchableOpacity, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-// 1. IMPORTS DE ANIMAÇÃO
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import VersionCheck from 'react-native-version-check';
 
 import { HomeScreenNavigationProp, RootStackParamList } from '../navigation/types';
 import { useTheme } from '../theme/useTheme';
@@ -13,6 +13,7 @@ import { GameButton } from '../components/GameButton';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { SettingsModal } from '../components/SettingsModal';
+import { RateModal } from '../components/RateModal';
 
 interface GameItem {
   id: string;
@@ -24,21 +25,20 @@ const GAMES: GameItem[] = [
   { id: '1', labelKey: 'home.truco', route: 'Truco' },
   { id: '2', labelKey: 'home.fodinha', route: 'Fodinha' },
   { id: '3', labelKey: 'home.cacheta', route: 'Cacheta' },
-  // { id: '4', labelKey: 'home.canastra', route: 'Canastra' },
 ];
 
 export const HomeScreen = () => {
-  // Força Retrato
   useScreenOrientation('PORTRAIT');
   
   const { theme, toggleTheme, themeName } = useTheme(); 
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
-  // ESTADO DO MODAL
+  // ESTADOS DOS MODAIS
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [rateModalVisible, setRateModalVisible] = useState(false);
 
-  // 2. CONFIGURAÇÃO DO FADE-IN
-  const screenOpacity = useSharedValue(0); // Começa invisível
+  // ANIMAÇÃO DE FADE-IN
+  const screenOpacity = useSharedValue(0); 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: screenOpacity.value
   }));
@@ -50,15 +50,42 @@ export const HomeScreen = () => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  // 3. DETECTOR DE LAYOUT (A MÁGICA ACONTECE AQUI)
+  // VERIFICAÇÃO DE UPDATE
+  useEffect(() => {
+    const checkUpdate = async () => {
+      if (__DEV__) return; 
+
+      try {
+        const updateNeeded = await VersionCheck.needUpdate();
+        
+        if (updateNeeded?.isNeeded) {
+          Alert.alert(
+            translate('home.update_title'), 
+            translate('home.update_message'),
+            [
+              { text: translate('home.cancel'), style: 'cancel' },
+              {
+                text: translate('home.update_now'),
+                onPress: () => {
+                  Linking.openURL(updateNeeded.storeUrl);
+                },
+              },
+            ]
+          );
+        }
+      } catch (error) {
+        console.log('Erro update:', error);
+      }
+    };
+    checkUpdate();
+  }, []);
+
+  // CONTROLE DE ANIMAÇÃO (EVITA FLICKER)
   const handleLayout = (event: any) => {
     const { width, height } = event.nativeEvent.layout;
-    
-    // IMPORTANTE: Aqui verificamos se Height > Width (Retrato)
-    // Isso impede que a tela apareça enquanto ainda está "deitada" vindo dos jogos
     if (height > width) { 
        screenOpacity.value = withTiming(1, { 
-         duration: 400, // Um pouco mais lento na Home fica elegante
+         duration: 400, 
          easing: Easing.out(Easing.quad) 
        });
     }
@@ -70,7 +97,9 @@ export const HomeScreen = () => {
 
   const handleSettingsPress = () => setSettingsVisible(true);
   
-  const handleRemoveAdsPress = () => console.log('Remover Ads');
+  const handleRemoveAdsPress = () => {
+    setRateModalVisible(true);
+  };
 
   const titleStyle = {
     color: theme.colors.home.title,
@@ -83,7 +112,6 @@ export const HomeScreen = () => {
     <View style={{ flex: 1 }}>
       <AnimatedBackground />
 
-      {/* 4. APLICAÇÃO DA ANIMAÇÃO NA ÁREA SEGURA */}
       <Animated.View style={[styles.safeArea, animatedStyle]} onLayout={handleLayout}>
         <SafeAreaView style={styles.safeArea}>
           <View style={[styles.mainContainer, { padding: theme.spacing.m }]}>
@@ -112,11 +140,14 @@ export const HomeScreen = () => {
               />
             </View>
             
+            {/* FOOTER COM OS DOIS ÍCONES */}
             <View style={[styles.footerSection, { marginTop: theme.spacing.m }]}>
+              {/* Botão Configurações */}
               <TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton} hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
                 <Ionicons name="settings-sharp" size={28} color={iconColor} />
               </TouchableOpacity>
 
+              {/* Botão Diamante */}
               <TouchableOpacity onPress={handleRemoveAdsPress} style={styles.iconButton} hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
                 <MaterialCommunityIcons name="diamond-stone" size={30} color={removeAdsColor} />
               </TouchableOpacity>
@@ -131,6 +162,11 @@ export const HomeScreen = () => {
         onClose={() => setSettingsVisible(false)} 
         toggleTheme={toggleTheme}
         isDarkMode={themeName === 'dark'}
+      />
+
+      <RateModal 
+        visible={rateModalVisible}
+        onClose={() => setRateModalVisible(false)}
       />
     </View>
   );

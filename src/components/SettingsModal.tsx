@@ -4,6 +4,8 @@ import {
   TouchableWithoutFeedback, Alert 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import VersionCheck from 'react-native-version-check';
+
 import { useTheme } from '../theme/useTheme';
 import i18n, { translate } from '../i18n';
 import { clearAllData } from '../utils/storage';
@@ -18,10 +20,8 @@ interface SettingsModalProps {
 export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: SettingsModalProps) => {
   const { theme } = useTheme();
   
-  // Estado para forçar o re-render local quando o idioma muda
   const [currentLocale, setCurrentLocale] = useState(i18n.locale);
 
-  // Sync do estado local com o i18n global quando o modal abre
   useEffect(() => {
     if (visible) {
       setCurrentLocale(i18n.locale);
@@ -43,22 +43,24 @@ export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: Set
         { 
           text: translate('common.confirm'),
           style: 'destructive', 
+          onPress: () => {
+             clearAllData();
+             onClose();
+          }
         }
       ]
     );
-    clearAllData();
   };
 
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
-        {/* Usando View normal com cor em vez de BlurView para garantir visibilidade */}
         <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           
           <TouchableWithoutFeedback>
             <View style={[styles.container, { 
-              backgroundColor: theme.colors.modal.background, // Verifique se isso existe em dark.ts
-              borderColor: theme.colors.neon.primary // Verifique se isso existe em dark.ts
+              backgroundColor: theme.colors.modal.background,
+              borderColor: theme.colors.neon.primary
             }]}>
               
               <View style={styles.header}>
@@ -110,8 +112,11 @@ export const SettingsModal = ({ visible, onClose, toggleTheme, isDarkMode }: Set
                 <Text style={[styles.resetText, { color: theme.colors.status.error }]}>{translate('settings.reset_all')}</Text>
               </TouchableOpacity>
 
+              {/* VERSÃO ATUAL (INSTALADA) */}
               <Text style={[styles.versionText, { color: theme.colors.text.secondary }]}>
-                {translate('settings.version')} 1.1.2
+                {__DEV__ 
+                  ? 'Dev Version' 
+                  : `${translate('settings.version')} ${VersionCheck.getCurrentVersion()}`} 
               </Text>
 
             </View>

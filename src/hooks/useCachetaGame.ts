@@ -12,8 +12,93 @@ interface Player {
   currentAction: Action;
 }
 
+// --- PURE FUNCTIONS ---
+const processNextRound = (players: Player[], playersWithPoints: any[]): { updatedPlayers: Player[], hasError: boolean, errorKey?: string } => {
+  const playersToUpdate = players.map((p, idx) => {
+      const pWithPts = playersWithPoints[idx]; 
+      // Se o jogador está vivo e não escolheu ação, assume derrota (lost)
+      if (pWithPts.currentPoints > 0 && p.currentAction === null) {
+          return { ...p, currentAction: 'lost' as Action };
+      }
+      return p;
+  });
+
+  const activePlayers = playersWithPoints.filter(p => p.currentPoints > 0);
+  const winnersCount = playersToUpdate.filter(p => p.currentAction === 'won').length;
+
+  // REGRA 1: Se tem jogadores vivos, precisa de um ganhador
+  // REGRA 2: Não pode ter mais de 1 ganhador
+  if (activePlayers.length > 0 && winnersCount !== 1) {
+    return { 
+        updatedPlayers: players, 
+        hasError: true, 
+        errorKey: winnersCount === 0 ? 'cacheta.need_winner' : 'cacheta.multiple_winners' 
+    };
+  }
+
+  const finalPlayers = playersToUpdate.map(p => ({
+    ...p,
+    history: [...p.history, p.currentAction],
+    currentAction: null
+  }));
+
+  return { updatedPlayers: finalPlayers, hasError: false };
+};
+
+const updatePlayerActionInList = (players: Player[], pId: string, action: Action): Player[] => {
+  return players.map(p => {
+    // Se estamos marcando alguém como WON, precisamos desmarcar qualquer outro WON
+    if (action === 'won') {
+        if (p.id === pId) return { ...p, currentAction: 'won' }; // Marca o alvo
+        if (p.currentAction === 'won') return { ...p, currentAction: null }; // Desmarca os outros
+        return p;
+    }
+
+    // Comportamento normal para outras ações (fold, lost, null)
+    if (p.id !== pId) return p;
+    return { ...p, currentAction: action === p.currentAction ? null : action };
+  });
+};
+
+const updateHistoryInList = (players: Player[], pId: string, action: Action, roundIdx: number): Player[] => {
+  return players.map(p => {
+    const newH = [...p.history];
+
+    // Se estamos marcando alguém como WON neste round histórico, desmarca os outros
+    if (action === 'won') {
+        if (p.id === pId) {
+            newH[roundIdx] = 'won';
+        } else if (newH[roundIdx] === 'won') {
+            newH[roundIdx] = null; // Ou poderia forçar 'lost', mas null força o usuário a revisar
+        }
+        return { ...p, history: newH };
+    }
+
+    // Comportamento normal
+    if (p.id !== pId) return p;
+    newH[roundIdx] = action === newH[roundIdx] ? null : action;
+    return { ...p, history: newH };
+  });
+};
+
+const removeRoundFromList = (players: Player[], roundIdx: number): Player[] => {
+  return players.map(p => {
+    const h = [...p.history];
+    h.splice(roundIdx, 1);
+    return { ...p, history: h };
+  });
+};
+
+const removePlayerFromList = (players: Player[], pId: string): Player[] => {
+  return players.filter(p => p.id !== pId);
+};
+
+const resetAllPlayers = (players: Player[]): Player[] => {
+  return players.map(p => ({ ...p, history: [], currentAction: null }));
+};
+
+// --- HOOK ---
 export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
-  // --- STATES ---
   const [initialPoints, setInitialPoints] = useState(10);
   const [players, setPlayers] = useState<Player[]>([
     { id: '1', name: translate('common.player') + ' 1', history: [], currentAction: null },
@@ -21,7 +106,6 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
     { id: '3', name: translate('common.player') + ' 3', history: [], currentAction: null },
   ]);
 
-  // --- PERSISTENCE ---
   useEffect(() => {
     const loadData = async () => {
       const saved = await getData(STORAGE_KEYS.CACHETA_DATA);
@@ -37,7 +121,6 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
     saveData(STORAGE_KEYS.CACHETA_DATA, { players, initialPoints });
   }, [players, initialPoints]);
 
-  // --- LOGIC ---
   const playersWithPoints = useMemo(() => {
     return players.map(p => {
       let pts = initialPoints;
@@ -49,64 +132,59 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
     });
   }, [players, initialPoints]);
 
+  const rounds = useMemo(() => {
+    if (players.length === 0) return [];
+    return players[0].history.map((_, i) => ({ id: `round-${i}`, index: i }));
+  }, [players]);
+
   const handleNextRound = () => {
-    const playersToUpdate = players.map((p, idx) => {
-        const pWithPts = playersWithPoints[idx]; 
-        if (pWithPts.currentPoints > 0 && p.currentAction === null) {
-            return { ...p, currentAction: 'lost' as Action };
-        }
-        return p;
-    });
-
-    const hasWinner = playersToUpdate.some(p => p.currentAction === 'won');
-    const alive = playersWithPoints.filter(p => p.currentPoints > 0);
-
-    if (!hasWinner && alive.length > 0) {
-      Alert.alert(translate('common.error'), translate('cacheta.need_winner'));
+    const result = processNextRound(players, playersWithPoints);
+    if (result.hasError) {
+      // Usa a chave de erro retornada (ex: multiple_winners ou need_winner)
+      Alert.alert(
+          translate('common.error'), 
+          translate(result.errorKey as any) || translate('cacheta.need_winner')
+      );
       return;
     }
-
-    setPlayers(prev => playersToUpdate.map(p => ({
-      ...p,
-      history: [...p.history, p.currentAction],
-      currentAction: null
-    })));
-
+    setPlayers(result.updatedPlayers);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
   };
 
   const updateAction = (pId: string, action: Action) => {
-    setPlayers(prev => prev.map(p => {
-      if (p.id !== pId) return p;
-      return { ...p, currentAction: action === p.currentAction ? null : action };
-    }));
+    setPlayers(prev => updatePlayerActionInList(prev, pId, action));
   };
   
   const updateHistoryAction = (pId: string, action: Action, roundIdx: number) => {
-      setPlayers(prev => prev.map(p => {
-          if (p.id !== pId) return p;
-          const newH = [...p.history];
-          newH[roundIdx] = action === newH[roundIdx] ? null : action;
-          return { ...p, history: newH };
-      }));
+    setPlayers(prev => updateHistoryInList(prev, pId, action, roundIdx));
+  };
+
+  const removePlayer = (pId: string) => {
+    setPlayers(prev => removePlayerFromList(prev, pId));
+  };
+
+  const executeDeleteRound = (roundIdx: number, onCloseOverlay: () => void) => {
+      setPlayers(prev => removeRoundFromList(prev, roundIdx));
+      onCloseOverlay();
   };
 
   const deleteRound = (roundIdx: number, onCloseOverlay: () => void) => {
-      Alert.alert(translate('cacheta.delete_round'), translate('cacheta.confirm_delete_round'), [
-          { text: translate('common.cancel'), style: 'cancel' },
-          { text: translate('common.confirm'), style: 'destructive', onPress: () => {
-              setPlayers(prev => prev.map(p => { 
-                  const h = [...p.history]; 
-                  h.splice(roundIdx, 1); 
-                  return { ...p, history: h }; 
-              }));
-              onCloseOverlay();
-          }}
-      ]);
+      Alert.alert(
+          translate('cacheta.delete_round'), 
+          translate('cacheta.confirm_delete_round'), 
+          [
+              { text: translate('common.cancel'), style: 'cancel' },
+              { 
+                  text: translate('common.confirm'), 
+                  style: 'destructive', 
+                  onPress: () => executeDeleteRound(roundIdx, onCloseOverlay) 
+              }
+          ]
+      );
   };
 
   const handleReset = () => {
-    setPlayers(prev => prev.map(p => ({ ...p, history: [], currentAction: null })));
+    setPlayers(prev => resetAllPlayers(prev));
   };
 
   const handleAddPlayer = () => {
@@ -126,7 +204,8 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
     players, setPlayers,
     initialPoints, setInitialPoints,
     playersWithPoints,
+    rounds, 
     handleNextRound, updateAction, updateHistoryAction, deleteRound,
-    handleReset, handleAddPlayer
+    handleReset, handleAddPlayer, removePlayer
   };
 };

@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '../theme/useTheme';
 
 export interface HistoryItem {
+  id: string;
   team: 'us' | 'them';
   points: number;
 }
@@ -20,7 +21,6 @@ export const MatchHistoryGraph = ({
 }: MatchHistoryGraphProps) => {
   const { theme } = useTheme();
   
-  // Use props if provided, otherwise fallback to theme colors
   const finalColorUs = colorUs || theme.colors.truco.teamUs;
   const finalColorThem = colorThem || theme.colors.truco.teamThem;
 
@@ -39,12 +39,12 @@ export const MatchHistoryGraph = ({
         contentContainerStyle={styles.scrollContent}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
-        {history.map((item, index) => {
+        {history.map((item) => {
           // Altura: Truco (3 ou 4) é maior que ponto normal (1 ou 2)
-          const barHeight = item.points > 2 ? 30 : 16; 
+          const barHeight = item.points > 2 ? 30 : 16;
           
           return (
-            <View key={index} style={[
+            <View key={item.id} style={[
                 styles.historyDot, 
                 { 
                     backgroundColor: item.team === 'us' ? finalColorUs : finalColorThem,

@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,7 +36,7 @@ export const FodinhaScreen = () => {
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
   // --- TUTORIAL & LAYOUT STATES ---
-  const [layoutReady, setLayoutReady] = useState(false); // <--- TRAVA DE SEGURANÇA
+  const [layoutReady, setLayoutReady] = useState(false); 
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
 
@@ -48,22 +48,19 @@ export const FodinhaScreen = () => {
 
   useLayoutEffect(() => { navigation.setOptions({ headerShown: false }); }, [navigation]);
 
-  // Detector de Layout Seguro (Corrige Race Condition)
   const handleLayout = (event: any) => {
     const { width, height } = event.nativeEvent.layout;
-    if (width > height) { // Confirma que estamos em Landscape
+    if (width > height) { 
        setLayoutReady(true);
     }
   };
 
   useEffect(() => {
-    // Só verifica o tutorial se o layout estiver pronto (Landscape)
     if (!layoutReady) return;
 
     const checkTutorial = async () => {
       const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_FODINHA);
       if (!hasSeen) {
-        // Pequeno delay para garantir que a UI se acalmou após a rotação
         setTimeout(() => {
             setTutorialActive(true);
             setTutorialStep(0);
@@ -104,8 +101,20 @@ export const FodinhaScreen = () => {
 
   const handleDeletePlayer = () => {
     if (!editingPlayerId) return;
-    game.setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
-    setShowEditName(false);
+    
+    const confirmDelete = () => {
+        game.removePlayer(editingPlayerId);
+        setShowEditName(false);
+    };
+
+    Alert.alert(
+        translate('common.delete_player'), 
+        translate('common.confirm_delete_player'), 
+        [
+            { text: translate('common.cancel'), style: 'cancel' },
+            { text: translate('common.confirm'), style: 'destructive', onPress: confirmDelete }
+        ]
+    );
   };
 
   const getEditingPlayerName = () => game.players.find(p => p.id === editingPlayerId)?.name || '';
@@ -196,17 +205,19 @@ export const FodinhaScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* HISTÓRICO */}
+            {/* HISTÓRICO - FIX S6479 */}
             <View style={{ flexDirection: 'row' }}>
-              {game.players.length > 0 && game.players[0].history.map((_, rIdx) => (
-                <View key={rIdx}>
+              {/* Aqui está o FIX: Iteramos sobre game.rounds (que tem IDs) em vez de índices puros */}
+              {game.rounds.map((round) => (
+                <View key={round.id}>
                     <TouchableOpacity
                         style={styles.historyColumn}
-                        onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}
+                        onPress={() => { setEditingRoundIdx(round.index); setShowEditHistory(true); }}
                     >
-                    <View style={styles.cellHeader}><Text style={styles.headerText}>{rIdx + 1}</Text></View>
+                    <View style={styles.cellHeader}><Text style={styles.headerText}>{round.index + 1}</Text></View>
                     {game.players.map(p => {
-                        const damage = p.history[rIdx];
+                        // Usamos round.index para pegar o valor correto do array
+                        const damage = p.history[round.index];
                         return (
                             <View key={p.id} style={[styles.historyCell, { backgroundColor: theme.colors.fodinha.cardBackground }]}>
                             {damage === 0 ? (
@@ -303,16 +314,16 @@ export const FodinhaScreen = () => {
                 <View style={{ flexShrink: 1 }}>
                     <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ paddingBottom: 20 }}>
                         {game.players.map(p => {
-                            const damage = p.history[editingRoundIdx!] || 0;
+                            const damage = p.history[editingRoundIdx] || 0;
                             return (
                                 <View key={p.id} style={[styles.editHistoryRow, { borderBottomColor: theme.colors.fodinha.divider }]}>
                                     <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 12, flex: 1 }}>{p.name}</Text>
                                     <View style={[styles.stepperContainer, { backgroundColor: theme.colors.background.overlay }]}>
-                                        <TouchableOpacity onPress={() => game.adjustHistoryDamage(p.id, -1, editingRoundIdx!)} style={styles.stepBtn}>
+                                        <TouchableOpacity onPress={() => game.adjustHistoryDamage(p.id, -1, editingRoundIdx)} style={styles.stepBtn}>
                                             <Ionicons name="remove" size={16} color={theme.colors.text.white} />
                                         </TouchableOpacity>
                                         <Text style={[styles.mainValue, { color: damage > 0 ? theme.colors.fodinha.damageText : theme.colors.status.success }]}>{damage > 0 ? `-${damage}` : 'OK'}</Text>
-                                        <TouchableOpacity onPress={() => game.adjustHistoryDamage(p.id, 1, editingRoundIdx!)} style={styles.stepBtn}>
+                                        <TouchableOpacity onPress={() => game.adjustHistoryDamage(p.id, 1, editingRoundIdx)} style={styles.stepBtn}>
                                             <Ionicons name="add" size={16} color={theme.colors.text.white} />
                                         </TouchableOpacity>
                                     </View>
@@ -322,7 +333,7 @@ export const FodinhaScreen = () => {
                     </ScrollView>
                 </View>
                 <View style={[styles.modalFooterRow, { borderTopColor: theme.colors.fodinha.divider }]}>
-                        <TouchableOpacity onPress={() => game.deleteRound(editingRoundIdx!, () => setShowEditHistory(false))} style={{ padding: 10 }}>
+                        <TouchableOpacity onPress={() => game.deleteRound(editingRoundIdx, () => setShowEditHistory(false))} style={{ padding: 10 }}>
                            <Text style={{ color: theme.colors.status.error, fontFamily: 'Minecraft', fontSize: 12, textDecorationLine: 'underline' }}>{translate('cacheta.delete_round')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setShowEditHistory(false)} style={[styles.saveBtnSmall, { backgroundColor: theme.colors.brand.primary }]}>
@@ -349,7 +360,8 @@ export const FodinhaScreen = () => {
             visible={tutorialActive}
             spotlight={getTutorialSpotlight()}
             message={getTutorialMessage()}
-            onNext={handleNextTutorial}
+            // FIX S6544: Retornando void explicitamente
+            onNext={() => { handleNextTutorial(); }}
             nextText={tutorialStep === 3 ? translate('common.got_it') : translate('common.next')}
         />
       )}

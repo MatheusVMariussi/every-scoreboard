@@ -20,6 +20,104 @@ import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 import { useTrucoGame } from '../hooks/useTrucoGame';
 
+// --- COMPONENTE EXTRAÍDO ---
+// Definido fora do componente principal para evitar recriação a cada render
+interface TeamScoreAreaProps {
+  team: 'us' | 'them';
+  score: number;
+  name: string;
+  wins: number;
+  color: string;
+  targetProp?: any;
+  basePoints: number;
+  trucoPoints: number;
+  onPointChange: (team: 'us' | 'them', points: number) => void;
+  onEditName: (team: 'us' | 'them') => void;
+}
+
+const TeamScoreArea = ({ 
+  team, score, name, wins, color, targetProp, 
+  basePoints, trucoPoints, onPointChange, onEditName 
+}: TeamScoreAreaProps) => {
+  const { theme } = useTheme();
+  const scale = useSharedValue(1);
+  const translateY = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: scale.value }, 
+      { translateY: translateY.value }
+    ] as any,
+  }));
+
+  const gesture = Gesture.Race(
+    Gesture.Pan()
+      .onUpdate((e) => { translateY.value = e.translationY * 0.1; })
+      .onEnd((e) => {
+        if (e.translationY < -40) {
+           scheduleOnRN(onPointChange, team, trucoPoints); 
+        } else if (e.translationY > 40) {
+           scheduleOnRN(onPointChange, team, -basePoints);
+        }
+        translateY.value = withSpring(0);
+      }),
+    Gesture.Tap()
+      .onStart(() => { scale.value = withSpring(0.95); })
+      .onEnd(() => { 
+          scale.value = withSpring(1); 
+          scheduleOnRN(onPointChange, team, basePoints);
+      })
+  );
+
+  return (
+    <View style={styles.teamColumn}>
+      <View style={[styles.colorBar, { backgroundColor: color }]} />
+
+      <View>
+          <TouchableOpacity
+              onPress={() => onEditName(team)}
+              style={styles.nameContainer}
+              activeOpacity={0.6}
+              hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
+          >
+              <Text style={[styles.teamName, { color: theme.colors.text.inverse }]}>
+                  {name} <Ionicons name="pencil" size={12} color={theme.colors.text.secondary} />
+              </Text>
+              <View style={styles.trophyContainer}>
+                  {Array.from({ length: wins }).map((_, i) => (
+                      <Ionicons key={`trophy-${team}-${i}`} name="trophy" size={12} color={color} />
+                  ))}
+              </View>
+          </TouchableOpacity>
+      </View>
+
+      <GestureDetector gesture={gesture}>
+        <View style={styles.gestureArea} collapsable={false}>
+           <Animated.View style={[styles.scoreContainer, animatedStyle]}>
+              <View ref={targetProp?.ref} collapsable={false}>
+                <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
+                  {score.toString().padStart(2, '0')}
+                </Text>
+              </View>
+
+              <View style={styles.hintsOverlay}>
+                 <View style={styles.hintBox}>
+                    <Ionicons name="chevron-up" size={16} color={theme.colors.truco.divider} />
+                    <Text style={[styles.hintText, { color: theme.colors.text.white }]}>+{trucoPoints}</Text>
+                 </View>
+                 <View style={styles.hintBox}>
+                    <Text style={[styles.hintText, { color: theme.colors.text.white }]}>-{basePoints}</Text>
+                    <Ionicons name="chevron-down" size={16} color={theme.colors.truco.divider} />
+                 </View>
+              </View>
+           </Animated.View>
+        </View>
+      </GestureDetector>
+    </View>
+  );
+};
+
+// --- COMPONENTE PRINCIPAL ---
 export const TrucoScreen = () => {
   useScreenOrientation('PORTRAIT');
   
@@ -85,87 +183,26 @@ export const TrucoScreen = () => {
     }
   };
 
-  // --- COMPONENTES VISUAIS INTERNOS ---
-  const TeamScoreArea = ({ team, score, name, wins, color, targetProp }: any) => {
-    const scale = useSharedValue(1);
-    const translateY = useSharedValue(0);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-      transform: [
-        { scale: scale.value }, 
-        { translateY: translateY.value }
-      ] as any,
-    }));
-
-    const baseValue = game.getBasePoints();
-    const trucoValue = game.gameMode === 'paulista' ? 3 : 4;
-
-    const gesture = Gesture.Race(
-      Gesture.Pan()
-        .onUpdate((e) => { translateY.value = e.translationY * 0.1; })
-        .onEnd((e) => {
-          if (e.translationY < -40) {
-             scheduleOnRN(game.handlePointChange, team, trucoValue); 
-          } else if (e.translationY > 40) {
-             scheduleOnRN(game.handlePointChange, team, -baseValue);
-          }
-          translateY.value = withSpring(0);
-        }),
-      Gesture.Tap()
-        .onStart(() => { scale.value = withSpring(0.95); })
-        .onEnd(() => { 
-            scale.value = withSpring(1); 
-            scheduleOnRN(game.handlePointChange, team, baseValue);
-        })
-    );
-
-    return (
-      <View style={styles.teamColumn}>
-        <View style={[styles.colorBar, { backgroundColor: color }]} />
-
-        <View>
-            <TouchableOpacity
-                onPress={() => { setEditingTeam(team); setEditNameVisible(true); }}
-                style={styles.nameContainer}
-                activeOpacity={0.6}
-                hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
-            >
-                <Text style={[styles.teamName, { color: theme.colors.text.inverse }]}>
-                    {name} <Ionicons name="pencil" size={12} color={theme.colors.text.secondary} />
-                </Text>
-                <View style={styles.trophyContainer}>
-                    {Array.from({ length: wins }).map((_, i) => (
-                        <Ionicons key={i} name="trophy" size={12} color={color} />
-                    ))}
-                </View>
-            </TouchableOpacity>
-        </View>
-
-        <GestureDetector gesture={gesture}>
-          <View style={styles.gestureArea} collapsable={false}>
-             <Animated.View style={[styles.scoreContainer, animatedStyle]}>
-                <View ref={targetProp?.ref} collapsable={false}>
-                  <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
-                    {score.toString().padStart(2, '0')}
-                  </Text>
-                </View>
-
-                <View style={styles.hintsOverlay}>
-                   <View style={styles.hintBox}>
-                      <Ionicons name="chevron-up" size={16} color={theme.colors.truco.divider} />
-                      <Text style={[styles.hintText, { color: theme.colors.text.white }]}>+{trucoValue}</Text>
-                   </View>
-                   <View style={styles.hintBox}>
-                      <Text style={[styles.hintText, { color: theme.colors.text.white }]}>-{baseValue}</Text>
-                      <Ionicons name="chevron-down" size={16} color={theme.colors.truco.divider} />
-                   </View>
-                </View>
-             </Animated.View>
-          </View>
-        </GestureDetector>
-      </View>
-    );
+  // Wrapper para salvar nome sem aninhamento excessivo no JSX
+  const handleSaveName = (newName: string) => {
+    if (newName.trim()) {
+        if (editingTeam === 'us') {
+            game.setNameUs(newName);
+        } else {
+            game.setNameThem(newName);
+        }
+    }
   };
+
+  // Handlers para o componente extraído
+  const handleEditName = (team: 'us' | 'them') => {
+      setEditingTeam(team);
+      setEditNameVisible(true);
+  };
+
+  // Valores calculados para passar pro componente filho
+  const basePoints = game.getBasePoints();
+  const trucoPoints = game.gameMode === 'paulista' ? 3 : 4;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -186,9 +223,18 @@ export const TrucoScreen = () => {
         </View>
 
         <View style={styles.scoreboardRow}>
-          <TeamScoreArea team="them" score={game.scoreThem} name={game.nameThem} wins={game.matchWinsThem} color={COLOR_THEM} />
+          <TeamScoreArea 
+            team="them" 
+            score={game.scoreThem} 
+            name={game.nameThem} 
+            wins={game.matchWinsThem} 
+            color={COLOR_THEM} 
+            basePoints={basePoints}
+            trucoPoints={trucoPoints}
+            onPointChange={game.handlePointChange}
+            onEditName={handleEditName}
+          />
           <View style={[styles.verticalDivider, { backgroundColor: theme.colors.truco.divider }]} />
-          {/* Adicionamos targetProp apenas em um dos lados para o tutorial não ficar duplicado ou confuso */}
           <TeamScoreArea
             team="us"
             score={game.scoreUs}
@@ -196,6 +242,10 @@ export const TrucoScreen = () => {
             wins={game.matchWinsUs}
             color={COLOR_US}
             targetProp={scoreTarget}
+            basePoints={basePoints}
+            trucoPoints={trucoPoints}
+            onPointChange={game.handlePointChange}
+            onEditName={handleEditName}
           />
         </View>
 
@@ -214,7 +264,7 @@ export const TrucoScreen = () => {
         spotlight={getTutorialSpotlight()}
         message={getTutorialMessage()}
         nextText={tutorialStep === 1 ? translate('common.got_it') : translate('common.next')}
-        onNext={handleNextTutorial}
+        onNext={() => { handleNextTutorial(); }}
       />
 
       <TrucoSettingsModal 
@@ -238,14 +288,13 @@ export const TrucoScreen = () => {
         visible={editNameVisible} 
         initialValue={editingTeam === 'us' ? game.nameUs : game.nameThem} 
         onClose={() => setEditNameVisible(false)} 
-        onSave={(n) => { if (n.trim()) editingTeam === 'us' ? game.setNameUs(n) : game.setNameThem(n); }} 
+        onSave={handleSaveName} 
       />
 
     </GestureHandlerRootView>
   );
 };
 
-// ... Styles permanecem iguais ...
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, height: 50 },

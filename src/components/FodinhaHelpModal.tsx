@@ -188,8 +188,8 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
              </TouchableOpacity>
 
              <View style={styles.dots}>
-                {steps.map((_, i) => (
-                    <View key={i} style={[styles.dot, { backgroundColor: i === step ? theme.colors.text.primary : theme.colors.text.secondary }, i === step && styles.activeDot]} />
+                {steps.map((stepItem, i) => (
+                    <View key={`step-${stepItem.title}`} style={[styles.dot, { backgroundColor: i === step ? theme.colors.text.primary : theme.colors.text.secondary }, i === step && styles.activeDot]} />
                 ))}
              </View>
 

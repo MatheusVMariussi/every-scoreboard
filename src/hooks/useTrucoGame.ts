@@ -76,7 +76,11 @@ export const useTrucoGame = () => {
     setPointHistory(prev => {
       const newHist = [...prev];
       if (pointsToAdd > 0) {
-        newHist.push({ team, points: pointsToAdd });
+        newHist.push({ 
+            id: Date.now().toString() + Math.random(),
+            team, 
+            points: pointsToAdd 
+        });
       } else {
         let foundIndex = -1;
         for (let i = newHist.length - 1; i >= 0; i--) { 

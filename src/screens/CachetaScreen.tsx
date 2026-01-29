@@ -45,7 +45,7 @@ export const CachetaScreen = () => {
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
 
-  // Targets (Removi o targetHistory)
+  // Targets
   const targetNames = useTutorialTarget(tutorialActive && tutorialStep === 0);
   const targetActions = useTutorialTarget(tutorialActive && tutorialStep === 1);
   const targetButton = useTutorialTarget(tutorialActive && tutorialStep === 2);
@@ -73,7 +73,6 @@ export const CachetaScreen = () => {
     checkTutorial();
   }, [layoutReady]);
 
-  // Lógica do Tutorial atualizada para 3 passos (0, 1, 2)
   const handleNextTutorial = async () => {
     if (tutorialStep < 2) {
       setTutorialStep(prev => prev + 1);
@@ -86,7 +85,6 @@ export const CachetaScreen = () => {
   const getTutorialMessage = () => {
     switch (tutorialStep) {
       case 0: return translate('cacheta.tutorial.step_names');
-      // Pulei o histórico intencionalmente
       case 1: return translate('cacheta.tutorial.step_actions');
       case 2: return translate('cacheta.tutorial.step_button');
       default: return "";
@@ -104,13 +102,32 @@ export const CachetaScreen = () => {
 
   const handleDeletePlayer = () => {
     if (!editingPlayerId) return;
-    Alert.alert(translate('common.delete_player'), translate('common.confirm_delete_player'), [
-      { text: translate('common.cancel'), style: 'cancel' },
-      { text: translate('common.confirm'), style: 'destructive', onPress: () => {
-          game.setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
-          setShowEditName(false);
-      }}
-    ]);
+
+    const confirmDelete = () => {
+        game.removePlayer(editingPlayerId);
+        setShowEditName(false);
+    };
+
+    Alert.alert(
+      translate('common.delete_player'), 
+      translate('common.confirm_delete_player'), 
+      [
+        { text: translate('common.cancel'), style: 'cancel' },
+        { 
+          text: translate('common.confirm'), 
+          style: 'destructive', 
+          onPress: confirmDelete 
+        }
+      ]
+    );
+  };
+
+  const handleSavePlayerName = (newName: string) => {
+    if (newName.trim() && editingPlayerId) {
+        game.setPlayers(prev => prev.map(p => 
+            p.id === editingPlayerId ? { ...p, name: newName } : p
+        ));
+    }
   };
 
   const getActionColor = (action: Action) => {
@@ -124,10 +141,15 @@ export const CachetaScreen = () => {
 
   const handleSaveHistory = () => {
     if (editingRoundIdx !== null) {
-      // Fix: Removido o ! pois o if acima já garante
-      const hasWinner = game.players.some(p => p.history[editingRoundIdx] === 'won');
-      if (!hasWinner) {
+      const winnersCount = game.players.filter(p => p.history[editingRoundIdx] === 'won').length;
+      
+      if (winnersCount === 0) {
         Alert.alert(translate('common.error'), translate('cacheta.need_winner'));
+        return;
+      }
+      
+      if (winnersCount > 1) {
+        Alert.alert(translate('common.error'), translate('cacheta.multiple_winners') || 'Apenas um jogador pode ganhar por rodada.');
         return;
       }
     }
@@ -179,15 +201,15 @@ export const CachetaScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* 2. HISTÓRICO (Sem ref para tutorial agora) */}
+            {/* 2. HISTÓRICO */}
             <View style={{ flexDirection: 'row' }}>
-              {game.players.length > 0 && game.players[0].history.map((_, rIdx) => (
-                <View key={rIdx}>
-                    <TouchableOpacity style={styles.historyColumn} onPress={() => { setEditingRoundIdx(rIdx); setShowEditHistory(true); }}>
-                    <View style={styles.cellHeader}><Text style={styles.headerText}>{translate('common.round')[0]}{rIdx + 1}</Text></View>
+              {game.rounds.map((round) => (
+                <View key={round.id}>
+                    <TouchableOpacity style={styles.historyColumn} onPress={() => { setEditingRoundIdx(round.index); setShowEditHistory(true); }}>
+                    <View style={styles.cellHeader}><Text style={styles.headerText}>{translate('common.round')[0]}{round.index + 1}</Text></View>
                     {game.playersWithPoints.map(p => (
-                        <View key={p.id} style={[styles.historyCell, { backgroundColor: getActionColor(p.history[rIdx]) + '22' }]}>
-                        <View style={[styles.dot, { backgroundColor: getActionColor(p.history[rIdx]) || theme.colors.truco.divider }]} />
+                        <View key={p.id} style={[styles.historyCell, { backgroundColor: getActionColor(p.history[round.index]) + '22' }]}>
+                        <View style={[styles.dot, { backgroundColor: getActionColor(p.history[round.index]) || theme.colors.truco.divider }]} />
                         </View>
                     ))}
                     </TouchableOpacity>
@@ -246,7 +268,6 @@ export const CachetaScreen = () => {
                     <View key={p.id} style={[styles.editHistoryRow, { borderBottomColor: theme.colors.modal.divider }]}>
                       <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 10, flex: 1 }}>{p.name}</Text>
                       <View style={styles.actionRow}>
-                        {/* Fix: Removido os "!" aqui também, pois o editingRoundIdx já é garantido pelo pai */}
                         <ActionCircle theme={theme} label={translate('cacheta.actions.fold')} color={theme.colors.cacheta.fold} active={p.history[editingRoundIdx] === 'fold'} onPress={() => game.updateHistoryAction(p.id, 'fold', editingRoundIdx)} />
                         <ActionCircle theme={theme} label={translate('cacheta.actions.lost')} color={theme.colors.cacheta.loss} active={p.history[editingRoundIdx] === 'lost'} onPress={() => game.updateHistoryAction(p.id, 'lost', editingRoundIdx)} />
                         <ActionCircle theme={theme} label={translate('cacheta.actions.won')} color={theme.colors.cacheta.win} active={p.history[editingRoundIdx] === 'won'} onPress={() => game.updateHistoryAction(p.id, 'won', editingRoundIdx)} />
@@ -256,7 +277,6 @@ export const CachetaScreen = () => {
                 </ScrollView>
 
                 <View style={[styles.modalFooterRow, { borderTopColor: theme.colors.modal.divider }]}>
-                  {/* Fix: Removido o "!" no deleteRound */}
                   <TouchableOpacity style={styles.textBtn} onPress={() => game.deleteRound(editingRoundIdx, () => setShowEditHistory(false))}>
                     <Text style={[styles.deleteLinkText, { color: theme.colors.status.error }]}>{translate('cacheta.delete_round')}</Text>
                   </TouchableOpacity>
@@ -282,7 +302,7 @@ export const CachetaScreen = () => {
       <EditNameModal 
         visible={showEditName} initialValue={getEditingPlayerName()} 
         onClose={() => setShowEditName(false)} 
-        onSave={(n) => { if (n.trim() && editingPlayerId) game.setPlayers(prev => prev.map(p => p.id === editingPlayerId ? { ...p, name: n } : p)); }}
+        onSave={handleSavePlayerName} 
         onDelete={handleDeletePlayer}
       />
 
@@ -291,7 +311,7 @@ export const CachetaScreen = () => {
             visible={tutorialActive}
             spotlight={getTutorialSpotlight()}
             message={getTutorialMessage()}
-            onNext={handleNextTutorial}
+            onNext={() => { handleNextTutorial(); }}
             nextText={tutorialStep === 2 ? translate('common.got_it') : translate('common.next')}
         />
       )}

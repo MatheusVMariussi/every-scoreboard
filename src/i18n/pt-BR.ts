@@ -10,6 +10,17 @@ export default {
 
     settings: 'Configurações',
     removeAds: 'Remover Anúncios',
+    update_title: 'Nova Versão Disponível',
+    update_message: 'Uma nova versão está disponível. Atualize para ter a melhor experiência.',
+    cancel: 'Cancelar',
+    update_now: 'Atualizar',
+  },
+  rateModal: {
+    rate_title: 'AVALIE',
+    rate_message: 'Gostando da experiência? Avalie na loja!\n\nObs: App em Beta, bugs são esperados. Sugestões de melhorias são muito bem-vindas! Entre em contato.',
+    rate_now: 'AVALIAR',
+    rate_contact: 'CONTATO',
+    later: 'DEPOIS',
   },
   settings: {
     title: 'CONFIGURAÇÕES',
@@ -127,6 +138,7 @@ export default {
     confirm_delete_round: 'Deseja excluir esta rodada permanentemente?',
     delete_round: 'EXCLUIR RODADA',
     need_winner: 'Alguém precisa ter vencido a rodada!',
+    multiple_winners: 'Apenas um jogador pode ganhar a rodada!',
     current: 'ATUAL',
     actions: {
       fold: 'C',
