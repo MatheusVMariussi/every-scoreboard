@@ -9,8 +9,8 @@ Este projeto é um marcador de pontos multi-jogos projetado para facilitar a con
 ## 🎮 Jogos Suportados
 
 - **Truco**: Marcador de tentos com histórico de partidas e gráfico de evolução.
-- **Cacheta**: Gerenciamento de vidas e rodadas.
-- **Fodinha**: Controle de vidas e apostas.
+- **Cacheta**: Gerenciamento de vidas e rodadas, com controle de perdas e eliminações.
+- **Fodinha**: Controle de vidas e apostas, com regras personalizáveis.
 - **Canastra**: (Em desenvolvimento)
 
 ## 🚀 Tecnologias Utilizadas
@@ -19,7 +19,7 @@ Este projeto é um marcador de pontos multi-jogos projetado para facilitar a con
 - **TypeScript**
 - **React Navigation** (Navegação entre telas)
 - **Reanimated** (Animações fluidas)
-- **Shopify Skia** (Gráficos de alta performance)
+- **Shopify Skia** (Gráficos de alta performance e efeitos visuais)
 - **Async Storage** (Persistência de dados)
 - **i18n-js** (Internacionalização)
 
@@ -27,7 +27,7 @@ Este projeto é um marcador de pontos multi-jogos projetado para facilitar a con
 
 A estrutura de pastas em `src/` é organizada da seguinte forma:
 
-- **components/**: Componentes de UI reutilizáveis (botões, modais, gráficos).
+- **components/**: Componentes de UI reutilizáveis (botões, modais, gráficos, tutoriais).
 - **screens/**: Telas principais de cada jogo (HomeScreen, TrucoScreen, etc.).
 - **navigation/**: Configuração de rotas e navegação.
 - **hooks/**: Hooks customizados (ex: `useScreenOrientation`).
@@ -41,14 +41,13 @@ A estrutura de pastas em `src/` é organizada da seguinte forma:
 - **Temas**: Suporte a modo claro e escuro, respeitando a preferência do sistema ou configurável pelo usuário.
 - **Internacionalização**: Suporte automático a Português e Inglês.
 - **Histórico**: Visualização gráfica do histórico de partidas (no Truco).
-- **Tutorial Interativo**: Instruções de uso ao abrir cada jogo pela primeira vez. (Em desenvolvimento)
-- **Regras Integradas**: Guia de "Como Jogar" disponível nos ajustes de cada jogo.
+- **Tutorial Interativo**: Sistema de onboarding com efeito de "spotlight" (foco) que guia o usuário pelas principais funcionalidades ao abrir cada jogo pela primeira vez.
+- **Regras Integradas**: Modais de ajuda detalhados ("Como Jogar") acessíveis via menu de configurações, explicando regras e pontuações.
 
 ## ⚠️ Status e Próximos Passos
 
 A tela de **Canastra** está atualmente em construção e será implementada em atualizações futuras.
 
-Os tutoriais interativos foram implementados de maneira basica inicialmente, e continuam em desenvolvimento para ficarem mais explicativos
-
 Planejamento para as próximas versões:
-- Adicionar propagandas, e juntamente com isso, a funcionalidade do botão "Remover ADS" do menu principal, que irá remover essas propagandas.
+- Implementação completa do placar de Canastra.
+- Adicionar propagandas e funcionalidade "Remover ADS" (versão Premium).
