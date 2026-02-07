@@ -4,11 +4,9 @@ import { useNavigation } from '@react-navigation/native';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
-import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { useTransitionBack } from '../hooks/useTransitionBack';
 
 export const CanastraScreen = () => {
-  useScreenOrientation('LANDSCAPE');
   useTransitionBack();
   const { theme } = useTheme();
   const navigation = useNavigation();

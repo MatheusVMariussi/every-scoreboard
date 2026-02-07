@@ -10,7 +10,6 @@ import { HomeScreenNavigationProp, RootStackParamList } from '../navigation/type
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
-import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { SettingsModal } from '../components/SettingsModal';
 import { RateModal } from '../components/RateModal';
@@ -28,8 +27,6 @@ const GAMES: GameItem[] = [
 ];
 
 export const HomeScreen = () => {
-  useScreenOrientation('PORTRAIT');
-  
   const { theme, toggleTheme, themeName } = useTheme(); 
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
