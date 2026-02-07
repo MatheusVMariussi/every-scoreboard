@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Cacheta: undefined;
   Canastra: undefined;
   Fodinha: undefined;
+  Transition: { target: keyof RootStackParamList };
 };
 
 export type HomeScreenNavigationProp = NativeStackNavigationProp<

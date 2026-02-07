@@ -9,6 +9,7 @@ import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
 import { useScreenOrientation } from '../hooks/useScreenOrientation';
+import { useTransitionBack } from '../hooks/useTransitionBack';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
 import { FodinhaSettingsModal } from '../components/FodinhaSettingsModal';
@@ -19,6 +20,7 @@ import { useFodinhaGame } from '../hooks/useFodinhaGame';
 
 export const FodinhaScreen = () => {
   useScreenOrientation('LANDSCAPE');
+  useTransitionBack();
   
   const { theme } = useTheme();
   const navigation = useNavigation();
