@@ -35,9 +35,9 @@ export const RootNavigator = () => {
       <Stack.Screen name="Home" component={HomeScreen} options={{ animation: 'fade' }}/>
 
       <Stack.Screen name="Truco" component={TrucoScreen} options={{ animation: 'fade' }}/>
-      <Stack.Screen name="Cacheta" component={CachetaScreen} options={{ animation: 'fade', orientation: 'landscape' }}/>
-      <Stack.Screen name="Canastra" component={CanastraScreen} options={{ animation: 'fade', orientation: 'landscape' }}/>
-      <Stack.Screen name="Fodinha" component={FodinhaScreen} options={{ animation: 'fade', orientation: 'landscape' }}/>
+      <Stack.Screen name="Cacheta" component={CachetaScreen} options={{ animation: 'fade' }}/>
+      <Stack.Screen name="Canastra" component={CanastraScreen} options={{ animation: 'fade' }}/>
+      <Stack.Screen name="Fodinha" component={FodinhaScreen} options={{ animation: 'fade' }}/>
 
       <Stack.Screen
         name="Transition"

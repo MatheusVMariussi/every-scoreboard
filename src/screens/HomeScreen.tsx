@@ -89,7 +89,12 @@ export const HomeScreen = () => {
   };
 
   const handlePress = (route: keyof RootStackParamList) => {
-    navigation.navigate(route as any); 
+    if (route === 'Truco') {
+      navigation.navigate('Truco');
+    } else {
+      // For landscape games, go through Transition screen
+      navigation.navigate('Transition', { target: route });
+    }
   };
 
   const handleSettingsPress = () => setSettingsVisible(true);
