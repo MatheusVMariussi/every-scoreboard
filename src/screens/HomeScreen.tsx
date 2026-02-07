@@ -6,11 +6,10 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import VersionCheck from 'react-native-version-check';
 
-import { HomeScreenNavigationProp, RootStackParamList } from '../navigation/types';
+import { HomeScreenNavigationProp, GameScreen } from '../navigation/types';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
-import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { SettingsModal } from '../components/SettingsModal';
 import { RateModal } from '../components/RateModal';
@@ -18,7 +17,7 @@ import { RateModal } from '../components/RateModal';
 interface GameItem {
   id: string;
   labelKey: string;
-  route: keyof RootStackParamList;
+  route: GameScreen;
 }
 
 const GAMES: GameItem[] = [
@@ -28,8 +27,6 @@ const GAMES: GameItem[] = [
 ];
 
 export const HomeScreen = () => {
-  useScreenOrientation('PORTRAIT');
-  
   const { theme, toggleTheme, themeName } = useTheme(); 
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
@@ -91,8 +88,13 @@ export const HomeScreen = () => {
     }
   };
 
-  const handlePress = (route: keyof RootStackParamList) => {
-    navigation.navigate(route as any); 
+  const handlePress = (route: GameScreen) => {
+    if (route === 'Truco') {
+      navigation.navigate('Truco');
+    } else {
+      // For landscape games, go through Transition screen
+      navigation.navigate('Transition', { target: route });
+    }
   };
 
   const handleSettingsPress = () => setSettingsVisible(true);

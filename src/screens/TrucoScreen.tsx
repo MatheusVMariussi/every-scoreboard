@@ -16,7 +16,6 @@ import { TrucoHelpModal } from '../components/TrucoHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { MatchHistoryGraph } from '../components/MatchHistoryGraph';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
-import { useScreenOrientation } from '../hooks/useScreenOrientation';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 import { useTrucoGame } from '../hooks/useTrucoGame';
 
@@ -119,8 +118,6 @@ const TeamScoreArea = ({
 
 // --- COMPONENTE PRINCIPAL ---
 export const TrucoScreen = () => {
-  useScreenOrientation('PORTRAIT');
-  
   const { theme } = useTheme();
   const navigation = useNavigation();
 
