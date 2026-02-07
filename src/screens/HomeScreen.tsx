@@ -6,7 +6,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import VersionCheck from 'react-native-version-check';
 
-import { HomeScreenNavigationProp, RootStackParamList } from '../navigation/types';
+import { HomeScreenNavigationProp, GameScreen } from '../navigation/types';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
@@ -17,7 +17,7 @@ import { RateModal } from '../components/RateModal';
 interface GameItem {
   id: string;
   labelKey: string;
-  route: keyof RootStackParamList;
+  route: GameScreen;
 }
 
 const GAMES: GameItem[] = [
@@ -88,7 +88,7 @@ export const HomeScreen = () => {
     }
   };
 
-  const handlePress = (route: keyof RootStackParamList) => {
+  const handlePress = (route: GameScreen) => {
     if (route === 'Truco') {
       navigation.navigate('Truco');
     } else {
