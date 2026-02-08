@@ -78,19 +78,21 @@ export const TransitionScreen = () => {
       await ScreenOrientation.lockAsync(targetLock);
 
       if (needsLandscape === isLandscape) {
-        // Already in correct orientation — go now
-        safeNavigate();
+        // Already in correct orientation — navigate after a brief minimum display
+        setTimeout(safeNavigate, 150);
         return;
       }
 
       // The native `orientation` prop on this screen triggers the rotation.
-      // Listen for when it completes, then wait for the visual animation to settle.
+      // Listen for when it completes, then wait for the visual rotation animation
+      // to fully settle before navigating (the listener fires when the value changes,
+      // but the OS rotation animation continues for a bit after).
       subscription = ScreenOrientation.addOrientationChangeListener(() => {
-        setTimeout(safeNavigate, 300);
+        setTimeout(safeNavigate, 600);
       });
 
-      // Safety fallback
-      fallbackTimer = setTimeout(safeNavigate, 1200);
+      // Safety fallback if listener doesn't fire
+      fallbackTimer = setTimeout(safeNavigate, 1500);
     };
 
     doTransition();
