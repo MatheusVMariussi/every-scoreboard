@@ -38,6 +38,11 @@ export default {
     how_to_play: 'COMO JOGAR',
     loading: 'Carregando...',
     error: 'Algo deu errado',
+    error_title: 'Oops!',
+    error_message: 'Algo deu errado.\nTente novamente ou resete os dados se o problema persistir.',
+    error_try_again: 'TENTAR NOVAMENTE',
+    error_reset: 'RESETAR DADOS',
+    error_reset_confirm: 'Isso apagará todos os dados salvos e reiniciará o app. Continuar?',
 
     save: 'SALVAR',
     cancel: 'CANCELAR',

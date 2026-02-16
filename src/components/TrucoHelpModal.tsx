@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { translate } from '../i18n';
+import { ms, wp } from '../theme/responsive';
 
 interface TrucoHelpModalProps {
   visible: boolean;
@@ -94,11 +95,11 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
                 <Text style={styles.text}>{translate('truco.help.suits_order')}</Text>
                 <View style={styles.suitsOrder}>
                     <Text style={styles.suitIcon}>♣ PAUS</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#666" />
+                    <Ionicons name="chevron-forward" size={ms(16)} color="#666" />
                     <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♥ COPAS</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#666" />
+                    <Ionicons name="chevron-forward" size={ms(16)} color="#666" />
                     <Text style={styles.suitIcon}>♠ ESPADA</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#666" />
+                    <Ionicons name="chevron-forward" size={ms(16)} color="#666" />
                     <Text style={[styles.suitIcon, {color: '#D32F2F'}]}>♦ OURO</Text>
                 </View>
              </>
@@ -181,7 +182,7 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
           <View style={styles.header}>
             <Text style={styles.headerTitle}>{translate('truco.help.title')}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close-circle" size={32} color="#333" />
+              <Ionicons name="close-circle" size={ms(32)} color="#333" />
             </TouchableOpacity>
           </View>
 
@@ -221,52 +222,52 @@ export const TrucoHelpModal = ({ visible, onClose, gameMode }: TrucoHelpModalPro
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  container: { width: '100%', maxHeight: '85%', borderRadius: 16, overflow: 'hidden', elevation: 5 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E0E0E0', backgroundColor: '#FFF' },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
-  scrollContent: { padding: 20 },
-  stepTitle: { fontSize: 22, fontWeight: 'bold', color: '#333', marginBottom: 15, textAlign: 'center' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: ms(20) },
+  container: { width: wp('100%'), maxHeight: '85%', borderRadius: ms(16), overflow: 'hidden', elevation: 5 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: ms(16), borderBottomWidth: 1, borderBottomColor: '#E0E0E0', backgroundColor: '#FFF' },
+  headerTitle: { fontSize: ms(20), fontWeight: 'bold', color: '#333' },
+  scrollContent: { padding: ms(20) },
+  stepTitle: { fontSize: ms(22), fontWeight: 'bold', color: '#333', marginBottom: ms(15), textAlign: 'center' },
   stepContainer: { alignItems: 'center' },
-  text: { fontSize: 16, color: '#444', lineHeight: 24, marginBottom: 15, textAlign: 'center' },
-  note: { fontSize: 12, color: '#666', fontStyle: 'italic', marginTop: 10, textAlign: 'center' },
-  subTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginTop: 10, marginBottom: 5 },
+  text: { fontSize: ms(16), color: '#444', lineHeight: ms(24), marginBottom: ms(15), textAlign: 'center' },
+  note: { fontSize: ms(12), color: '#666', fontStyle: 'italic', marginTop: ms(10), textAlign: 'center' },
+  subTitle: { fontSize: ms(18), fontWeight: 'bold', color: '#333', marginTop: ms(10), marginBottom: ms(5) },
 
   // Cards
-  cardsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: 15 },
-  card: { width: 44, height: 60, backgroundColor: '#FFF', borderRadius: 4, borderWidth: 1, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center', elevation: 2 },
+  cardsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: ms(8), marginBottom: ms(15) },
+  card: { width: ms(44), height: ms(60), backgroundColor: '#FFF', borderRadius: ms(4), borderWidth: 1, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center', elevation: 2 },
   cardManilha: { borderColor: '#FFD700', borderWidth: 2, backgroundColor: '#FFFDF0' },
   cardHighlight: { borderColor: '#333', borderWidth: 1.5 },
-  cardValue: { fontSize: 18, fontWeight: 'bold' },
-  cardSuit: { fontSize: 16 },
+  cardValue: { fontSize: ms(18), fontWeight: 'bold' },
+  cardSuit: { fontSize: ms(16) },
 
   // Examples
-  exampleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 15, marginTop: 10 },
-  miniScoreboard: { alignItems: 'center', backgroundColor: '#333', padding: 8, borderRadius: 6 },
-  miniScoreTitle: { color: '#FFF', fontSize: 10, fontWeight: 'bold' },
-  miniScoreVal: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
-  vs: { fontSize: 16, fontWeight: 'bold', color: '#666' },
+  exampleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ms(15), marginTop: ms(10) },
+  miniScoreboard: { alignItems: 'center', backgroundColor: '#333', padding: ms(8), borderRadius: ms(6) },
+  miniScoreTitle: { color: '#FFF', fontSize: ms(10), fontWeight: 'bold' },
+  miniScoreVal: { color: '#FFF', fontSize: ms(20), fontWeight: 'bold' },
+  vs: { fontSize: ms(16), fontWeight: 'bold', color: '#666' },
 
-  exampleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 10, backgroundColor: '#EFEFEF', padding: 10, borderRadius: 8 },
-  exampleText: { fontSize: 14, color: '#333' },
+  exampleBox: { flexDirection: 'row', alignItems: 'center', gap: ms(10), marginVertical: ms(10), backgroundColor: '#EFEFEF', padding: ms(10), borderRadius: ms(8) },
+  exampleText: { fontSize: ms(14), color: '#333' },
 
-  suitsOrder: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 },
-  suitIcon: { fontSize: 12, fontWeight: 'bold' },
+  suitsOrder: { flexDirection: 'row', alignItems: 'center', gap: ms(5), marginTop: ms(5) },
+  suitIcon: { fontSize: ms(12), fontWeight: 'bold' },
 
   // Points Table
-  tablePoints: { width: '100%', backgroundColor: '#FFF', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#E0E0E0' },
-  rowPoint: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  tablePoints: { width: '100%', backgroundColor: '#FFF', borderRadius: ms(8), padding: ms(10), borderWidth: 1, borderColor: '#E0E0E0' },
+  rowPoint: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: ms(8), borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   lbl: { fontWeight: 'bold', color: '#555' },
   val: { color: '#333' },
 
   // Footer
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#E0E0E0' },
-  navBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 25 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: ms(16), backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#E0E0E0' },
+  navBtn: { paddingVertical: ms(10), paddingHorizontal: ms(20), borderRadius: ms(25) },
   primaryBtn: { backgroundColor: '#333' },
   disabledBtn: { opacity: 0 },
-  navText: { fontSize: 16, fontWeight: '600', color: '#333' },
+  navText: { fontSize: ms(16), fontWeight: '600', color: '#333' },
   primaryText: { color: '#FFF' },
-  dots: { flexDirection: 'row', gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#CCC' },
-  activeDot: { backgroundColor: '#333', width: 20 }
+  dots: { flexDirection: 'row', gap: ms(6) },
+  dot: { width: ms(8), height: ms(8), borderRadius: ms(4), backgroundColor: '#CCC' },
+  activeDot: { backgroundColor: '#333', width: ms(20) }
 });

@@ -6,6 +6,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
+import { ms } from '../theme/responsive';
 
 interface SpotlightRect {
   x: number;
@@ -24,9 +25,9 @@ interface TutorialOverlayProps {
 }
 
 // --- CONSTANTES ---
-const SCREEN_PADDING = 20;
-const ARROW_SIZE = 12;
-const BORDER_RADIUS = 16;
+const SCREEN_PADDING = ms(20);
+const ARROW_SIZE = ms(12);
+const BORDER_RADIUS = ms(16);
 
 // --- FUNÇÕES AUXILIARES DE LAYOUT ---
 const getBaseStyles = (theme: any) => ({
@@ -57,20 +58,20 @@ const calculateSidePlacement = (
   baseStyles: ReturnType<typeof getBaseStyles>
 ) => {
   const isLeftSide = spotlight.x < screenWidth / 2;
-  const tooltipWidth = Math.min(300, screenWidth * 0.45);
-  
+  const tooltipWidth = Math.min(ms(300), screenWidth * 0.45);
+
   const tooltipStyle = {
     ...baseStyles.tooltip,
     width: tooltipWidth,
-    top: (screenHeight / 2) - 60,
-    left: isLeftSide 
-      ? spotlight.x + spotlight.width + 25 
-      : spotlight.x - tooltipWidth - 25
+    top: (screenHeight / 2) - ms(60),
+    left: isLeftSide
+      ? spotlight.x + spotlight.width + ms(25)
+      : spotlight.x - tooltipWidth - ms(25)
   };
 
   const arrowStyle = {
     ...baseStyles.arrow,
-    top: 50,
+    top: ms(50),
     transform: [{ rotate: isLeftSide ? '-90deg' : '90deg' }],
     [isLeftSide ? 'left' : 'right']: -ARROW_SIZE - 2
   };
@@ -84,27 +85,24 @@ const calculateStandardPlacement = (
   screenHeight: number,
   baseStyles: ReturnType<typeof getBaseStyles>
 ) => {
-  const tooltipWidth = Math.min(screenWidth * 0.6, 500);
+  const tooltipWidth = Math.min(screenWidth * 0.6, ms(500));
   const targetCenterX = spotlight.x + (spotlight.width / 2);
   const isTopHalf = (spotlight.y + spotlight.height) < screenHeight / 2;
 
-  // Posição Vertical
-  const verticalStyle = isTopHalf 
-    ? { top: spotlight.y + spotlight.height + 25 }
-    : { bottom: (screenHeight - spotlight.y) + 25 };
+  const verticalStyle = isTopHalf
+    ? { top: spotlight.y + spotlight.height + ms(25) }
+    : { bottom: (screenHeight - spotlight.y) + ms(25) };
 
-  // Posição Horizontal (Clamp)
   let left = targetCenterX - (tooltipWidth / 2);
   if (left < SCREEN_PADDING) left = SCREEN_PADDING;
   else if (left + tooltipWidth > screenWidth - SCREEN_PADDING) {
     left = screenWidth - tooltipWidth - SCREEN_PADDING;
   }
 
-  // Posição da Seta
   let arrowX = targetCenterX - left - ARROW_SIZE;
   const minArrowX = BORDER_RADIUS;
   const maxArrowX = tooltipWidth - (ARROW_SIZE * 2) - BORDER_RADIUS;
-  
+
   if (arrowX < minArrowX) arrowX = minArrowX;
   if (arrowX > maxArrowX) arrowX = maxArrowX;
 
@@ -126,20 +124,20 @@ const calculateStandardPlacement = (
 };
 
 const getLayoutStyles = (
-  spotlight: SpotlightRect | null, 
-  width: number, 
-  height: number, 
+  spotlight: SpotlightRect | null,
+  width: number,
+  height: number,
   theme: any
 ) => {
   const baseStyles = getBaseStyles(theme);
 
   if (!spotlight) {
-    const centerWidth = Math.min(width * 0.6, 500);
+    const centerWidth = Math.min(width * 0.6, ms(500));
     return {
       tooltipStyle: {
         ...baseStyles.tooltip,
         width: centerWidth,
-        top: (height / 2) - 60,
+        top: (height / 2) - ms(60),
         left: (width - centerWidth) / 2,
       },
       arrowStyle: null
@@ -162,7 +160,6 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
   const { width, height } = useWindowDimensions();
   const [isRendered, setIsRendered] = useState(false);
 
-  // Animation values
   const opacity = useSharedValue(0);
   const spotlightX = useSharedValue(0);
   const spotlightY = useSharedValue(0);
@@ -182,9 +179,9 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
 
   useEffect(() => {
     if (spotlight) {
-      const padding = 12;
+      const padding = ms(12);
       const config = { duration: 400, easing: Easing.inOut(Easing.quad) };
-      
+
       spotlightX.value = withTiming(spotlight.x - padding, config);
       spotlightY.value = withTiming(spotlight.y - padding, config);
       spotlightW.value = withTiming(spotlight.width + (padding * 2), config);
@@ -193,14 +190,14 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
   }, [spotlight]);
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  
-  const innerRect = useDerivedValue(() => 
-    rrect(rect(spotlightX.value, spotlightY.value, spotlightW.value, spotlightH.value), 12, 12)
+
+  const spotlightRadius = ms(12);
+  const innerRect = useDerivedValue(() =>
+    rrect(rect(spotlightX.value, spotlightY.value, spotlightW.value, spotlightH.value), spotlightRadius, spotlightRadius)
   );
 
   const outerRect = useDerivedValue(() => { return rrect(rect(0, 0, width, height), 0, 0); });
 
-  // Recalcula o layout apenas se as dependências mudarem
   const { tooltipStyle, arrowStyle } = useMemo(
     () => getLayoutStyles(spotlight, width, height, theme),
     [spotlight, width, height, theme]
@@ -218,7 +215,7 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
         {spotlight && <View style={arrowStyle} />}
 
         <View style={styles.contentRow}>
-            <Ionicons name="information-circle" size={26} color={theme.colors.brand.primary} style={{ marginTop: -2 }} />
+            <Ionicons name="information-circle" size={ms(26)} color={theme.colors.brand.primary} style={{ marginTop: -2 }} />
             <Text style={[styles.message, { color: theme.colors.text.primary }]}>{message}</Text>
         </View>
 
@@ -246,26 +243,26 @@ export const TutorialOverlay = ({ visible, spotlight, message, onNext, onSkip, n
 const styles = StyleSheet.create({
   container: { ...StyleSheet.absoluteFillObject, zIndex: 9999, elevation: 10 },
   tooltipContainer: {
-    padding: 20,
+    padding: ms(20),
     borderRadius: BORDER_RADIUS,
     borderWidth: 2,
     alignItems: 'center',
-    gap: 15,
+    gap: ms(15),
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
-  contentRow: { 
-    flexDirection: 'row', 
-    alignItems: 'flex-start', 
-    gap: 12 
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: ms(12)
   },
-  message: { fontFamily: 'Minecraft', fontSize: 14, textAlign: 'left', lineHeight: 22, flex: 1 },
-  buttonsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', width: '100%', gap: 15 },
-  skipBtn: { padding: 10 },
-  skipText: { fontFamily: 'Minecraft', fontSize: 11, textDecorationLine: 'underline' },
-  nextBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  nextText: { fontFamily: 'Minecraft', fontSize: 12, fontWeight: 'bold' },
+  message: { fontFamily: 'Minecraft', fontSize: ms(14), textAlign: 'left', lineHeight: ms(22), flex: 1 },
+  buttonsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', width: '100%', gap: ms(15) },
+  skipBtn: { padding: ms(10) },
+  skipText: { fontFamily: 'Minecraft', fontSize: ms(11), textDecorationLine: 'underline' },
+  nextBtn: { paddingHorizontal: ms(20), paddingVertical: ms(10), borderRadius: ms(8) },
+  nextText: { fontFamily: 'Minecraft', fontSize: ms(12), fontWeight: 'bold' },
 });

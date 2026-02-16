@@ -3,7 +3,7 @@ import { Alert, ScrollView } from 'react-native';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { translate } from '../i18n';
 
-interface Player {
+export interface FodinhaPlayer {
   id: string;
   name: string;
   lives: number;
@@ -11,14 +11,15 @@ interface Player {
   currentBid: number;
   currentWon: number;
 }
+type Player = FodinhaPlayer;
 
 // Lógica pura para calcular dano e atualizar histórico
 
-const logicRemovePlayer = (players: Player[], pId: string) => {
+export const logicRemovePlayer = (players: Player[], pId: string) => {
   return players.filter(p => p.id !== pId);
 };
 
-const logicUpdateHistoryDamage = (players: Player[], pId: string, delta: number, roundIdx: number, initialLives: number) => {
+export const logicUpdateHistoryDamage = (players: Player[], pId: string, delta: number, roundIdx: number, initialLives: number) => {
   return players.map(p => {
     if (p.id !== pId) return p;
     const newHistory = [...p.history];
@@ -30,7 +31,7 @@ const logicUpdateHistoryDamage = (players: Player[], pId: string, delta: number,
   });
 };
 
-const logicUpdateValue = (players: Player[], pId: string, delta: number, phase: 'betting' | 'results', cardsInRound: number) => {
+export const logicUpdateValue = (players: Player[], pId: string, delta: number, phase: 'betting' | 'results', cardsInRound: number) => {
   return players.map(p => {
     if (p.id !== pId) return p;
     if (phase === 'betting') {
@@ -43,7 +44,7 @@ const logicUpdateValue = (players: Player[], pId: string, delta: number, phase: 
   });
 };
 
-const logicRemoveRound = (players: Player[], roundIdx: number, initialLives: number) => {
+export const logicRemoveRound = (players: Player[], roundIdx: number, initialLives: number) => {
   return players.map(p => {
     const newHistory = [...p.history];
     newHistory.splice(roundIdx, 1);
@@ -52,7 +53,7 @@ const logicRemoveRound = (players: Player[], roundIdx: number, initialLives: num
   });
 };
 
-const logicFinishRound = (players: Player[], penaltyMode: 'fixed' | 'difference') => {
+export const logicFinishRound = (players: Player[], penaltyMode: 'fixed' | 'difference') => {
   return players.map(p => {
     if (p.lives <= 0) return p;
     const diff = Math.abs(p.currentBid - p.currentWon);

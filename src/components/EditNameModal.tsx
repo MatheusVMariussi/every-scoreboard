@@ -3,6 +3,7 @@ import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, Keyboard, T
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
+import { ms, wp } from '../theme/responsive';
 
 interface EditNameModalProps {
   visible: boolean;
@@ -39,7 +40,7 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
     if (onDelete) {
         onDelete();
         Keyboard.dismiss();
-        onClose(); 
+        onClose();
     }
   };
 
@@ -49,7 +50,7 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
         <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           <TouchableWithoutFeedback>
             <View style={[styles.container, { backgroundColor: DARK_BG, borderColor: theme.colors.truco.scoreText }]}>
-              
+
               {/* HEADER: TÍTULO + LIXEIRA (SE HOUVER) */}
               <View style={styles.header}>
                   <Text style={[styles.title, { color: TEXT_COLOR }]}>
@@ -57,11 +58,11 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
                   </Text>
                   {onDelete && (
                     <TouchableOpacity onPress={handleDelete} style={styles.trashBtn}>
-                        <Ionicons name="trash-outline" size={22} color={theme.colors.status.error} />
+                        <Ionicons name="trash-outline" size={ms(22)} color={theme.colors.status.error} />
                     </TouchableOpacity>
                   )}
               </View>
-              
+
               <TextInput
                 style={[styles.input, { color: TEXT_COLOR, borderColor: BORDER_COLOR }]}
                 value={name}
@@ -89,12 +90,12 @@ export const EditNameModal = ({ visible, initialValue, onSave, onDelete, onClose
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  container: { width: '60%', padding: 20, borderRadius: 15, borderWidth: 1 },
-  header: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 15, position: 'relative' },
-  title: { fontFamily: 'Minecraft', fontSize: 14, textAlign: 'center' },
-  trashBtn: { position: 'absolute', right: 0, padding: 5 }, // Lixeira no canto direito
-  input: { borderWidth: 1, borderRadius: 8, padding: 10, fontFamily: 'Minecraft', fontSize: 14, marginBottom: 20 },
-  buttonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 15 },
-  btn: { padding: 10 },
-  saveBtn: { borderRadius: 8, paddingHorizontal: 20 }
+  container: { width: wp('60%'), maxWidth: ms(350), padding: ms(20), borderRadius: ms(15), borderWidth: 1 },
+  header: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: ms(15), position: 'relative' },
+  title: { fontFamily: 'Minecraft', fontSize: ms(14), textAlign: 'center' },
+  trashBtn: { position: 'absolute', right: 0, padding: ms(5) },
+  input: { borderWidth: 1, borderRadius: ms(8), padding: ms(10), fontFamily: 'Minecraft', fontSize: ms(14), marginBottom: ms(20) },
+  buttonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: ms(15) },
+  btn: { padding: ms(10) },
+  saveBtn: { borderRadius: ms(8), paddingHorizontal: ms(20) }
 });

@@ -38,6 +38,11 @@ export default {
     how_to_play: 'HOW TO PLAY',
     loading: 'Loading...',
     error: 'Something went wrong',
+    error_title: 'Oops!',
+    error_message: 'Something went wrong.\nTry again or reset data if the problem persists.',
+    error_try_again: 'TRY AGAIN',
+    error_reset: 'RESET DATA',
+    error_reset_confirm: 'This will erase all saved data and restart the app. Continue?',
 
     save: 'SAVE',
     cancel: 'CANCEL',

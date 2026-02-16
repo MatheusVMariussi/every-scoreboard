@@ -3,6 +3,7 @@ import { Modal, View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedba
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { ms, wp } from '../theme/responsive';
 
 interface TrucoSettingsModalProps {
   visible: boolean;
@@ -15,10 +16,10 @@ interface TrucoSettingsModalProps {
   setMaxScore: (score: number) => void;
 }
 
-export const TrucoSettingsModal = ({ 
+export const TrucoSettingsModal = ({
   visible, onClose, onReset, onOpenHelp,
   gameMode, setGameMode,
-  maxScore, setMaxScore 
+  maxScore, setMaxScore
 }: TrucoSettingsModalProps) => {
   const { theme } = useTheme();
 
@@ -32,7 +33,7 @@ export const TrucoSettingsModal = ({
               <View style={styles.header}>
                 <Text style={[styles.title, { color: theme.colors.text.primary }]}>{translate('settings.title')}</Text>
                 <TouchableOpacity onPress={onClose}>
-                  <Ionicons name="close" size={24} color={theme.colors.text.primary} />
+                  <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
                 </TouchableOpacity>
               </View>
 
@@ -40,35 +41,35 @@ export const TrucoSettingsModal = ({
               <View style={styles.section}>
                 <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('truco.game_mode')}</Text>
                 <View style={styles.row}>
-                  <OptionBtn 
+                  <OptionBtn
                     label={translate('truco.paulista').toUpperCase()}
-                    active={gameMode === 'paulista'} 
-                    onPress={() => setGameMode('paulista')} 
+                    active={gameMode === 'paulista'}
+                    onPress={() => setGameMode('paulista')}
                     theme={theme}
                   />
-                  <OptionBtn 
+                  <OptionBtn
                     label={translate('truco.mineiro').toUpperCase()}
-                    active={gameMode === 'mineiro'} 
-                    onPress={() => setGameMode('mineiro')} 
+                    active={gameMode === 'mineiro'}
+                    onPress={() => setGameMode('mineiro')}
                     theme={theme}
                   />
                 </View>
               </View>
 
-              {/* NOVO: PONTUAÇÃO MÁXIMA */}
+              {/* PONTUAÇÃO MÁXIMA */}
               <View style={styles.section}>
                 <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{translate('truco.max_score')}</Text>
                 <View style={styles.row}>
-                  <OptionBtn 
+                  <OptionBtn
                     label={translate('common.points_12')}
-                    active={maxScore === 12} 
-                    onPress={() => setMaxScore(12)} 
+                    active={maxScore === 12}
+                    onPress={() => setMaxScore(12)}
                     theme={theme}
                   />
-                  <OptionBtn 
+                  <OptionBtn
                     label={translate('common.points_24')}
-                    active={maxScore === 24} 
-                    onPress={() => setMaxScore(24)} 
+                    active={maxScore === 24}
+                    onPress={() => setMaxScore(24)}
                     theme={theme}
                   />
                 </View>
@@ -81,7 +82,7 @@ export const TrucoSettingsModal = ({
                       style={[styles.actionBtn, { borderColor: theme.colors.text.secondary, borderWidth: 1 }]}
                       onPress={onOpenHelp}
                   >
-                      <Ionicons name="book-outline" size={20} color={theme.colors.text.primary} style={{ marginRight: 8 }} />
+                      <Ionicons name="book-outline" size={ms(20)} color={theme.colors.text.primary} style={{ marginRight: ms(8) }} />
                       <Text style={[styles.actionText, { color: theme.colors.text.primary }]}>
                           {translate('common.how_to_play')}
                       </Text>
@@ -106,11 +107,11 @@ export const TrucoSettingsModal = ({
 };
 
 const OptionBtn = ({ label, active, onPress, theme }: any) => (
-  <TouchableOpacity 
+  <TouchableOpacity
     onPress={onPress}
     style={[
-      styles.optBtn, 
-      { 
+      styles.optBtn,
+      {
         backgroundColor: active ? theme.colors.brand.primary : 'transparent',
         borderColor: active ? theme.colors.brand.primary : theme.colors.text.secondary
       }
@@ -124,18 +125,18 @@ const OptionBtn = ({ label, active, onPress, theme }: any) => (
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  container: { width: '85%', padding: 24, borderRadius: 20, borderWidth: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
+  container: { width: wp('85%'), maxWidth: ms(500), padding: ms(24), borderRadius: ms(20), borderWidth: 1 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: ms(25) },
   headerTitleContainer: { flexDirection: 'row', alignItems: 'center' },
-  infoBtn: { marginLeft: 10 },
-  title: { fontFamily: 'Minecraft', fontSize: 18 },
-  section: { marginBottom: 20 },
-  label: { fontSize: 10, fontFamily: 'Minecraft', marginBottom: 10, opacity: 0.7 },
-  row: { flexDirection: 'row', gap: 10 },
-  optBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
-  optText: { fontFamily: 'Minecraft', fontSize: 12 },
-  divider: { height: 1, marginVertical: 15 },
-  actionsRow: { gap: 10 },
-  actionBtn: { flexDirection: 'row', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  actionText: { fontFamily: 'Minecraft', fontSize: 14 }
+  infoBtn: { marginLeft: ms(10) },
+  title: { fontFamily: 'Minecraft', fontSize: ms(18) },
+  section: { marginBottom: ms(20) },
+  label: { fontSize: ms(10), fontFamily: 'Minecraft', marginBottom: ms(10), opacity: 0.7 },
+  row: { flexDirection: 'row', gap: ms(10) },
+  optBtn: { flex: 1, paddingVertical: ms(12), borderRadius: ms(8), borderWidth: 1, alignItems: 'center' },
+  optText: { fontFamily: 'Minecraft', fontSize: ms(12) },
+  divider: { height: 1, marginVertical: ms(15) },
+  actionsRow: { gap: ms(10) },
+  actionBtn: { flexDirection: 'row', padding: ms(15), borderRadius: ms(10), alignItems: 'center', justifyContent: 'center' },
+  actionText: { fontFamily: 'Minecraft', fontSize: ms(14) }
 });

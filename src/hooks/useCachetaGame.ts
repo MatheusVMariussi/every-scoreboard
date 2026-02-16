@@ -3,22 +3,22 @@ import { Alert, ScrollView } from 'react-native';
 import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { translate } from '../i18n';
 
-type Action = 'won' | 'fold' | 'lost' | null;
+export type CachetaAction = 'won' | 'fold' | 'lost' | null;
 
-interface Player {
+export interface CachetaPlayer {
   id: string;
   name: string;
-  history: Action[];
-  currentAction: Action;
+  history: CachetaAction[];
+  currentAction: CachetaAction;
 }
 
 // --- PURE FUNCTIONS ---
-const processNextRound = (players: Player[], playersWithPoints: any[]): { updatedPlayers: Player[], hasError: boolean, errorKey?: string } => {
+export const processNextRound = (players: CachetaPlayer[], playersWithPoints: any[]): { updatedPlayers: CachetaPlayer[], hasError: boolean, errorKey?: string } => {
   const playersToUpdate = players.map((p, idx) => {
-      const pWithPts = playersWithPoints[idx]; 
+      const pWithPts = playersWithPoints[idx];
       // Se o jogador está vivo e não escolheu ação, assume derrota (lost)
       if (pWithPts.currentPoints > 0 && p.currentAction === null) {
-          return { ...p, currentAction: 'lost' as Action };
+          return { ...p, currentAction: 'lost' as CachetaAction };
       }
       return p;
   });
@@ -45,7 +45,7 @@ const processNextRound = (players: Player[], playersWithPoints: any[]): { update
   return { updatedPlayers: finalPlayers, hasError: false };
 };
 
-const updatePlayerActionInList = (players: Player[], pId: string, action: Action): Player[] => {
+export const updatePlayerActionInList = (players: CachetaPlayer[], pId: string, action: CachetaAction): CachetaPlayer[] => {
   return players.map(p => {
     // Se estamos marcando alguém como WON, precisamos desmarcar qualquer outro WON
     if (action === 'won') {
@@ -60,7 +60,7 @@ const updatePlayerActionInList = (players: Player[], pId: string, action: Action
   });
 };
 
-const updateHistoryInList = (players: Player[], pId: string, action: Action, roundIdx: number): Player[] => {
+export const updateHistoryInList = (players: CachetaPlayer[], pId: string, action: CachetaAction, roundIdx: number): CachetaPlayer[] => {
   return players.map(p => {
     const newH = [...p.history];
 
@@ -81,7 +81,7 @@ const updateHistoryInList = (players: Player[], pId: string, action: Action, rou
   });
 };
 
-const removeRoundFromList = (players: Player[], roundIdx: number): Player[] => {
+export const removeRoundFromList = (players: CachetaPlayer[], roundIdx: number): CachetaPlayer[] => {
   return players.map(p => {
     const h = [...p.history];
     h.splice(roundIdx, 1);
@@ -89,18 +89,18 @@ const removeRoundFromList = (players: Player[], roundIdx: number): Player[] => {
   });
 };
 
-const removePlayerFromList = (players: Player[], pId: string): Player[] => {
+export const removePlayerFromList = (players: CachetaPlayer[], pId: string): CachetaPlayer[] => {
   return players.filter(p => p.id !== pId);
 };
 
-const resetAllPlayers = (players: Player[]): Player[] => {
+export const resetAllPlayers = (players: CachetaPlayer[]): CachetaPlayer[] => {
   return players.map(p => ({ ...p, history: [], currentAction: null }));
 };
 
 // --- HOOK ---
 export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
   const [initialPoints, setInitialPoints] = useState(10);
-  const [players, setPlayers] = useState<Player[]>([
+  const [players, setPlayers] = useState<CachetaPlayer[]>([
     { id: '1', name: translate('common.player') + ' 1', history: [], currentAction: null },
     { id: '2', name: translate('common.player') + ' 2', history: [], currentAction: null },
     { id: '3', name: translate('common.player') + ' 3', history: [], currentAction: null },
@@ -190,7 +190,7 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
   const handleAddPlayer = () => {
     setPlayers(prev => {
       const currentRounds = prev.length > 0 ? prev[0].history.length : 0;
-      const penaltyHistory: Action[] = new Array(currentRounds).fill('lost');
+      const penaltyHistory: CachetaAction[] = new Array(currentRounds).fill('lost');
       return [...prev, { 
         id: Date.now().toString(), 
         name: `${translate('common.player')} ${prev.length + 1}`,

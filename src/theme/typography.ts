@@ -1,8 +1,10 @@
+import { ms } from './responsive';
+
 export const typography = {
   sizes: {
-    title: 24,
-    body: 16,
-    caption: 12,
+    title: ms(24),
+    body: ms(16),
+    caption: ms(12),
   },
   weights: {
     regular: '400',

@@ -1,7 +1,9 @@
+import { ms } from './responsive';
+
 export const spacing = {
-  xs: 4,
-  s: 8,
-  m: 16,
-  l: 24,
-  xl: 32,
+  xs: ms(4),
+  s: ms(8),
+  m: ms(16),
+  l: ms(24),
+  xl: ms(32),
 } as const;

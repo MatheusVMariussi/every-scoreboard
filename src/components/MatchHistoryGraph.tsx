@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '../theme/useTheme';
+import { ms } from '../theme/responsive';
 
 export interface HistoryItem {
   id: string;
@@ -14,13 +15,13 @@ interface MatchHistoryGraphProps {
   colorThem?: string;
 }
 
-export const MatchHistoryGraph = ({ 
-  history, 
+export const MatchHistoryGraph = ({
+  history,
   colorUs,
   colorThem
 }: MatchHistoryGraphProps) => {
   const { theme } = useTheme();
-  
+
   const finalColorUs = colorUs || theme.colors.truco.teamUs;
   const finalColorThem = colorThem || theme.colors.truco.teamThem;
 
@@ -28,34 +29,30 @@ export const MatchHistoryGraph = ({
 
   return (
     <View style={styles.container}>
-      
-      {/* A LINHA CENTRAL FIXA (Agora aparece sempre) */}
+
+      {/* A LINHA CENTRAL FIXA */}
       <View style={[styles.centerLine, { backgroundColor: theme.colors.truco.divider }]} />
 
-      <ScrollView 
+      <ScrollView
         ref={scrollViewRef}
-        horizontal 
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {history.map((item) => {
-          // Altura: Truco (3 ou 4) é maior que ponto normal (1 ou 2)
-          const barHeight = item.points > 2 ? 30 : 16;
-          
+          const barHeight = item.points > 2 ? ms(30) : ms(16);
+
           return (
             <View key={item.id} style={[
-                styles.historyDot, 
-                { 
+                styles.historyDot,
+                {
                     backgroundColor: item.team === 'us' ? finalColorUs : finalColorThem,
                     height: barHeight,
-                    // Lógica de Deslocamento:
-                    // Se for 'them' (cima), deslocamos para cima (translateY negativo)
-                    // Se for 'us' (baixo), deslocamos para baixo (translateY positivo)
                     transform: [
                       { translateY: item.team === 'them' ? -(barHeight / 2 + 2) : (barHeight / 2 + 2) }
                     ]
-                } 
+                }
             ]} />
           );
         })}
@@ -65,30 +62,30 @@ export const MatchHistoryGraph = ({
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    width: '100%', 
+  container: {
+    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     position: 'relative'
   },
-  
+
   centerLine: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 2, // Espessura da linha
-    zIndex: -1, // Fica atrás dos pontos
-    alignSelf: 'center' // Garante o centro vertical
+    height: 2,
+    zIndex: -1,
+    alignSelf: 'center'
   },
 
-  scrollContent: { 
-    alignItems: 'center', // Centraliza os itens verticalmente na linha
-    paddingHorizontal: 20, // Espaço nas pontas
-    gap: 6 // Espaço entre as barrinhas
+  scrollContent: {
+    alignItems: 'center',
+    paddingHorizontal: ms(20),
+    gap: ms(6)
   },
 
-  historyDot: { 
-    width: 6, 
-    borderRadius: 3 
+  historyDot: {
+    width: ms(6),
+    borderRadius: ms(3)
   },
 });

@@ -3,6 +3,7 @@ import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
+import { ms, wp } from '../theme/responsive';
 
 interface CachetaHelpModalProps {
   visible: boolean;
@@ -14,7 +15,7 @@ const ActionDisplay = ({ label, color, points, theme }: { label: string, color: 
     <View style={[styles.circle, { borderColor: color }]}>
         <Text style={[styles.circleText, { color: color }]}>{label}</Text>
     </View>
-    <Ionicons name="arrow-forward" size={20} color={theme.colors.text.secondary} />
+    <Ionicons name="arrow-forward" size={ms(20)} color={theme.colors.text.secondary} />
     <Text style={[styles.pointsText, { color: points === '0' ? theme.colors.status.success : theme.colors.status.error }]}>
         {points}
     </Text>
@@ -38,7 +39,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
       content: (
         <View style={styles.stepContainerRow}>
           <View style={styles.iconColumn}>
-            <Ionicons name="shield-checkmark-outline" size={80} color={theme.colors.brand.primary} />
+            <Ionicons name="shield-checkmark-outline" size={ms(80)} color={theme.colors.brand.primary} />
           </View>
           <View style={styles.textColumn}>
             <Text style={[styles.text, { color: theme.colors.text.primary }]}>
@@ -52,7 +53,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
       title: translate('cacheta.help.hands_title'),
       content: (
         <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: 20 }]}>
+          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: ms(20) }]}>
             {translate('cacheta.help.hands_text')}
           </Text>
 
@@ -89,7 +90,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
       title: translate('cacheta.help.scoring_title'),
       content: (
         <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: 20 }]}>
+          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: ms(20) }]}>
             {translate('cacheta.help.scoring_text')}
           </Text>
 
@@ -135,7 +136,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
       content: (
         <View style={styles.stepContainerRow}>
            <View style={styles.iconColumn}>
-             <Ionicons name="skull-outline" size={80} color={theme.colors.status.error} />
+             <Ionicons name="skull-outline" size={ms(80)} color={theme.colors.status.error} />
            </View>
            <View style={styles.textColumn}>
              <Text style={[styles.text, { color: theme.colors.text.primary }]}>
@@ -144,9 +145,9 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
 
              <View style={styles.exampleBox}>
                  <Text style={[styles.exampleText, { color: theme.colors.text.secondary }]}>10 Pts</Text>
-                 <Ionicons name="arrow-forward" size={16} color={theme.colors.text.secondary} />
+                 <Ionicons name="arrow-forward" size={ms(16)} color={theme.colors.text.secondary} />
                  <Text style={[styles.exampleText, { color: theme.colors.status.error }]}>0 Pts</Text>
-                 <Ionicons name="arrow-forward" size={16} color={theme.colors.text.secondary} />
+                 <Ionicons name="arrow-forward" size={ms(16)} color={theme.colors.text.secondary} />
                  <Text style={[styles.eliminatedText, { color: theme.colors.status.error }]}>{translate('cacheta.out_of_game')}</Text>
              </View>
            </View>
@@ -179,7 +180,7 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
           <View style={[styles.header, { borderBottomColor: theme.colors.modal.divider, backgroundColor: theme.colors.background.secondary }]}>
             <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>{translate('cacheta.help.title')}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close-circle" size={32} color={theme.colors.text.primary} />
+              <Ionicons name="close-circle" size={ms(32)} color={theme.colors.text.primary} />
             </TouchableOpacity>
           </View>
 
@@ -219,60 +220,60 @@ export const CachetaHelpModal = ({ visible, onClose }: CachetaHelpModalProps) =>
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  container: { width: '85%', maxHeight: '85%', borderRadius: 16, overflow: 'hidden', elevation: 5 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold' },
-  scrollContent: { padding: 20 },
-  stepTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: ms(20) },
+  container: { width: wp('85%'), maxHeight: '85%', borderRadius: ms(16), overflow: 'hidden', elevation: 5 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: ms(16), borderBottomWidth: 1 },
+  headerTitle: { fontSize: ms(20), fontWeight: 'bold' },
+  scrollContent: { padding: ms(20) },
+  stepTitle: { fontSize: ms(22), fontWeight: 'bold', marginBottom: ms(20), textAlign: 'center' },
   stepContainer: { alignItems: 'center' },
 
   // Row Layout Steps (Objective / Elimination)
-  stepContainerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, paddingHorizontal: 20 },
+  stepContainerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ms(20), paddingHorizontal: ms(20) },
   iconColumn: { width: '30%', alignItems: 'center' },
   textColumn: { width: '70%' },
-  text: { fontSize: 16, lineHeight: 24, textAlign: 'center' },
+  text: { fontSize: ms(16), lineHeight: ms(24), textAlign: 'center' },
 
   // Hands Grid
   handsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' },
-  handColumn: { flex: 1, alignItems: 'center', paddingHorizontal: 5 },
-  verticalDivider: { width: 1, backgroundColor: '#E0E0E0', height: '100%', marginHorizontal: 10 },
+  handColumn: { flex: 1, alignItems: 'center', paddingHorizontal: ms(5) },
+  verticalDivider: { width: 1, backgroundColor: '#E0E0E0', height: '100%', marginHorizontal: ms(10) },
 
-  subTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  subText: { fontSize: 13, marginBottom: 10, textAlign: 'center', fontStyle: 'italic', minHeight: 40 },
-  cardsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  subTitle: { fontSize: ms(16), fontWeight: 'bold', marginBottom: ms(5) },
+  subText: { fontSize: ms(13), marginBottom: ms(10), textAlign: 'center', fontStyle: 'italic', minHeight: ms(40) },
+  cardsRow: { flexDirection: 'row', gap: ms(8), marginBottom: ms(10) },
 
   // Scoring Grid
   scoringGrid: { flexDirection: 'row', width: '100%', justifyContent: 'space-around', alignItems: 'flex-start' },
-  scoringItem: { flex: 1, alignItems: 'center', paddingHorizontal: 5 },
-  scoringLabel: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  scoringDesc: { fontSize: 13, textAlign: 'center', marginTop: 5 },
-  actionItem: { flexDirection: 'row', alignItems: 'center', gap: 5, marginVertical: 5 },
-  pointsText: { fontSize: 24, fontWeight: 'bold', fontFamily: 'Minecraft' },
+  scoringItem: { flex: 1, alignItems: 'center', paddingHorizontal: ms(5) },
+  scoringLabel: { fontSize: ms(16), fontWeight: 'bold', marginBottom: ms(5) },
+  scoringDesc: { fontSize: ms(13), textAlign: 'center', marginTop: ms(5) },
+  actionItem: { flexDirection: 'row', alignItems: 'center', gap: ms(5), marginVertical: ms(5) },
+  pointsText: { fontSize: ms(24), fontWeight: 'bold', fontFamily: 'Minecraft' },
 
   // Elimination
-  exampleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 15, padding: 10, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.05)', justifyContent: 'center' },
-  exampleText: { fontSize: 16, fontWeight: 'bold', fontFamily: 'Minecraft' },
-  eliminatedText: { fontSize: 16, fontWeight: 'bold', fontFamily: 'Minecraft' },
+  exampleBox: { flexDirection: 'row', alignItems: 'center', gap: ms(10), marginTop: ms(15), padding: ms(10), borderRadius: ms(10), backgroundColor: 'rgba(0,0,0,0.05)', justifyContent: 'center' },
+  exampleText: { fontSize: ms(16), fontWeight: 'bold', fontFamily: 'Minecraft' },
+  eliminatedText: { fontSize: ms(16), fontWeight: 'bold', fontFamily: 'Minecraft' },
 
   // Circle Component
-  circle: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
-  circleText: { fontFamily: 'Minecraft', fontSize: 14, fontWeight: 'bold' },
+  circle: { width: ms(40), height: ms(40), borderRadius: ms(20), borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
+  circleText: { fontFamily: 'Minecraft', fontSize: ms(14), fontWeight: 'bold' },
 
   // Card
-  card: { width: 40, height: 56, backgroundColor: '#FFF', borderRadius: 4, borderWidth: 1, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center', elevation: 2 },
+  card: { width: ms(40), height: ms(56), backgroundColor: '#FFF', borderRadius: ms(4), borderWidth: 1, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center', elevation: 2 },
   cardHighlight: { borderColor: '#333', borderWidth: 1.5 },
-  cardValue: { fontSize: 16, fontWeight: 'bold' },
-  cardSuit: { fontSize: 14 },
+  cardValue: { fontSize: ms(16), fontWeight: 'bold' },
+  cardSuit: { fontSize: ms(14) },
 
   // Footer
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderTopWidth: 1 },
-  navBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 25 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: ms(16), borderTopWidth: 1 },
+  navBtn: { paddingVertical: ms(10), paddingHorizontal: ms(20), borderRadius: ms(25) },
   primaryBtn: { },
   disabledBtn: { opacity: 0 },
-  navText: { fontSize: 16, fontWeight: '600' },
+  navText: { fontSize: ms(16), fontWeight: '600' },
   primaryText: { },
-  dots: { flexDirection: 'row', gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  activeDot: { width: 20 }
+  dots: { flexDirection: 'row', gap: ms(6) },
+  dot: { width: ms(8), height: ms(8), borderRadius: ms(4) },
+  activeDot: { width: ms(20) }
 });

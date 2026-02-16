@@ -1,6 +1,6 @@
 import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
-import { 
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Alert, TouchableWithoutFeedback
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,20 +19,19 @@ import { CachetaHelpModal } from '../components/CachetaHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 import { useCachetaGame } from '../hooks/useCachetaGame';
+import { ms, wp } from '../theme/responsive';
 
 type Action = 'won' | 'fold' | 'lost' | null;
 
 export const CachetaScreen = () => {
   useTransitionBack();
-  
+
   const { theme } = useTheme();
   const navigation = useNavigation();
   const horizontalScrollRef = useRef<ScrollView>(null);
 
-  // --- GAME LOGIC ---
   const game = useCachetaGame(horizontalScrollRef);
 
-  // --- UI STATES ---
   const [showEditName, setShowEditName] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [showEditHistory, setShowEditHistory] = useState(false);
@@ -40,12 +39,10 @@ export const CachetaScreen = () => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
 
-  // --- TUTORIAL & LAYOUT ---
   const [layoutReady, setLayoutReady] = useState(false);
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
 
-  // Targets
   const targetNames = useTutorialTarget(tutorialActive && tutorialStep === 0);
   const targetActions = useTutorialTarget(tutorialActive && tutorialStep === 1);
   const targetButton = useTutorialTarget(tutorialActive && tutorialStep === 2);
@@ -54,7 +51,7 @@ export const CachetaScreen = () => {
 
   const handleLayout = (event: any) => {
     const { width, height } = event.nativeEvent.layout;
-    if (width > height) { 
+    if (width > height) {
        setLayoutReady(true);
     }
   };
@@ -109,14 +106,14 @@ export const CachetaScreen = () => {
     };
 
     Alert.alert(
-      translate('common.delete_player'), 
-      translate('common.confirm_delete_player'), 
+      translate('common.delete_player'),
+      translate('common.confirm_delete_player'),
       [
         { text: translate('common.cancel'), style: 'cancel' },
-        { 
-          text: translate('common.confirm'), 
-          style: 'destructive', 
-          onPress: confirmDelete 
+        {
+          text: translate('common.confirm'),
+          style: 'destructive',
+          onPress: confirmDelete
         }
       ]
     );
@@ -124,7 +121,7 @@ export const CachetaScreen = () => {
 
   const handleSavePlayerName = (newName: string) => {
     if (newName.trim() && editingPlayerId) {
-        game.setPlayers(prev => prev.map(p => 
+        game.setPlayers(prev => prev.map(p =>
             p.id === editingPlayerId ? { ...p, name: newName } : p
         ));
     }
@@ -142,12 +139,12 @@ export const CachetaScreen = () => {
   const handleSaveHistory = () => {
     if (editingRoundIdx !== null) {
       const winnersCount = game.players.filter(p => p.history[editingRoundIdx] === 'won').length;
-      
+
       if (winnersCount === 0) {
         Alert.alert(translate('common.error'), translate('cacheta.need_winner'));
         return;
       }
-      
+
       if (winnersCount > 1) {
         Alert.alert(translate('common.error'), translate('cacheta.multiple_winners') || 'Apenas um jogador pode ganhar por rodada.');
         return;
@@ -159,29 +156,29 @@ export const CachetaScreen = () => {
   return (
     <View style={{ flex: 1 }} onLayout={handleLayout}>
       <LinearGradient colors={[theme.colors.truco.backgroundTop, theme.colors.truco.backgroundBottom]} style={StyleSheet.absoluteFill} />
-      
+
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'top']}>
-        
+
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerSide}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-              <Ionicons name="arrow-back" size={24} color={theme.colors.text.white} />
+              <Ionicons name="arrow-back" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
           </View>
-          
+
           <Text style={[styles.headerTitle, { color: theme.colors.text.white }]}>{translate('home.cacheta').toUpperCase()}</Text>
-          
+
           <View style={[styles.headerSide, { justifyContent: 'flex-end' }]}>
             <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
-                <Ionicons name="settings-sharp" size={24} color={theme.colors.text.white} />
+                <Ionicons name="settings-sharp" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
           </View>
         </View>
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <ScrollView ref={horizontalScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tableScroll}>
-            
+
             {/* 1. NOMES */}
             <View style={styles.namesColumn} ref={targetNames.ref} collapsable={false}>
               <View style={styles.cellHeader}><Text style={styles.headerText}>{translate('common.player').toUpperCase()}</Text></View>
@@ -197,7 +194,7 @@ export const CachetaScreen = () => {
                 </View>
               ))}
               <TouchableOpacity style={styles.addBtn} onPress={game.handleAddPlayer}>
-                <Ionicons name="add-circle" size={26} color={theme.colors.neon.primary} />
+                <Ionicons name="add-circle" size={ms(26)} color={theme.colors.neon.primary} />
               </TouchableOpacity>
             </View>
 
@@ -241,7 +238,7 @@ export const CachetaScreen = () => {
 
         {/* 4. BOTÃO */}
         <View style={styles.footer} ref={targetButton.ref} collapsable={false}>
-          <View style={{ width: 220, height: 50 }}>
+          <View style={{ width: ms(220), height: ms(50) }}>
             <GameButton title={translate('cacheta.next_round')} onPress={game.handleNextRound} />
           </View>
         </View>
@@ -253,20 +250,20 @@ export const CachetaScreen = () => {
         <TouchableWithoutFeedback onPress={handleSaveHistory}>
           <View style={[styles.absoluteOverlay, { backgroundColor: theme.colors.background.overlay }]}>
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={[styles.overlayContent, { width: '85%', backgroundColor: theme.colors.background.secondary }]}>
+              <View style={[styles.overlayContent, { width: wp('85%'), backgroundColor: theme.colors.background.secondary }]}>
                 <View style={styles.modalHeader}>
                   <Text style={[styles.overlayTitle, { color: theme.colors.text.primary }]}>
                     {translate('common.edit_round', { index: editingRoundIdx + 1 })}
                   </Text>
                   <TouchableOpacity onPress={handleSaveHistory}>
-                    <Ionicons name="close" size={24} color={theme.colors.text.primary} />
+                    <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
                   </TouchableOpacity>
                 </View>
 
-                <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
+                <ScrollView style={{ maxHeight: ms(200) }} showsVerticalScrollIndicator={false}>
                   {game.players.map(p => (
                     <View key={p.id} style={[styles.editHistoryRow, { borderBottomColor: theme.colors.modal.divider }]}>
-                      <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: 10, flex: 1 }}>{p.name}</Text>
+                      <Text style={{ color: theme.colors.text.primary, fontFamily: 'Minecraft', fontSize: ms(10), flex: 1 }}>{p.name}</Text>
                       <View style={styles.actionRow}>
                         <ActionCircle theme={theme} label={translate('cacheta.actions.fold')} color={theme.colors.cacheta.fold} active={p.history[editingRoundIdx] === 'fold'} onPress={() => game.updateHistoryAction(p.id, 'fold', editingRoundIdx)} />
                         <ActionCircle theme={theme} label={translate('cacheta.actions.lost')} color={theme.colors.cacheta.loss} active={p.history[editingRoundIdx] === 'lost'} onPress={() => game.updateHistoryAction(p.id, 'lost', editingRoundIdx)} />
@@ -290,7 +287,7 @@ export const CachetaScreen = () => {
         </TouchableWithoutFeedback>
       )}
 
-      <CachetaSettingsModal 
+      <CachetaSettingsModal
         visible={settingsVisible} onClose={() => setSettingsVisible(false)}
         onReset={() => { game.handleReset(); if(tutorialActive) handleNextTutorial(); }}
         onOpenHelp={() => { setSettingsVisible(false); setHelpVisible(true); }}
@@ -299,10 +296,10 @@ export const CachetaScreen = () => {
 
       <CachetaHelpModal visible={helpVisible} onClose={() => { setHelpVisible(false); setSettingsVisible(true); }} />
 
-      <EditNameModal 
-        visible={showEditName} initialValue={getEditingPlayerName()} 
-        onClose={() => setShowEditName(false)} 
-        onSave={handleSavePlayerName} 
+      <EditNameModal
+        visible={showEditName} initialValue={getEditingPlayerName()}
+        onClose={() => setShowEditName(false)}
+        onSave={handleSavePlayerName}
         onDelete={handleDeletePlayer}
       />
 
@@ -327,38 +324,38 @@ const ActionCircle = ({ label, color, active, onPress, theme }: any) => (
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, height: 50 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: ms(20), height: ms(50) },
   headerSide: { flex: 1, flexDirection: 'row' },
-  headerTitle: { fontFamily: 'Minecraft', fontSize: 16, textAlign: 'center', flex: 2 },
-  iconBtn: { padding: 5 },
-  tableScroll: { paddingHorizontal: 20, paddingBottom: 20 },
-  namesColumn: { width: 130 },
-  cellHeader: { height: 35, justifyContent: 'center', alignItems: 'center' },
-  headerText: { fontSize: 10, fontFamily: 'Minecraft', color: '#888' },
-  playerCell: { height: 55, paddingHorizontal: 12, justifyContent: 'center', marginBottom: 4, borderRadius: 10 },
-  playerName: { fontFamily: 'Minecraft', fontSize: 11, marginBottom: 2 },
-  playerPoints: { fontSize: 22, fontFamily: 'Minecraft' },
+  headerTitle: { fontFamily: 'Minecraft', fontSize: ms(16), textAlign: 'center', flex: 2 },
+  iconBtn: { padding: ms(5) },
+  tableScroll: { paddingHorizontal: ms(20), paddingBottom: ms(20) },
+  namesColumn: { width: ms(130) },
+  cellHeader: { height: ms(35), justifyContent: 'center', alignItems: 'center' },
+  headerText: { fontSize: ms(10), fontFamily: 'Minecraft', color: '#888' },
+  playerCell: { height: ms(55), paddingHorizontal: ms(12), justifyContent: 'center', marginBottom: ms(4), borderRadius: ms(10) },
+  playerName: { fontFamily: 'Minecraft', fontSize: ms(11), marginBottom: ms(2) },
+  playerPoints: { fontSize: ms(22), fontFamily: 'Minecraft' },
   outText: { textDecorationLine: 'line-through', opacity: 0.5 },
-  addBtn: { height: 40, justifyContent: 'center', alignItems: 'center' },
-  historyColumn: { width: 45, alignItems: 'center' },
-  historyCell: { width: 38, height: 55, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
-  activeColumn: { marginLeft: 15, borderRadius: 12, overflow: 'hidden', borderWidth: 1, alignSelf: 'flex-start' },
-  cellHeaderActive: { height: 35, justifyContent: 'center', alignItems: 'center' },
-  activeCell: { height: 55, justifyContent: 'center', paddingHorizontal: 10, marginBottom: 4 },
-  actionRow: { flexDirection: 'row', gap: 6 },
-  circle: { width: 48, height: 38, borderRadius: 10, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center' },
-  circleText: { fontFamily: 'Minecraft', fontSize: 12 },
-  outLabel: { fontFamily: 'Minecraft', fontSize: 8, textAlign: 'center' },
-  footer: { height: 60, justifyContent: 'center', alignItems: 'center' },
+  addBtn: { height: ms(40), justifyContent: 'center', alignItems: 'center' },
+  historyColumn: { width: ms(45), alignItems: 'center' },
+  historyCell: { width: ms(38), height: ms(55), justifyContent: 'center', alignItems: 'center', marginBottom: ms(4) },
+  dot: { width: ms(10), height: ms(10), borderRadius: ms(5) },
+  activeColumn: { marginLeft: ms(15), borderRadius: ms(12), overflow: 'hidden', borderWidth: 1, alignSelf: 'flex-start' },
+  cellHeaderActive: { height: ms(35), justifyContent: 'center', alignItems: 'center' },
+  activeCell: { height: ms(55), justifyContent: 'center', paddingHorizontal: ms(10), marginBottom: ms(4) },
+  actionRow: { flexDirection: 'row', gap: ms(6) },
+  circle: { width: ms(48), height: ms(38), borderRadius: ms(10), borderWidth: 1.5, justifyContent: 'center', alignItems: 'center' },
+  circleText: { fontFamily: 'Minecraft', fontSize: ms(12) },
+  outLabel: { fontFamily: 'Minecraft', fontSize: ms(8), textAlign: 'center' },
+  footer: { height: ms(60), justifyContent: 'center', alignItems: 'center' },
   absoluteOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 999 },
-  overlayContent: { width: '60%', padding: 20, borderRadius: 20, borderWidth: 1 },
-  overlayTitle: { fontFamily: 'Minecraft', fontSize: 14, marginBottom: 15, textAlign: 'center' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  editHistoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1 },
-  modalFooterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, paddingTop: 10, borderTopWidth: 1 },
-  textBtn: { paddingVertical: 10 },
-  deleteLinkText: { fontFamily: 'Minecraft', fontSize: 10, textDecorationLine: 'underline' },
-  saveBtnSmall: { paddingHorizontal: 25, paddingVertical: 10, borderRadius: 8 },
-  saveBtnText: { fontFamily: 'Minecraft', fontSize: 12 }
+  overlayContent: { padding: ms(20), borderRadius: ms(20), borderWidth: 1 },
+  overlayTitle: { fontFamily: 'Minecraft', fontSize: ms(14), marginBottom: ms(15), textAlign: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: ms(15) },
+  editHistoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: ms(10), paddingBottom: ms(10), borderBottomWidth: 1 },
+  modalFooterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: ms(15), paddingTop: ms(10), borderTopWidth: 1 },
+  textBtn: { paddingVertical: ms(10) },
+  deleteLinkText: { fontFamily: 'Minecraft', fontSize: ms(10), textDecorationLine: 'underline' },
+  saveBtnSmall: { paddingHorizontal: ms(25), paddingVertical: ms(10), borderRadius: ms(8) },
+  saveBtnText: { fontFamily: 'Minecraft', fontSize: ms(12) }
 });

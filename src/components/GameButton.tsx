@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, Text, StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useTheme } from '../theme/useTheme';
+import { ms } from '../theme/responsive';
 
 interface GameButtonProps {
   title: string;
@@ -13,42 +14,36 @@ interface GameButtonProps {
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-export const GameButton = ({ 
-  title, 
-  onPress, 
-  style, 
-  disabled, 
-  variant = 'primary' // Padrão é primary
+export const GameButton = ({
+  title,
+  onPress,
+  style,
+  disabled,
+  variant = 'primary'
 }: GameButtonProps) => {
   const { theme } = useTheme();
 
-  // Lógica de Cores baseada na Variante
   let bgColor, borderColor;
 
   switch (variant) {
     case 'secondary':
-      // Amarelo/Dourado (Fase de Apostas)
       bgColor = theme.colors.home.buttonSecondary;
       borderColor = theme.colors.home.buttonSecondaryBorder;
       break;
     case 'destructive':
-      // Vermelho (Perigo/Reset)
       bgColor = theme.colors.home.buttonDestructive;
       borderColor = theme.colors.home.buttonDestructiveBorder;
       break;
     case 'primary':
     default:
-      // Laranja Padrão (Fase de Resultados / Ação Principal)
       bgColor = theme.colors.home.buttonBackground;
       borderColor = theme.colors.home.buttonBorder;
       break;
   }
-  
-  // Textos
+
   const textColor = theme.colors.home.title || '#FFFFFF';
   const textOutline = theme.colors.home.titleOutline || '#4A2311';
 
-  // Animação de escala
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -78,10 +73,10 @@ export const GameButton = ({
         style={[
           styles.visualContainer,
           animatedStyle,
-          { 
+          {
             backgroundColor: bgColor,
             borderColor: borderColor
-          }, 
+          },
           style
         ]}
       >
@@ -116,9 +111,9 @@ const styles = StyleSheet.create({
   visualContainer: {
     width: '100%',
     height: '100%',
-    borderRadius: 20,
+    borderRadius: ms(20),
     borderWidth: 0,
-    borderBottomWidth: 6,
+    borderBottomWidth: ms(6),
     borderLeftWidth: 1,
     borderRightWidth: 1,
     justifyContent: 'center',
@@ -133,14 +128,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -4, 
+    marginTop: ms(-4),
     width: '100%',
-    paddingHorizontal: 8,
+    paddingHorizontal: ms(8),
   },
   text: {
-    fontSize: 24,
+    fontSize: ms(24),
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: ms(1),
     textShadowOffset: { width: 1.5, height: 1.5 },
     textShadowRadius: 1,
   },

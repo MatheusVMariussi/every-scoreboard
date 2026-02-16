@@ -3,6 +3,7 @@ import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
+import { ms, wp } from '../theme/responsive';
 
 interface FodinhaHelpModalProps {
   visible: boolean;
@@ -26,7 +27,7 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
       content: (
         <View style={styles.stepContainerRow}>
           <View style={styles.iconColumn}>
-            <Ionicons name="heart-dislike-outline" size={80} color={theme.colors.status.error} />
+            <Ionicons name="heart-dislike-outline" size={ms(80)} color={theme.colors.status.error} />
           </View>
           <View style={styles.textColumn}>
             <Text style={[styles.text, { color: theme.colors.text.primary }]}>
@@ -40,13 +41,13 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
       title: translate('fodinha.help.betting_title'),
       content: (
         <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: 20 }]}>
+          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: ms(20) }]}>
             {translate('fodinha.help.betting_text')}
           </Text>
 
           <View style={[styles.alertBox, { backgroundColor: 'rgba(255, 152, 0, 0.1)', borderColor: 'rgba(255, 152, 0, 0.5)' }]}>
              <View style={styles.alertHeader}>
-                <Ionicons name="warning" size={24} color="#F57C00" />
+                <Ionicons name="warning" size={ms(24)} color="#F57C00" />
                 <Text style={[styles.alertTitle, { color: '#F57C00' }]}>{translate('fodinha.help.betting_rule_title')}</Text>
              </View>
              <Text style={[styles.alertText, { color: theme.colors.text.primary }]}>
@@ -63,21 +64,21 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
       title: translate('fodinha.help.scoring_title'),
       content: (
         <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: 20 }]}>
+          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: ms(20) }]}>
             {translate('fodinha.help.scoring_text')}
           </Text>
 
           <View style={styles.scoringRow}>
               {/* Hit */}
               <View style={[styles.scoringCard, { backgroundColor: theme.colors.background.overlay }]}>
-                  <Ionicons name="checkmark-circle" size={40} color={theme.colors.status.success} style={{ marginBottom: 10 }} />
+                  <Ionicons name="checkmark-circle" size={ms(40)} color={theme.colors.status.success} style={{ marginBottom: ms(10) }} />
                   <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>{translate('fodinha.help.hit_title')}</Text>
                   <Text style={[styles.cardText, { color: theme.colors.text.secondary }]}>{translate('fodinha.help.hit_text')}</Text>
               </View>
 
               {/* Miss */}
               <View style={[styles.scoringCard, { backgroundColor: theme.colors.background.overlay }]}>
-                  <Ionicons name="close-circle" size={40} color={theme.colors.status.error} style={{ marginBottom: 10 }} />
+                  <Ionicons name="close-circle" size={ms(40)} color={theme.colors.status.error} style={{ marginBottom: ms(10) }} />
                   <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>{translate('fodinha.help.miss_title')}</Text>
                   <Text style={[styles.cardText, { color: theme.colors.text.secondary }]}>{translate('fodinha.help.miss_text')}</Text>
               </View>
@@ -120,23 +121,23 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
             <Card value="4" suit="♦" />
           </View>
 
-          <View style={{ width: '100%', height: 1, backgroundColor: theme.colors.modal.divider, marginVertical: 15 }} />
+          <View style={{ width: '100%', height: 1, backgroundColor: theme.colors.modal.divider, marginVertical: ms(15) }} />
 
           <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('fodinha.help.cards_suit_title')}</Text>
-          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: 10 }]}>{translate('fodinha.help.cards_suit_text')}</Text>
+          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: ms(10) }]}>{translate('fodinha.help.cards_suit_text')}</Text>
 
           <View style={styles.suitsRow}>
              <View style={styles.suitItem}><Text style={[styles.suitText, { color: '#D32F2F' }]}>♦</Text></View>
-             <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
+             <Ionicons name="chevron-forward" size={ms(20)} color={theme.colors.text.secondary} />
              <View style={styles.suitItem}><Text style={[styles.suitText, { color: 'black' }]}>♠</Text></View>
-             <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
+             <Ionicons name="chevron-forward" size={ms(20)} color={theme.colors.text.secondary} />
              <View style={styles.suitItem}><Text style={[styles.suitText, { color: '#D32F2F' }]}>♥</Text></View>
-             <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
+             <Ionicons name="chevron-forward" size={ms(20)} color={theme.colors.text.secondary} />
              <View style={styles.suitItem}><Text style={[styles.suitText, { color: 'black' }]}>♣</Text></View>
           </View>
 
           <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>{translate('fodinha.help.cards_suit_title_cancelOut')}</Text>
-          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: 10 }]}>{translate('fodinha.help.cards_suit_text_cancelOut')}</Text>
+          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: ms(10) }]}>{translate('fodinha.help.cards_suit_text_cancelOut')}</Text>
 
         </View>
       )
@@ -167,7 +168,7 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
           <View style={[styles.header, { borderBottomColor: theme.colors.modal.divider, backgroundColor: theme.colors.background.secondary }]}>
             <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>{translate('fodinha.help.title')}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close-circle" size={32} color={theme.colors.text.primary} />
+              <Ionicons name="close-circle" size={ms(32)} color={theme.colors.text.primary} />
             </TouchableOpacity>
           </View>
 
@@ -207,60 +208,60 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  container: { width: '85%', maxHeight: '90%', borderRadius: 16, overflow: 'hidden', elevation: 5 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold' },
-  scrollContent: { padding: 20 },
-  stepTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: ms(20) },
+  container: { width: wp('85%'), maxHeight: '90%', borderRadius: ms(16), overflow: 'hidden', elevation: 5 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: ms(16), borderBottomWidth: 1 },
+  headerTitle: { fontSize: ms(20), fontWeight: 'bold' },
+  scrollContent: { padding: ms(20) },
+  stepTitle: { fontSize: ms(22), fontWeight: 'bold', marginBottom: ms(20), textAlign: 'center' },
   stepContainer: { alignItems: 'center' },
 
   // Row Layout
-  stepContainerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, paddingHorizontal: 20 },
+  stepContainerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ms(20), paddingHorizontal: ms(20) },
   iconColumn: { width: '30%', alignItems: 'center' },
   textColumn: { width: '70%' },
-  text: { fontSize: 16, lineHeight: 24, textAlign: 'center' },
+  text: { fontSize: ms(16), lineHeight: ms(24), textAlign: 'center' },
 
   // Betting Rule Alert
-  alertBox: { width: '80%', padding: 15, borderRadius: 10, borderWidth: 1, marginTop: 10 },
-  alertHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10, justifyContent: 'center' },
-  alertTitle: { fontSize: 18, fontWeight: 'bold' },
-  alertText: { fontSize: 15, lineHeight: 22, textAlign: 'center', fontWeight: '500' },
-  alertNote: { fontSize: 13, marginTop: 10, textAlign: 'center', fontStyle: 'italic' },
+  alertBox: { width: '80%', padding: ms(15), borderRadius: ms(10), borderWidth: 1, marginTop: ms(10) },
+  alertHeader: { flexDirection: 'row', alignItems: 'center', gap: ms(10), marginBottom: ms(10), justifyContent: 'center' },
+  alertTitle: { fontSize: ms(18), fontWeight: 'bold' },
+  alertText: { fontSize: ms(15), lineHeight: ms(22), textAlign: 'center', fontWeight: '500' },
+  alertNote: { fontSize: ms(13), marginTop: ms(10), textAlign: 'center', fontStyle: 'italic' },
 
   // Scoring Grid
-  scoringRow: { flexDirection: 'row', width: '100%', gap: 15, justifyContent: 'center', marginBottom: 20 },
-  scoringCard: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center' },
-  cardTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  cardText: { fontSize: 13, textAlign: 'center' },
+  scoringRow: { flexDirection: 'row', width: '100%', gap: ms(15), justifyContent: 'center', marginBottom: ms(20) },
+  scoringCard: { flex: 1, padding: ms(15), borderRadius: ms(10), alignItems: 'center' },
+  cardTitle: { fontSize: ms(16), fontWeight: 'bold', marginBottom: ms(5) },
+  cardText: { fontSize: ms(13), textAlign: 'center' },
 
   // Penalties
-  penaltyRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', width: '90%', marginTop: 10 },
-  penaltyItem: { flex: 1, alignItems: 'center', paddingHorizontal: 10 },
-  verticalDivider: { width: 1, height: '80%', marginHorizontal: 10 },
-  penaltyTitle: { fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
-  penaltyText: { fontSize: 12, textAlign: 'center' },
+  penaltyRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', width: '90%', marginTop: ms(10) },
+  penaltyItem: { flex: 1, alignItems: 'center', paddingHorizontal: ms(10) },
+  verticalDivider: { width: 1, height: '80%', marginHorizontal: ms(10) },
+  penaltyTitle: { fontSize: ms(14), fontWeight: 'bold', marginBottom: ms(5) },
+  penaltyText: { fontSize: ms(12), textAlign: 'center' },
 
   // Cards Step
-  cardsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 15 },
-  card: { width: 44, height: 60, backgroundColor: '#FFF', borderRadius: 4, borderWidth: 1, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center', elevation: 2 },
+  cardsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: ms(8), marginTop: ms(15) },
+  card: { width: ms(44), height: ms(60), backgroundColor: '#FFF', borderRadius: ms(4), borderWidth: 1, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center', elevation: 2 },
   cardHighlight: { borderColor: '#333', borderWidth: 1.5 },
-  cardValue: { fontSize: 18, fontWeight: 'bold' },
-  cardSuit: { fontSize: 16 },
+  cardValue: { fontSize: ms(18), fontWeight: 'bold' },
+  cardSuit: { fontSize: ms(16) },
 
-  subTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
-  suitsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'center' },
-  suitItem: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 18, elevation: 1, borderWidth: 1, borderColor: '#EEE' },
-  suitText: { fontSize: 20, fontWeight: 'bold' },
+  subTitle: { fontSize: ms(18), fontWeight: 'bold', marginBottom: ms(8) },
+  suitsRow: { flexDirection: 'row', alignItems: 'center', gap: ms(10), justifyContent: 'center' },
+  suitItem: { width: ms(36), height: ms(36), justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF', borderRadius: ms(18), elevation: 1, borderWidth: 1, borderColor: '#EEE' },
+  suitText: { fontSize: ms(20), fontWeight: 'bold' },
 
   // Footer
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderTopWidth: 1 },
-  navBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 25 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: ms(16), borderTopWidth: 1 },
+  navBtn: { paddingVertical: ms(10), paddingHorizontal: ms(20), borderRadius: ms(25) },
   primaryBtn: { },
   disabledBtn: { opacity: 0 },
-  navText: { fontSize: 16, fontWeight: '600' },
+  navText: { fontSize: ms(16), fontWeight: '600' },
   primaryText: { },
-  dots: { flexDirection: 'row', gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  activeDot: { width: 20 }
+  dots: { flexDirection: 'row', gap: ms(6) },
+  dot: { width: ms(8), height: ms(8), borderRadius: ms(4) },
+  activeDot: { width: ms(20) }
 });

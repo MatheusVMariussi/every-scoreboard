@@ -4,6 +4,48 @@ import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
 import { translate } from '../i18n';
 import { HistoryItem } from '../components/MatchHistoryGraph';
 
+// --- PURE FUNCTIONS ---
+export const getBasePoints = (gameMode: 'paulista' | 'mineiro') => gameMode === 'paulista' ? 1 : 2;
+
+export const buildPointHistory = (
+  currentHistory: HistoryItem[],
+  team: 'us' | 'them',
+  pointsToAdd: number,
+  basePoints: number
+): HistoryItem[] => {
+  const newHist = [...currentHistory];
+  if (pointsToAdd > 0) {
+    newHist.push({
+      id: Date.now().toString() + Math.random(),
+      team,
+      points: pointsToAdd,
+    });
+  } else {
+    let foundIndex = -1;
+    for (let i = newHist.length - 1; i >= 0; i--) {
+      if (newHist[i].team === team) { foundIndex = i; break; }
+    }
+    if (foundIndex !== -1) {
+      const currentPoints = newHist[foundIndex].points;
+      if (currentPoints > basePoints && Math.abs(pointsToAdd) === basePoints) {
+        newHist[foundIndex] = { ...newHist[foundIndex], points: currentPoints - basePoints };
+      } else {
+        newHist.splice(foundIndex, 1);
+      }
+    }
+  }
+  return newHist;
+};
+
+export const calculateNewScore = (currentScore: number, pointsToAdd: number, maxScore: number): { score: number; isVictory: boolean } => {
+  const newScore = Math.max(0, currentScore + pointsToAdd);
+  if (newScore >= maxScore && pointsToAdd > 0) {
+    return { score: maxScore, isVictory: true };
+  }
+  return { score: newScore, isVictory: false };
+};
+
+// --- HOOK ---
 export const useTrucoGame = () => {
   // --- STATES ---
   const [scoreUs, setScoreUs] = useState(0);
@@ -48,8 +90,6 @@ export const useTrucoGame = () => {
   }, [gameMode, maxScore]);
 
   // --- LOGIC ---
-  const getBasePoints = () => gameMode === 'paulista' ? 1 : 2;
-
   const resetGame = (fullReset = false) => {
     setScoreUs(0); setScoreThem(0);
     setPointHistory([]);
@@ -73,48 +113,18 @@ export const useTrucoGame = () => {
   };
 
   const handlePointChange = (team: 'us' | 'them', pointsToAdd: number) => {
-    setPointHistory(prev => {
-      const newHist = [...prev];
-      if (pointsToAdd > 0) {
-        newHist.push({ 
-            id: Date.now().toString() + Math.random(),
-            team, 
-            points: pointsToAdd 
-        });
-      } else {
-        let foundIndex = -1;
-        for (let i = newHist.length - 1; i >= 0; i--) { 
-            if (newHist[i].team === team) { foundIndex = i; break; } 
-        }
-        if (foundIndex !== -1) {
-          const currentPoints = newHist[foundIndex].points;
-          const base = getBasePoints();
-          if (currentPoints > base && Math.abs(pointsToAdd) === base) {
-             newHist[foundIndex] = { ...newHist[foundIndex], points: currentPoints - base };
-          } else {
-             newHist.splice(foundIndex, 1);
-          }
-        }
-      }
-      return newHist;
-    });
+    const base = getBasePoints(gameMode);
+    setPointHistory(prev => buildPointHistory(prev, team, pointsToAdd, base));
+
+    const currentScore = team === 'us' ? scoreUs : scoreThem;
+    const result = calculateNewScore(currentScore, pointsToAdd, maxScore);
 
     if (team === 'us') {
-      const newScore = Math.max(0, scoreUs + pointsToAdd);
-      if (newScore >= maxScore && pointsToAdd > 0) { 
-        handleVictory(nameUs, 'us'); 
-        setScoreUs(maxScore); 
-      } else {
-        setScoreUs(newScore);
-      }
+      if (result.isVictory) { handleVictory(nameUs, 'us'); }
+      setScoreUs(result.score);
     } else {
-      const newScore = Math.max(0, scoreThem + pointsToAdd);
-      if (newScore >= maxScore && pointsToAdd > 0) { 
-        handleVictory(nameThem, 'them'); 
-        setScoreThem(maxScore); 
-      } else {
-        setScoreThem(newScore);
-      }
+      if (result.isVictory) { handleVictory(nameThem, 'them'); }
+      setScoreThem(result.score);
     }
   };
 
@@ -129,6 +139,6 @@ export const useTrucoGame = () => {
     nameUs, setNameUs,
     nameThem, setNameThem,
     isLoaded,
-    getBasePoints, resetGame, handlePointChange
+    getBasePoints: () => getBasePoints(gameMode), resetGame, handlePointChange
   };
 };
