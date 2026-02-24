@@ -5,7 +5,7 @@ import {
   removeRoundFromList,
   removePlayerFromList,
   resetAllPlayers,
-  CachetaPlayer,
+  type CachetaPlayer,
 } from '../useCachetaGame';
 
 const makePlayer = (overrides: Partial<CachetaPlayer> = {}): CachetaPlayer => ({
@@ -25,7 +25,7 @@ describe('processNextRound', () => {
       makePlayer({ id: '2', currentAction: 'lost' }),
       makePlayer({ id: '3', currentAction: 'fold' }),
     ];
-    const withPoints = players.map(p => ({ ...p, currentPoints: 10 }));
+    const withPoints = players.map((p) => ({ ...p, currentPoints: 10 }));
 
     const result = processNextRound(players, withPoints);
 
@@ -34,7 +34,9 @@ describe('processNextRound', () => {
     expect(result.updatedPlayers[1].history).toEqual(['lost']);
     expect(result.updatedPlayers[2].history).toEqual(['fold']);
     // currentAction should be reset to null
-    result.updatedPlayers.forEach(p => expect(p.currentAction).toBeNull());
+    result.updatedPlayers.forEach((p) => {
+      expect(p.currentAction).toBeNull();
+    });
   });
 
   it('returns error when no winners among active players', () => {
@@ -42,7 +44,7 @@ describe('processNextRound', () => {
       makePlayer({ id: '1', currentAction: 'fold' }),
       makePlayer({ id: '2', currentAction: 'lost' }),
     ];
-    const withPoints = players.map(p => ({ ...p, currentPoints: 10 }));
+    const withPoints = players.map((p) => ({ ...p, currentPoints: 10 }));
 
     const result = processNextRound(players, withPoints);
 
@@ -55,7 +57,7 @@ describe('processNextRound', () => {
       makePlayer({ id: '1', currentAction: 'won' }),
       makePlayer({ id: '2', currentAction: 'won' }),
     ];
-    const withPoints = players.map(p => ({ ...p, currentPoints: 10 }));
+    const withPoints = players.map((p) => ({ ...p, currentPoints: 10 }));
 
     const result = processNextRound(players, withPoints);
 
@@ -190,7 +192,7 @@ describe('resetAllPlayers', () => {
       makePlayer({ id: '2', history: ['lost'], currentAction: 'won' }),
     ];
     const result = resetAllPlayers(players);
-    result.forEach(p => {
+    result.forEach((p) => {
       expect(p.history).toEqual([]);
       expect(p.currentAction).toBeNull();
     });

@@ -11,7 +11,7 @@ Este projeto é um marcador de pontos multi-jogos projetado para facilitar a con
 - **Truco**: Marcador de tentos com histórico de partidas e gráfico de evolução.
 - **Cacheta**: Gerenciamento de vidas e rodadas, com controle de perdas e eliminações.
 - **Fodinha**: Controle de vidas e apostas, com regras personalizáveis.
-- **Canastra**: (Em desenvolvimento)
+- **Canastra**: (Em breve)
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -24,6 +24,8 @@ Este projeto é um marcador de pontos multi-jogos projetado para facilitar a con
 - **Async Storage** (Persistência de dados)
 - **i18n-js** (Internacionalização)
 - **Jest** (Testes unitários com jest-expo)
+- **ESLint** (Flat config com typescript-eslint strict + react-hooks + react-native)
+- **Prettier** (Formatação consistente)
 
 ## 📂 Estrutura do Projeto
 
@@ -61,9 +63,19 @@ Os testes cobrem a lógica pura dos jogos:
 - **Cacheta**: Processamento de rodadas, validação de ganhadores, edição de histórico e remoção de jogadores/rodadas.
 - **Fodinha**: Cálculo de dano (modo fixo e diferença), controle de apostas, edição de histórico e remoção de rodadas.
 
+## 🔧 Lint e Formatação
+
+O projeto utiliza **ESLint** (flat config, strict TypeScript) e **Prettier**:
+
+```bash
+npm run lint          # Verifica erros de lint
+npm run lint:fix      # Corrige erros automaticamente
+npm run format        # Formata todo o código com Prettier
+```
+
 ## ⚠️ Status e Próximos Passos
 
-A tela de **Canastra** está atualmente em construção e será implementada em atualizações futuras.
+A tela de **Canastra** está escondida atrás de um badge "Em Breve" e será implementada em atualizações futuras.
 
 Planejamento para as próximas versões:
 - Implementação completa do placar de Canastra.

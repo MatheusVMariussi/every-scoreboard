@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenWrapper } from '../components/ScreenWrapper';
@@ -17,12 +17,8 @@ export const CanastraScreen = () => {
 
   return (
     <ScreenWrapper style={styles.container}>
-      <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-        Placar de Canastra
-      </Text>
-      <Text style={{ color: theme.colors.text.secondary }}>
-        (Em construção)
-      </Text>
+      <Text style={[styles.title, { color: theme.colors.text.primary }]}>Placar de Canastra</Text>
+      <Text style={{ color: theme.colors.text.secondary }}>(Em construção)</Text>
     </ScreenWrapper>
   );
 };

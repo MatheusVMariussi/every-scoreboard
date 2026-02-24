@@ -1,5 +1,5 @@
-import React from 'react';
-import { StatusBar, View, ViewStyle } from 'react-native';
+import type React from 'react';
+import { StatusBar, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/useTheme';
 
@@ -15,7 +15,7 @@ export const ScreenWrapper = ({ children, style }: ScreenWrapperProps) => {
   const containerStyle = {
     flex: 1,
     backgroundColor: theme.colors.background.primary,
-    paddingTop: insets.top, 
+    paddingTop: insets.top,
     paddingBottom: insets.bottom,
     paddingLeft: insets.left,
     paddingRight: insets.right,

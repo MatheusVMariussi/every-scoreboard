@@ -100,8 +100,8 @@ export interface Theme {
       caption: number;
     };
     weights: {
-      regular: "400";
-      bold: "700";
+      regular: '400';
+      bold: '700';
     };
   };
 }

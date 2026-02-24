@@ -7,7 +7,8 @@ export default {
     canastra: 'Canastra',
     fodinha: 'Fodinha',
     cacheta: 'Cacheta',
-    
+
+    coming_soon: 'COMING SOON',
     settings: 'Settings',
     removeAds: 'Remove Ads',
     update_title: 'New Version Available',
@@ -17,7 +18,8 @@ export default {
   },
   rateModal: {
     rate_title: 'RATE US',
-    rate_message: 'Enjoying the experience? Rate us on the store!\n\nNote: App is in Beta, bugs are expected. Improvement suggestions are very welcome! Contact me!',
+    rate_message:
+      'Enjoying the experience? Rate us on the store!\n\nNote: App is in Beta, bugs are expected. Improvement suggestions are very welcome! Contact me!',
     rate_now: 'RATE',
     rate_contact: 'CONTACT',
     later: 'LATER',
@@ -32,7 +34,7 @@ export default {
     english: 'English',
     version: 'Version',
     reset_all: 'RESET ALL DATA',
-    confirm_reset_all: 'This will permanently delete all team names and histories. Continue?'
+    confirm_reset_all: 'This will permanently delete all team names and histories. Continue?',
   },
   common: {
     how_to_play: 'HOW TO PLAY',
@@ -43,6 +45,11 @@ export default {
     error_try_again: 'TRY AGAIN',
     error_reset: 'RESET DATA',
     error_reset_confirm: 'This will erase all saved data and restart the app. Continue?',
+
+    storage_error_title: 'Storage Error',
+    storage_save_error: 'Could not save data. Please try again.',
+    storage_load_error: 'Could not load saved data.',
+    storage_clear_error: 'Could not clear data. Please try again.',
 
     save: 'SAVE',
     cancel: 'CANCEL',
@@ -56,7 +63,8 @@ export default {
     confirm_delete_player: 'Do you really want to remove this player and all their history?',
 
     confirm_change_title: 'CHANGE MODE?',
-    confirm_change_message: 'Changing the game mode will reset the current score. Do you want to continue?',
+    confirm_change_message:
+      'Changing the game mode will reset the current score. Do you want to continue?',
     confirm_reset_title: 'RESET?',
     confirm_reset_message: 'Do you really want to reset the score for this match?',
     confirm: 'CONFIRM',
@@ -75,15 +83,19 @@ export default {
     help: {
       title: 'HOW TO PLAY',
       objective_title: 'OBJECTIVE',
-      objective_text_1: 'Truco is played in pairs. The goal is to be the first team to reach 12 or 24 points.',
-      objective_text_2: 'The match is divided into "Hands". Each hand starts worth {{points}} point(s) and is played in a "best of three" rounds.',
+      objective_text_1:
+        'Truco is played in pairs. The goal is to be the first team to reach 12 or 24 points.',
+      objective_text_2:
+        'The match is divided into "Hands". Each hand starts worth {{points}} point(s) and is played in a "best of three" rounds.',
       cards_title: 'CARD STRENGTH',
       cards_text: 'The basic card hierarchy (strongest to weakest) is:',
       cards_note: '* In "Clean Deck", 8, 9 and 10 are removed.',
       manilhas_title: 'MANILHAS',
-      manilhas_text: 'Manilhas are the strongest cards in the game, beating any other (including the 3).',
+      manilhas_text:
+        'Manilhas are the strongest cards in the game, beating any other (including the 3).',
       manilha_variable_title: 'Variable Manilha (Turn)',
-      manilha_variable_text: 'In Truco Paulista, a card is turned up. The manilha will be the card immediately superior to it.',
+      manilha_variable_text:
+        'In Truco Paulista, a card is turned up. The manilha will be the card immediately superior to it.',
       manilha_example_if: 'If turned:',
       manilha_example_is: 'The manilha is:',
       suits_order: 'Suit Order:',
@@ -97,9 +109,10 @@ export default {
       points_table_nine: 'Nine:',
       points_table_ten: 'Ten:',
       points_table_twelve: 'Twelve:',
-      points_refuse_text: 'If the opposing team refuses the call, they lose the hand and the calling team wins the points worth before the raise.',
+      points_refuse_text:
+        'If the opposing team refuses the call, they lose the hand and the calling team wins the points worth before the raise.',
       tentos: '{{count}} points',
-      tento_one: '1 point'
+      tento_one: '1 point',
     },
     us: 'US',
     them: 'THEM',
@@ -119,7 +132,7 @@ export default {
     max_score: 'MAXIMUM SCORE',
     tutorial: {
       score: 'Swipe UP to add TRUCO value (3/4 pts).\nSwipe DOWN to remove 1 pt.\nTap to add 1 pt.',
-      settings: 'Tap here to switch between game modes or change max score (12/24).'
+      settings: 'Tap here to switch between game modes or change max score (12/24).',
     },
   },
   cacheta: {
@@ -148,14 +161,15 @@ export default {
     actions: {
       fold: 'F',
       lost: 'L',
-      won: 'W'
+      won: 'W',
     },
     help: {
       title: 'HOW TO PLAY',
       objective_title: 'OBJECTIVE',
-      objective_text: 'The goal is to keep your score above zero. The game ends when only one player remains with points.',
+      objective_text:
+        'The goal is to keep your score above zero. The game ends when only one player remains with points.',
       scoring_title: 'SCORING',
-      scoring_text: 'Each round, points are deducted according to the player\'s result:',
+      scoring_text: "Each round, points are deducted according to the player's result:",
       won_title: 'WON',
       won_text: 'The winner of the round loses no points.',
       fold_title: 'FOLDED',
@@ -163,14 +177,14 @@ export default {
       lost_title: 'LOST',
       lost_text: 'Who plays the hand to the end and does not win, loses 2 points.',
       elimination_title: 'ELIMINATION',
-      elimination_text: 'When a player\'s score reaches 0, they are eliminated from the game.',
+      elimination_text: "When a player's score reaches 0, they are eliminated from the game.",
       hands_title: 'GAMEPLAY',
       hands_text: 'To win, you must form sets with your 9 cards. Valid sets are:',
       sets_title: 'SETS (TRINCAS)',
       sets_text: '3 cards of the same rank and different suits.',
       runs_title: 'RUNS (SEQUÊNCIAS)',
       runs_text: '3 or more cards of the same suit in sequence.',
-    }
+    },
   },
   fodinha: {
     title: 'FODINHA',
@@ -191,25 +205,31 @@ export default {
     bet: 'BET',
     edit_round_instruction: 'Adjust how much each player lost this round.',
     tutorial: {
-      actions: 'Set each player\'s bet or wins...',
+      actions: "Set each player's bet or wins...",
       step_cards: 'Adjust how many cards are dealt this round.',
       step_lives: 'Keep an eye on remaining player lives here.',
-      step_inputs: 'Set each player\'s bet or wins here.',
+      step_inputs: "Set each player's bet or wins here.",
       step_button: 'Confirm to proceed to the next phase.',
     },
     invalid_bets_title: 'Invalid Bets',
-    invalid_bets_message: 'The sum of bets ({{total}}) cannot equal the number of cards ({{cards}}).',
+    invalid_bets_message:
+      'The sum of bets ({{total}}) cannot equal the number of cards ({{cards}}).',
     wrong_count_title: 'Wrong Count',
-    wrong_count_message: 'The sum of won cards ({{total}}) must equal the number of cards ({{cards}}).',
+    wrong_count_message:
+      'The sum of won cards ({{total}}) must equal the number of cards ({{cards}}).',
     help: {
       title: 'HOW TO PLAY',
       objective_title: 'OBJECTIVE',
-      objective_text: 'The goal is to survive! Everyone starts with a number of lives. Losing all lives means elimination. The last survivor wins.',
+      objective_text:
+        'The goal is to survive! Everyone starts with a number of lives. Losing all lives means elimination. The last survivor wins.',
       betting_title: 'BETTING',
-      betting_text: 'In each round, players receive cards and must bet how many "hands" (tricks) they will win.',
+      betting_text:
+        'In each round, players receive cards and must bet how many "hands" (tricks) they will win.',
       betting_rule_title: 'IMPORTANT RULE',
-      betting_rule_text: 'The sum of all players\' bets CANNOT equal the total number of cards in the round.',
-      betting_rule_note: 'This ensures that at least one person will miss their bet and lose lives.',
+      betting_rule_text:
+        "The sum of all players' bets CANNOT equal the total number of cards in the round.",
+      betting_rule_note:
+        'This ensures that at least one person will miss their bet and lose lives.',
       scoring_title: 'SCORING',
       scoring_text: 'At the end of the round, the bet is compared to the number of hands won:',
       hit_title: 'HIT',
@@ -219,7 +239,8 @@ export default {
       penalty_fixed_title: 'Fixed Mode',
       penalty_fixed_text: 'Lose 1 life per miss, regardless of the difference.',
       penalty_diff_title: 'Difference Mode',
-      penalty_diff_text: 'Lose lives equal to the difference between bet and result (Ex: Bet 1, Won 3 = Lose 2 lives).',
+      penalty_diff_text:
+        'Lose lives equal to the difference between bet and result (Ex: Bet 1, Won 3 = Lose 2 lives).',
       cards_title: 'CARDS',
       cards_text: 'Fodinha uses and follows the Truco hierarchy:',
       cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
@@ -227,7 +248,8 @@ export default {
       cards_suit_text: 'If cards have the same rank, the tiebreaker is by suit:',
       cards_suit_order: 'Diamonds > Spades > Hearts > Clubs',
       cards_suit_title_cancelOut: 'Canceling Out',
-      cards_suit_text_cancelOut: 'Another variant of the game, cards with the same rank (except for manilhas) cancel each other out. When this happens, the remaining cards in the round are still considered valid, even if they have lower ranks. As a result, a 4 can win the round. If all cards are canceled and no card remains valid, the next round is worth double points, and this effect continues cumulatively.'
-    }
+      cards_suit_text_cancelOut:
+        'Another variant of the game, cards with the same rank (except for manilhas) cancel each other out. When this happens, the remaining cards in the round are still considered valid, even if they have lower ranks. As a result, a 4 can win the round. If all cards are canceled and no card remains valid, the next round is worth double points, and this effect continues cumulatively.',
+    },
   },
 };

@@ -15,11 +15,7 @@ interface MatchHistoryGraphProps {
   colorThem?: string;
 }
 
-export const MatchHistoryGraph = ({
-  history,
-  colorUs,
-  colorThem
-}: MatchHistoryGraphProps) => {
+export const MatchHistoryGraph = ({ history, colorUs, colorThem }: MatchHistoryGraphProps) => {
   const { theme } = useTheme();
 
   const finalColorUs = colorUs || theme.colors.truco.teamUs;
@@ -29,7 +25,6 @@ export const MatchHistoryGraph = ({
 
   return (
     <View style={styles.container}>
-
       {/* A LINHA CENTRAL FIXA */}
       <View style={[styles.centerLine, { backgroundColor: theme.colors.truco.divider }]} />
 
@@ -38,22 +33,27 @@ export const MatchHistoryGraph = ({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        onContentSizeChange={() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }}
       >
         {history.map((item) => {
           const barHeight = item.points > 2 ? ms(30) : ms(16);
 
           return (
-            <View key={item.id} style={[
+            <View
+              key={item.id}
+              style={[
                 styles.historyDot,
                 {
-                    backgroundColor: item.team === 'us' ? finalColorUs : finalColorThem,
-                    height: barHeight,
-                    transform: [
-                      { translateY: item.team === 'them' ? -(barHeight / 2 + 2) : (barHeight / 2 + 2) }
-                    ]
-                }
-            ]} />
+                  backgroundColor: item.team === 'us' ? finalColorUs : finalColorThem,
+                  height: barHeight,
+                  transform: [
+                    { translateY: item.team === 'them' ? -(barHeight / 2 + 2) : barHeight / 2 + 2 },
+                  ],
+                },
+              ]}
+            />
           );
         })}
       </ScrollView>
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     justifyContent: 'center',
-    position: 'relative'
+    position: 'relative',
   },
 
   centerLine: {
@@ -75,17 +75,17 @@ const styles = StyleSheet.create({
     right: 0,
     height: 2,
     zIndex: -1,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
 
   scrollContent: {
     alignItems: 'center',
     paddingHorizontal: ms(20),
-    gap: ms(6)
+    gap: ms(6),
   },
 
   historyDot: {
     width: ms(6),
-    borderRadius: ms(3)
+    borderRadius: ms(3),
   },
 });

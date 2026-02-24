@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { translate } from '../i18n';
@@ -29,21 +29,18 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleResetData = () => {
-    Alert.alert(
-      translate('common.error_reset'),
-      translate('common.error_reset_confirm'),
-      [
-        { text: translate('common.cancel'), style: 'cancel' },
-        {
-          text: translate('common.confirm'),
-          style: 'destructive',
-          onPress: async () => {
-            await clearAllData();
+    Alert.alert(translate('common.error_reset'), translate('common.error_reset_confirm'), [
+      { text: translate('common.cancel'), style: 'cancel' },
+      {
+        text: translate('common.confirm'),
+        style: 'destructive',
+        onPress: () => {
+          clearAllData().then(() => {
             this.setState({ hasError: false });
-          },
+          });
         },
-      ],
-    );
+      },
+    ]);
   };
 
   render() {

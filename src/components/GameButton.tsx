@@ -1,5 +1,4 @@
-import React from 'react';
-import { Pressable, Text, StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useTheme } from '../theme/useTheme';
 import { ms } from '../theme/responsive';
@@ -10,6 +9,7 @@ interface GameButtonProps {
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'destructive';
+  badge?: string;
 }
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -19,7 +19,8 @@ export const GameButton = ({
   onPress,
   style,
   disabled,
-  variant = 'primary'
+  variant = 'primary',
+  badge,
 }: GameButtonProps) => {
   const { theme } = useTheme();
 
@@ -64,10 +65,7 @@ export const GameButton = ({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       disabled={disabled}
-      style={({ pressed }) => [
-        styles.touchableContainer,
-        disabled && styles.disabled,
-      ]}
+      style={() => [styles.touchableContainer, disabled && styles.disabled]}
     >
       <AnimatedView
         style={[
@@ -75,9 +73,9 @@ export const GameButton = ({
           animatedStyle,
           {
             backgroundColor: bgColor,
-            borderColor: borderColor
+            borderColor: borderColor,
           },
-          style
+          style,
         ]}
       >
         <View style={styles.content}>
@@ -95,6 +93,11 @@ export const GameButton = ({
             {title.toUpperCase()}
           </Text>
         </View>
+        {Boolean(badge) && (
+          <View style={styles.badgeContainer}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        )}
       </AnimatedView>
     </Pressable>
   );
@@ -141,5 +144,21 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: ms(-8),
+    right: ms(-4),
+    backgroundColor: '#FF9F00',
+    paddingHorizontal: ms(8),
+    paddingVertical: ms(2),
+    borderRadius: ms(6),
+    transform: [{ rotate: '4deg' }],
+  },
+  badgeText: {
+    fontSize: ms(9),
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: ms(0.5),
   },
 });

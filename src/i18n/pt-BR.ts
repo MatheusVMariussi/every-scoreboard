@@ -8,6 +8,7 @@ export default {
     fodinha: 'Fodinha',
     cacheta: 'Cacheta',
 
+    coming_soon: 'EM BREVE',
     settings: 'Configurações',
     removeAds: 'Remover Anúncios',
     update_title: 'Nova Versão Disponível',
@@ -17,7 +18,8 @@ export default {
   },
   rateModal: {
     rate_title: 'AVALIE',
-    rate_message: 'Gostando da experiência? Avalie na loja!\n\nObs: App em Beta, bugs são esperados. Sugestões de melhorias são muito bem-vindas! Entre em contato.',
+    rate_message:
+      'Gostando da experiência? Avalie na loja!\n\nObs: App em Beta, bugs são esperados. Sugestões de melhorias são muito bem-vindas! Entre em contato.',
     rate_now: 'AVALIAR',
     rate_contact: 'CONTATO',
     later: 'DEPOIS',
@@ -32,7 +34,8 @@ export default {
     english: 'Inglês',
     version: 'Versão',
     reset_all: 'APAGAR TODOS OS DADOS',
-    confirm_reset_all: 'Isso apagará permanentemente todos os nomes de times e históricos. Continuar?'
+    confirm_reset_all:
+      'Isso apagará permanentemente todos os nomes de times e históricos. Continuar?',
   },
   common: {
     how_to_play: 'COMO JOGAR',
@@ -43,6 +46,11 @@ export default {
     error_try_again: 'TENTAR NOVAMENTE',
     error_reset: 'RESETAR DADOS',
     error_reset_confirm: 'Isso apagará todos os dados salvos e reiniciará o app. Continuar?',
+
+    storage_error_title: 'Erro de Armazenamento',
+    storage_save_error: 'Não foi possível salvar os dados. Tente novamente.',
+    storage_load_error: 'Não foi possível carregar os dados salvos.',
+    storage_clear_error: 'Não foi possível apagar os dados. Tente novamente.',
 
     save: 'SALVAR',
     cancel: 'CANCELAR',
@@ -56,7 +64,8 @@ export default {
     confirm_delete_player: 'Deseja realmente remover este jogador e todo o seu histórico?',
 
     confirm_change_title: 'MUDAR MODO?',
-    confirm_change_message: 'Ao mudar o modo de jogo, o placar atual será zerado. Deseja continuar?',
+    confirm_change_message:
+      'Ao mudar o modo de jogo, o placar atual será zerado. Deseja continuar?',
     confirm_reset_title: 'REINICIAR?',
     confirm_reset_message: 'Deseja realmente zerar o placar desta partida?',
     confirm: 'CONFIRMAR',
@@ -75,31 +84,37 @@ export default {
     help: {
       title: 'COMO JOGAR',
       objective_title: 'OBJETIVO',
-      objective_text_1: 'O Truco é disputado em duplas. O objetivo é ser a primeira dupla a alcançar {{points}} pontos.',
-      objective_text_2: 'A partida é dividida em "Mãos". Cada mão vale inicialmente {{points}} ponto(s) e é geralmente disputada em uma "melhor de três" rodadas.',
+      objective_text_1:
+        'O Truco é disputado em duplas. O objetivo é ser a primeira dupla a alcançar {{points}} pontos.',
+      objective_text_2:
+        'A partida é dividida em "Mãos". Cada mão vale inicialmente {{points}} ponto(s) e é geralmente disputada em uma "melhor de três" rodadas.',
       cards_title: 'FORÇA DAS CARTAS',
       cards_text: 'A hierarquia básica das cartas (da mais forte para a mais fraca) é:',
       cards_note: '* No "Baralho Limpo", retiram-se os 8, 9 e 10.',
       manilhas_title: 'MANILHAS',
-      manilhas_text: 'As Manilhas são as cartas mais fortes do jogo, superando qualquer outra (inclusive o 3).',
+      manilhas_text:
+        'As Manilhas são as cartas mais fortes do jogo, superando qualquer outra (inclusive o 3).',
       manilha_variable_title: 'Manilha Variável (Vira)',
-      manilha_variable_text: 'No Truco Paulista, vira-se uma carta. A manilha será a carta imediatamente superior a ela.',
+      manilha_variable_text:
+        'No Truco Paulista, vira-se uma carta. A manilha será a carta imediatamente superior a ela.',
       manilha_example_if: 'Se virar um:',
       manilha_example_is: 'A manilha é:',
       suits_order: 'Ordem de força (Nipes):',
       manilha_fixed_title: 'Manilhas Fixas',
       manilha_fixed_text: 'No Truco Mineiro, as manilhas são sempre as mesmas:',
       points_title: 'PEDIDOS E PONTOS',
-      points_text: 'A qualquer momento na sua vez, um jogador pode pedir "TRUCO" (ou aumentar a aposta).',
+      points_text:
+        'A qualquer momento na sua vez, um jogador pode pedir "TRUCO" (ou aumentar a aposta).',
       points_table_hand: 'Mão Normal:',
       points_table_truco: 'Truco:',
       points_table_six: 'Seis:',
       points_table_nine: 'Nove:',
       points_table_ten: 'Dez:',
       points_table_twelve: 'Doze:',
-      points_refuse_text: 'Se a dupla adversária recusar o pedido, eles perdem a mão e a dupla que pediu ganha os pontos que estavam valendo antes do aumento.',
+      points_refuse_text:
+        'Se a dupla adversária recusar o pedido, eles perdem a mão e a dupla que pediu ganha os pontos que estavam valendo antes do aumento.',
       tentos: '{{count}} tentos',
-      tento_one: '1 tento'
+      tento_one: '1 tento',
     },
     us: 'NÓS',
     them: 'ELES',
@@ -118,8 +133,10 @@ export default {
     game_mode: 'MODO DE JOGO',
     max_score: 'PONTUAÇÃO MÁXIMA',
     tutorial: {
-      score: 'Arraste para CIMA para somar o valor do TRUCO (3/4 pts).\nArraste para BAIXO para remover 1 pt.\nToque para somar 1 pt.',
-      settings: 'Toque aqui para alternar entre PAULISTA e MINEIRO ou mudar a pontuação máxima (12/24).'
+      score:
+        'Arraste para CIMA para somar o valor do TRUCO (3/4 pts).\nArraste para BAIXO para remover 1 pt.\nToque para somar 1 pt.',
+      settings:
+        'Toque aqui para alternar entre PAULISTA e MINEIRO ou mudar a pontuação máxima (12/24).',
     },
   },
   cacheta: {
@@ -148,14 +165,16 @@ export default {
     actions: {
       fold: 'C',
       lost: 'P',
-      won: 'G'
+      won: 'G',
     },
     help: {
       title: 'COMO JOGAR',
       objective_title: 'OBJETIVO',
-      objective_text: 'O objetivo é manter sua pontuação acima de zero. O jogo termina quando restar apenas um jogador com pontos.',
+      objective_text:
+        'O objetivo é manter sua pontuação acima de zero. O jogo termina quando restar apenas um jogador com pontos.',
       scoring_title: 'PONTUAÇÃO',
-      scoring_text: 'A cada rodada, os pontos são descontados de acordo com o resultado do jogador:',
+      scoring_text:
+        'A cada rodada, os pontos são descontados de acordo com o resultado do jogador:',
       won_title: 'GANHOU',
       won_text: 'Quem bate (ganha a rodada) não perde pontos.',
       fold_title: 'CORREU',
@@ -165,12 +184,13 @@ export default {
       elimination_title: 'ELIMINAÇÃO',
       elimination_text: 'Quando a pontuação de um jogador chega a 0, ele é eliminado do jogo.',
       hands_title: 'JOGO',
-      hands_text: 'Para bater (ganhar), você deve formar jogos com suas 9 cartas. Os jogos podem ser:',
+      hands_text:
+        'Para bater (ganhar), você deve formar jogos com suas 9 cartas. Os jogos podem ser:',
       sets_title: 'TRINCAS',
       sets_text: '3 cartas do mesmo valor e naipes diferentes.',
       runs_title: 'SEQUÊNCIAS',
       runs_text: '3 ou mais cartas do mesmo naipe em ordem.',
-    }
+    },
   },
   fodinha: {
     title: 'FODINHA',
@@ -198,18 +218,24 @@ export default {
       step_button: 'Confirme para avançar para a próxima fase.',
     },
     invalid_bets_title: 'Apostas Inválidas',
-    invalid_bets_message: 'A soma das apostas ({{total}}) não pode ser igual ao número de cartas ({{cards}}).',
+    invalid_bets_message:
+      'A soma das apostas ({{total}}) não pode ser igual ao número de cartas ({{cards}}).',
     wrong_count_title: 'Conta Errada',
-    wrong_count_message: 'A soma das cartas ganhas ({{total}}) deve ser igual ao número de cartas ({{cards}}).',
+    wrong_count_message:
+      'A soma das cartas ganhas ({{total}}) deve ser igual ao número de cartas ({{cards}}).',
     help: {
       title: 'COMO JOGAR',
       objective_title: 'OBJETIVO',
-      objective_text: 'O objetivo é sobreviver! Todos começam com um número de vidas. Quem perder todas as vidas é eliminado. O último sobrevivente vence.',
+      objective_text:
+        'O objetivo é sobreviver! Todos começam com um número de vidas. Quem perder todas as vidas é eliminado. O último sobrevivente vence.',
       betting_title: 'APOSTAS',
-      betting_text: 'Em cada rodada, os jogadores recebem cartas e devem apostar quantas "mãos" (vazas) irão ganhar.',
+      betting_text:
+        'Em cada rodada, os jogadores recebem cartas e devem apostar quantas "mãos" (vazas) irão ganhar.',
       betting_rule_title: 'REGRA IMPORTANTE',
-      betting_rule_text: 'A soma das apostas de todos os jogadores NÃO pode ser igual ao número de cartas da rodada.',
-      betting_rule_note: 'Isso garante que pelo menos uma pessoa vai errar a aposta e perder vidas.',
+      betting_rule_text:
+        'A soma das apostas de todos os jogadores NÃO pode ser igual ao número de cartas da rodada.',
+      betting_rule_note:
+        'Isso garante que pelo menos uma pessoa vai errar a aposta e perder vidas.',
       scoring_title: 'PONTUAÇÃO',
       scoring_text: 'Ao final da rodada, compara-se a aposta com o número de mãos ganhas:',
       hit_title: 'ACERTOU',
@@ -219,7 +245,8 @@ export default {
       penalty_fixed_title: 'Modo Fixo',
       penalty_fixed_text: 'Perde 1 vida por erro, não importa a diferença.',
       penalty_diff_title: 'Modo Diferença',
-      penalty_diff_text: 'Perde vidas igual à diferença entre a aposta e o resultado (Ex: Apostou 1, Ganhou 3 = Perde 2 vidas).',
+      penalty_diff_text:
+        'Perde vidas igual à diferença entre a aposta e o resultado (Ex: Apostou 1, Ganhou 3 = Perde 2 vidas).',
       cards_title: 'CARTAS',
       cards_text: 'A Fodinha utiliza o baralho e segue a hierarquia do Truco:',
       cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
@@ -227,7 +254,8 @@ export default {
       cards_suit_text: 'Caso as cartas tenham o mesmo valor, o desempate é pelo naipe:',
       cards_suit_order: 'Ouros > Espadas > Copas > Paus',
       cards_suit_title_cancelOut: 'Anulação',
-      cards_suit_text_cancelOut: 'Outra variante do jogo, cartas de mesmo valor (exceto manilhas) se anulam mutuamente. Quando isso acontece, as demais cartas da rodada continuam válidas, mesmo que tenham valores menores. Dessa forma, uma carta 4 pode vencer a rodada. Caso todas as cartas sejam anuladas e nenhuma reste válida, a próxima rodada valerá o dobro de pontos, e assim sucessivamente.',
-    }
+      cards_suit_text_cancelOut:
+        'Outra variante do jogo, cartas de mesmo valor (exceto manilhas) se anulam mutuamente. Quando isso acontece, as demais cartas da rodada continuam válidas, mesmo que tenham valores menores. Dessa forma, uma carta 4 pode vencer a rodada. Caso todas as cartas sejam anuladas e nenhuma reste válida, a próxima rodada valerá o dobro de pontos, e assim sucessivamente.',
+    },
   },
 };

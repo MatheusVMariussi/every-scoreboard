@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
-import { View, LayoutRectangle } from 'react-native';
+import { type View, type LayoutRectangle } from 'react-native';
 
 export const useTutorialTarget = (isActive: boolean) => {
   const ref = useRef<View>(null);
@@ -17,7 +17,7 @@ export const useTutorialTarget = (isActive: boolean) => {
 
   // Poll for measurement when active
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) return undefined;
 
     // Initial measurement
     measure();
@@ -25,7 +25,9 @@ export const useTutorialTarget = (isActive: boolean) => {
     // Polling interval to catch layout changes (animations, rotations)
     const interval = setInterval(measure, 500);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [isActive, measure]);
 
   return { ref, layout, measure };

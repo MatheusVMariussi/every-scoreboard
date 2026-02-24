@@ -1,12 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View, Text, TouchableOpacity, Alert, Linking } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  Linking,
+  type LayoutChangeEvent,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import VersionCheck from 'react-native-version-check';
 
-import { HomeScreenNavigationProp, GameScreen } from '../navigation/types';
+import { type HomeScreenNavigationProp, type GameScreen } from '../navigation/types';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
@@ -19,12 +33,14 @@ interface GameItem {
   id: string;
   labelKey: string;
   route: GameScreen;
+  comingSoon?: boolean;
 }
 
 const GAMES: GameItem[] = [
   { id: '1', labelKey: 'home.truco', route: 'Truco' },
   { id: '2', labelKey: 'home.fodinha', route: 'Fodinha' },
   { id: '3', labelKey: 'home.cacheta', route: 'Cacheta' },
+  { id: '4', labelKey: 'home.canastra', route: 'Canastra', comingSoon: true },
 ];
 
 export const HomeScreen = () => {
@@ -36,7 +52,7 @@ export const HomeScreen = () => {
 
   const screenOpacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: screenOpacity.value
+    opacity: screenOpacity.value,
   }));
 
   const iconColor = theme.colors.icon.secondary;
@@ -54,34 +70,30 @@ export const HomeScreen = () => {
         const updateNeeded = await VersionCheck.needUpdate();
 
         if (updateNeeded?.isNeeded) {
-          Alert.alert(
-            translate('home.update_title'),
-            translate('home.update_message'),
-            [
-              { text: translate('home.cancel'), style: 'cancel' },
-              {
-                text: translate('home.update_now'),
-                onPress: () => {
-                  Linking.openURL(updateNeeded.storeUrl);
-                },
+          Alert.alert(translate('home.update_title'), translate('home.update_message'), [
+            { text: translate('home.cancel'), style: 'cancel' },
+            {
+              text: translate('home.update_now'),
+              onPress: () => {
+                void Linking.openURL(updateNeeded.storeUrl);
               },
-            ]
-          );
+            },
+          ]);
         }
       } catch (error) {
         console.log('Erro update:', error);
       }
     };
-    checkUpdate();
+    void checkUpdate();
   }, []);
 
-  const handleLayout = (event: any) => {
+  const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     if (height > width) {
-       screenOpacity.value = withTiming(1, {
-         duration: 400,
-         easing: Easing.out(Easing.quad)
-       });
+      screenOpacity.value = withTiming(1, {
+        duration: 400,
+        easing: Easing.out(Easing.quad),
+      });
     }
   };
 
@@ -93,7 +105,9 @@ export const HomeScreen = () => {
     }
   };
 
-  const handleSettingsPress = () => setSettingsVisible(true);
+  const handleSettingsPress = () => {
+    setSettingsVisible(true);
+  };
 
   const handleRemoveAdsPress = () => {
     setRateModalVisible(true);
@@ -113,11 +127,10 @@ export const HomeScreen = () => {
       <Animated.View style={[styles.safeArea, animatedStyle]} onLayout={handleLayout}>
         <SafeAreaView style={styles.safeArea}>
           <View style={[styles.mainContainer, { padding: theme.spacing.m }]}>
-
             <View style={styles.headerSection}>
-               <Text style={[styles.appTitle, titleStyle]}>
-                  {translate('home.title').toUpperCase()}
-               </Text>
+              <Text style={[styles.appTitle, titleStyle]}>
+                {translate('home.title').toUpperCase()}
+              </Text>
             </View>
 
             <View style={styles.listSection}>
@@ -131,7 +144,11 @@ export const HomeScreen = () => {
                   <View style={[styles.buttonWrapper, { marginBottom: theme.spacing.m }]}>
                     <GameButton
                       title={translate(item.labelKey)}
-                      onPress={() => handlePress(item.route)}
+                      onPress={() => {
+                        handlePress(item.route);
+                      }}
+                      disabled={item.comingSoon}
+                      badge={item.comingSoon ? translate('home.coming_soon') : undefined}
                     />
                   </View>
                 )}
@@ -140,29 +157,40 @@ export const HomeScreen = () => {
 
             {/* FOOTER COM OS DOIS ÍCONES */}
             <View style={[styles.footerSection, { marginTop: theme.spacing.m }]}>
-              <TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton} hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
+              <TouchableOpacity
+                onPress={handleSettingsPress}
+                style={styles.iconButton}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              >
                 <Ionicons name="settings-sharp" size={ms(28)} color={iconColor} />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={handleRemoveAdsPress} style={styles.iconButton} hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
+              <TouchableOpacity
+                onPress={handleRemoveAdsPress}
+                style={styles.iconButton}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              >
                 <MaterialCommunityIcons name="diamond-stone" size={ms(30)} color={removeAdsColor} />
               </TouchableOpacity>
             </View>
-
           </View>
         </SafeAreaView>
       </Animated.View>
 
       <SettingsModal
         visible={settingsVisible}
-        onClose={() => setSettingsVisible(false)}
+        onClose={() => {
+          setSettingsVisible(false);
+        }}
         toggleTheme={toggleTheme}
         isDarkMode={themeName === 'dark'}
       />
 
       <RateModal
         visible={rateModalVisible}
-        onClose={() => setRateModalVisible(false)}
+        onClose={() => {
+          setRateModalVisible(false);
+        }}
       />
     </View>
   );
@@ -172,7 +200,13 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   mainContainer: { flex: 1, flexDirection: 'column' },
   headerSection: { marginBottom: ms(30), alignItems: 'center', width: '100%', paddingTop: ms(20) },
-  appTitle: { fontFamily: 'Minecraft', fontSize: ms(28), fontWeight: '900', textAlign: 'center', letterSpacing: ms(4) },
+  appTitle: {
+    fontFamily: 'Minecraft',
+    fontSize: ms(28),
+    fontWeight: '900',
+    textAlign: 'center',
+    letterSpacing: ms(4),
+  },
   listSection: { flex: 1, width: '100%' },
   listContent: { alignItems: 'center', flexGrow: 1, justifyContent: 'center' },
   buttonWrapper: { width: ms(280), height: ms(65) },
@@ -185,7 +219,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: ms(10),
     zIndex: 10,
     elevation: 10,
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
   },
-  iconButton: { padding: ms(10) }
+  iconButton: { padding: ms(10) },
 });

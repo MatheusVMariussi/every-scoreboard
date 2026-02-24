@@ -1,4 +1,4 @@
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { type NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type GameScreen = 'Truco' | 'Cacheta' | 'Canastra' | 'Fodinha';
 export type TransitionTarget = GameScreen | 'Home';
@@ -12,7 +12,4 @@ export type RootStackParamList = {
   Transition: { target: TransitionTarget };
 };
 
-export type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Home'
->;
+export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;

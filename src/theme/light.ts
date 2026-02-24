@@ -1,18 +1,18 @@
 import { palette } from './colors';
-import { Theme } from './types';
+import { type Theme } from './types';
 
 export const lightTheme: Theme = {
   colors: {
     background: {
-      primary: palette.white,       // Fundo padrão de telas (Configurações, Sobre)
-      secondary: palette.gray100,   // Fundo de cards ou listas
+      primary: palette.white, // Fundo padrão de telas (Configurações, Sobre)
+      secondary: palette.gray100, // Fundo de cards ou listas
       darkVoid: palette.deepBlueVoid, // Mantemos o void disponível mesmo no light
       overlay: palette.overlay80,
     },
     text: {
-      primary: palette.gray900,     // Texto principal PRETO (para ler no fundo branco)
-      secondary: palette.gray800,   // Texto secundário cinza escuro
-      inverse: palette.white,       // Texto para botões escuros
+      primary: palette.gray900, // Texto principal PRETO (para ler no fundo branco)
+      secondary: palette.gray800, // Texto secundário cinza escuro
+      inverse: palette.white, // Texto para botões escuros
       white: palette.white,
       black: palette.black,
     },
@@ -30,7 +30,7 @@ export const lightTheme: Theme = {
       glow: palette.cyanGlow,
     },
     home: {
-      title: palette.white,         // Título da Home continua branco
+      title: palette.white, // Título da Home continua branco
       titleOutline: palette.brownDark,
       buttonBackground: palette.orangePrimary,
       buttonBorder: palette.orangeDark,
@@ -41,7 +41,7 @@ export const lightTheme: Theme = {
       titleBackground: palette.darkOverlay, // Fundo escuro atrás do título para contraste
     },
     icon: {
-      primary: palette.gray900,     // Ícones escuros no fundo claro
+      primary: palette.gray900, // Ícones escuros no fundo claro
       secondary: palette.gray800,
     },
     modal: {
@@ -71,9 +71,9 @@ export const lightTheme: Theme = {
       divider: palette.white10,
     },
     cacheta: {
-      win: palette.green500,        // Ganhou
-      fold: palette.yellowFold,     // Correu
-      loss: palette.orangePrimary,  // Perdeu
+      win: palette.green500, // Ganhou
+      fold: palette.yellowFold, // Correu
+      loss: palette.orangePrimary, // Perdeu
       playerCard: 'rgba(255,255,255,0.05)',
       activeRound: 'rgba(0,240,255,0.1)', // Um leve brilho neon para a rodada ativa
       text: palette.white,
@@ -85,14 +85,18 @@ export const lightTheme: Theme = {
       eliminated: palette.red500,
       divider: palette.white10,
       countColor: palette.white,
-    }
+    },
   },
   // Mantenha as definições de espaçamento/tipografia iguais ou importe de um common.ts
   spacing: {
-    xs: 4, s: 8, m: 16, l: 24, xl: 32,
+    xs: 4,
+    s: 8,
+    m: 16,
+    l: 24,
+    xl: 32,
   },
   typography: {
     sizes: { title: 32, body: 16, caption: 12 },
-    weights: { regular: "400", bold: "700" },
+    weights: { regular: '400', bold: '700' },
   },
 };

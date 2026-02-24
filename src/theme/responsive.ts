@@ -6,12 +6,13 @@ const getScreenWidth = () => Dimensions.get('window').width;
 const getScreenHeight = () => Dimensions.get('window').height;
 
 export const wp = (widthPercent: string | number): number => {
-  const percent = typeof widthPercent === 'string' ? parseFloat(widthPercent) : widthPercent;
+  const percent = typeof widthPercent === 'string' ? Number.parseFloat(widthPercent) : widthPercent;
   return PixelRatio.roundToNearestPixel((getScreenWidth() * percent) / 100);
 };
 
 export const hp = (heightPercent: string | number): number => {
-  const percent = typeof heightPercent === 'string' ? parseFloat(heightPercent) : heightPercent;
+  const percent =
+    typeof heightPercent === 'string' ? Number.parseFloat(heightPercent) : heightPercent;
   return PixelRatio.roundToNearestPixel((getScreenHeight() * percent) / 100);
 };
 

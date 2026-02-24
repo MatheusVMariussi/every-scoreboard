@@ -1,18 +1,18 @@
 import { palette } from './colors';
-import { Theme } from './types';
+import { type Theme } from './types';
 
 export const darkTheme: Theme = {
   colors: {
     background: {
-      primary: palette.gray900,     // Fundo padrão ESCURO (Configurações, etc)
-      secondary: palette.gray800,   // Cards levemente mais claros
+      primary: palette.gray900, // Fundo padrão ESCURO (Configurações, etc)
+      secondary: palette.gray800, // Cards levemente mais claros
       darkVoid: palette.deepBlueVoid,
       overlay: palette.overlay80,
     },
     text: {
-      primary: palette.white,       // Texto principal BRANCO
-      secondary: palette.gray100,   // Texto secundário cinza claro
-      inverse: palette.gray900,     // Texto para botões claros
+      primary: palette.white, // Texto principal BRANCO
+      secondary: palette.gray100, // Texto secundário cinza claro
+      inverse: palette.gray900, // Texto para botões claros
       white: palette.white,
       black: palette.black,
     },
@@ -42,7 +42,7 @@ export const darkTheme: Theme = {
       titleBackground: palette.darkOverlay,
     },
     icon: {
-      primary: palette.white,       // Ícones brancos no fundo escuro
+      primary: palette.white, // Ícones brancos no fundo escuro
       secondary: palette.gray100,
     },
     modal: {
@@ -72,9 +72,9 @@ export const darkTheme: Theme = {
       divider: palette.white10,
     },
     cacheta: {
-      win: palette.green500,        // Ganhou
-      fold: palette.yellowFold,     // Correu
-      loss: palette.orangePrimary,  // Perdeu
+      win: palette.green500, // Ganhou
+      fold: palette.yellowFold, // Correu
+      loss: palette.orangePrimary, // Perdeu
       playerCard: 'rgba(255,255,255,0.05)',
       activeRound: 'rgba(0,240,255,0.1)', // Um leve brilho neon para a rodada ativa
       text: palette.white,
@@ -86,14 +86,18 @@ export const darkTheme: Theme = {
       eliminated: palette.red500,
       divider: palette.white10,
       countColor: palette.white,
-    }
+    },
   },
   // Espaçamento e tipografia se mantêm
   spacing: {
-    xs: 4, s: 8, m: 16, l: 24, xl: 32,
+    xs: 4,
+    s: 8,
+    m: 16,
+    l: 24,
+    xl: 32,
   },
   typography: {
     sizes: { title: 32, body: 16, caption: 12 },
-    weights: { regular: "400", bold: "700" },
+    weights: { regular: '400', bold: '700' },
   },
 };

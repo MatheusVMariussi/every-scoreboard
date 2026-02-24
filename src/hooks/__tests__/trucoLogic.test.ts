@@ -1,5 +1,5 @@
 import { getBasePoints, buildPointHistory, calculateNewScore } from '../useTrucoGame';
-import { HistoryItem } from '../../components/MatchHistoryGraph';
+import { type HistoryItem } from '../../components/MatchHistoryGraph';
 
 // --- getBasePoints ---
 

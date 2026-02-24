@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation, useRoute, type RouteProp, CommonActions } from '@react-navigation/native';
+import { type NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Animated, {
   useSharedValue,
@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { RootStackParamList } from '../navigation/types';
+import { type RootStackParamList } from '../navigation/types';
 import { useTheme } from '../theme/useTheme';
 
 type TransitionRouteProp = RouteProp<RootStackParamList, 'Transition'>;
@@ -30,28 +30,24 @@ export const TransitionScreen = () => {
   // Spinning rotation icon
   const rotation = useSharedValue(0);
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 1200, easing: Easing.linear }),
-      -1
-    );
+    rotation.value = withRepeat(withTiming(360, { duration: 1200, easing: Easing.linear }), -1);
   }, [rotation]);
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
   }));
 
-  const navigateToTarget = () => {
+  const navigateToTarget = useCallback(() => {
     if (hasNavigated.current) return;
     hasNavigated.current = true;
 
-    const routes = target === 'Home'
-      ? [{ name: 'Home' as const }]
-      : [{ name: 'Home' as const }, { name: target }];
+    const routes =
+      target === 'Home'
+        ? [{ name: 'Home' as const }]
+        : [{ name: 'Home' as const }, { name: target }];
 
-    navigation.dispatch(
-      CommonActions.reset({ index: routes.length - 1, routes })
-    );
-  };
+    navigation.dispatch(CommonActions.reset({ index: routes.length - 1, routes }));
+  }, [navigation, target]);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,14 +91,14 @@ export const TransitionScreen = () => {
       fallbackTimer = setTimeout(safeNavigate, 1500);
     };
 
-    doTransition();
+    void doTransition();
 
     return () => {
       cancelled = true;
       if (subscription) ScreenOrientation.removeOrientationChangeListener(subscription);
       if (fallbackTimer) clearTimeout(fallbackTimer);
     };
-  }, [navigation, target]);
+  }, [navigation, target, navigateToTarget]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background.darkVoid }]}>

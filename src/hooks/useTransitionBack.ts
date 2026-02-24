@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { usePreventRemove } from '@react-navigation/core';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { type NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { type RootStackParamList } from '../navigation/types';
 
 /**
  * Intercepts back navigation and routes through TransitionScreen

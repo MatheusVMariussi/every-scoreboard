@@ -4,7 +4,7 @@ import {
   logicUpdateHistoryDamage,
   logicRemoveRound,
   logicRemovePlayer,
-  FodinhaPlayer,
+  type FodinhaPlayer,
 } from '../useFodinhaGame';
 
 const makePlayer = (overrides: Partial<FodinhaPlayer> = {}): FodinhaPlayer => ({
@@ -79,8 +79,8 @@ describe('logicFinishRound', () => {
     ];
     const result = logicFinishRound(players, 'fixed');
     expect(result[0].lives).toBe(10); // no damage
-    expect(result[1].lives).toBe(9);  // 1 damage
-    expect(result[2].lives).toBe(0);  // untouched
+    expect(result[1].lives).toBe(9); // 1 damage
+    expect(result[2].lives).toBe(0); // untouched
   });
 });
 
