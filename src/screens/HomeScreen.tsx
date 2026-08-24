@@ -5,7 +5,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   Linking,
   type LayoutChangeEvent,
 } from 'react-native';
@@ -27,7 +26,14 @@ import { GameButton } from '../components/GameButton';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { SettingsModal } from '../components/SettingsModal';
 import { RateModal } from '../components/RateModal';
+import { UpdateModal } from '../components/UpdateModal';
 import { ms } from '../theme/responsive';
+
+interface UpdateInfo {
+  storeUrl: string;
+  currentVersion: string;
+  latestVersion: string;
+}
 
 interface GameItem {
   id: string;
@@ -49,6 +55,7 @@ export const HomeScreen = () => {
 
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
   const screenOpacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -70,15 +77,11 @@ export const HomeScreen = () => {
         const updateNeeded = await VersionCheck.needUpdate();
 
         if (updateNeeded?.isNeeded) {
-          Alert.alert(translate('home.update_title'), translate('home.update_message'), [
-            { text: translate('home.cancel'), style: 'cancel' },
-            {
-              text: translate('home.update_now'),
-              onPress: () => {
-                void Linking.openURL(updateNeeded.storeUrl);
-              },
-            },
-          ]);
+          setUpdateInfo({
+            storeUrl: updateNeeded.storeUrl,
+            currentVersion: updateNeeded.currentVersion,
+            latestVersion: updateNeeded.latestVersion,
+          });
         }
       } catch (error) {
         console.log('Erro update:', error);
@@ -111,6 +114,17 @@ export const HomeScreen = () => {
 
   const handleRemoveAdsPress = () => {
     setRateModalVisible(true);
+  };
+
+  const handleCloseUpdate = () => {
+    setUpdateInfo(null);
+  };
+
+  const handleOpenStore = () => {
+    if (updateInfo) {
+      void Linking.openURL(updateInfo.storeUrl);
+    }
+    setUpdateInfo(null);
   };
 
   const titleStyle = {
@@ -191,6 +205,14 @@ export const HomeScreen = () => {
         onClose={() => {
           setRateModalVisible(false);
         }}
+      />
+
+      <UpdateModal
+        visible={updateInfo !== null}
+        onClose={handleCloseUpdate}
+        onUpdate={handleOpenStore}
+        currentVersion={updateInfo?.currentVersion}
+        latestVersion={updateInfo?.latestVersion}
       />
     </View>
   );
