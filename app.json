@@ -11,8 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.servyy.everyscoreboard",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
-        "NSPhotoLibraryUsageDescription": "O Every Scoreboard não acessa suas fotos. Esta permissão é exigida por um componente interno do app e nunca é solicitada durante o uso."
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
