@@ -25,6 +25,9 @@ import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 import { useCachetaGame } from '../hooks/useCachetaGame';
 import { ms, wp } from '../theme/responsive';
+import { getVoiceLocale, VoiceFooter, VoicePanel } from '../components/voice/VoiceFooter';
+import { useVoiceScoring } from '../voice/useVoiceScoring';
+import { toCachetaBatch, type PendingState } from '../voice/pendingQueue';
 
 type Action = 'won' | 'fold' | 'lost' | null;
 
@@ -47,6 +50,18 @@ export const CachetaScreen = () => {
   const [layoutReady, setLayoutReady] = useState(false);
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
+
+  const voice = useVoiceScoring({
+    game: 'cacheta',
+    // Fixado na montagem: a gramática e o reconhecedor seguem o idioma do app.
+    locale: getVoiceLocale(),
+    players: game.players,
+    // Aprovar aplica e fecha a rodada. Se a validação barrar, o hook mostra o Alert de
+    // sempre e devolve false — a fila fica intacta para o usuário corrigir e reaprovar
+    // (aplicar é idempotente, então reaprovar não duplica nada).
+    onApply: (pending: PendingState, advance: boolean) =>
+      game.applyVoiceEntries(toCachetaBatch(pending), advance),
+  });
 
   const targetNames = useTutorialTarget(tutorialActive && tutorialStep === 0);
   const targetActions = useTutorialTarget(tutorialActive && tutorialStep === 1);
@@ -361,6 +376,7 @@ export const CachetaScreen = () => {
 
         {/* 4. BOTÃO */}
         <View style={styles.footer} ref={targetButton.ref} collapsable={false}>
+          <VoiceFooter voice={voice} players={game.players} />
           <View style={{ width: ms(220), height: ms(50) }}>
             <GameButton title={translate('cacheta.next_round')} onPress={game.handleNextRound} />
           </View>
@@ -509,6 +525,9 @@ export const CachetaScreen = () => {
         onSave={handleSavePlayerName}
         onDelete={handleDeletePlayer}
       />
+
+      {/* Painel da fila: na raiz, senão o Android não entrega toque fora do rodapé. */}
+      <VoicePanel voice={voice} players={game.players} />
 
       {layoutReady && (
         <TutorialOverlay

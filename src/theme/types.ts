@@ -74,6 +74,21 @@ export interface ThemeColors {
     activeRound: string;
     text: string; // New: for text inside cards
   };
+  /**
+   * Camada de voz. As telas de jogo são sempre feltro escuro, independente do tema,
+   * então estes valores são iguais no claro e no escuro de propósito.
+   */
+  voice: {
+    surface: string; // Pastilhas ancoradas no rodapé
+    panel: string; // Painel da fila e modal de aviso
+    border: string; // Contorno em repouso
+    idle: string; // Ícone em repouso
+    idleText: string; // Rótulos e texto secundário
+    active: string; // Ouvindo (mesmo acento de "ATUAL")
+    activeSoft: string;
+    recording: string; // Modo sempre ouvindo
+    recordingSoft: string;
+  };
   fodinha: {
     cardBackground: string; // New
     damageText: string; // New

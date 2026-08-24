@@ -35,6 +35,35 @@ export default {
     version: 'Version',
     reset_all: 'RESET ALL DATA',
     confirm_reset_all: 'This will permanently delete all team names and histories. Continue?',
+    terms_of_use: 'TERMS OF USE',
+    terms_title: 'TERMS OF USE',
+    terms_body:
+      "This app does not collect, transmit, share, or store any personal data on external servers.\n\nAll data (team names, match history, and settings) is saved exclusively on your device and never leaves it.\n\nThe microphone is used only when you turn on voice scoring, and only while it is listening. Audio is not recorded, not stored, and not sent to our servers: your device's own system performs the transcription. On Android 12 and older, that transcription is handled by Google's speech service rather than on-device.\n\nThe app does not use the camera, location, contacts, photo gallery, or any other sensitive device feature.\n\nThere is no account creation, login, or any form of user identification.",
+    terms_close: 'GOT IT',
+  },
+  // Voice scoring runs in this locale too: the recognizer listens in en-US and the parser
+  // uses the en-US grammar (src/voice/grammar/en-US.ts).
+  voice: {
+    hold_to_talk: 'HOLD TO TALK',
+    listening: 'LISTENING...',
+    always_on: 'ALWAYS LISTENING',
+    pending_title: 'PENDING',
+    pending_count: '{{count}} PENDING',
+    apply: 'APPLY',
+    clear: 'CLEAR',
+    corrected: 'CORRECTED',
+    confirm: 'CONFIRM',
+    who_was_it: 'Did not recognize "{{token}}". Who was it?',
+    permission_denied: 'No microphone access. Enable it in your device settings.',
+    error_generic: 'Speech recognition failed. Please try again.',
+    warning_title: 'BEFORE YOU TURN THIS ON',
+    warning_battery:
+      'Leaving the microphone on the whole time drains the battery much faster than usual.',
+    warning_noise:
+      'At a noisy table, recognition makes mistakes. That is why nothing is applied on its own: everything goes to a queue for you to review and approve.',
+    warning_dont_show: 'DO NOT SHOW AGAIN',
+    warning_enable: 'ENABLE',
+    warning_cancel: 'NOT NOW',
   },
   common: {
     how_to_play: 'HOW TO PLAY',

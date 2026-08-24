@@ -2,16 +2,11 @@
   "expo": {
     "name": "Every Scoreboard",
     "slug": "every-scoreboard",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.servyy.everyscoreboard",
@@ -31,12 +26,28 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-mark.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#090910"
+        }
+      ],
       "expo-localization",
       "expo-font",
       [
         "expo-screen-orientation",
         {
           "initialOrientation": "PORTRAIT"
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "O microfone é usado apenas enquanto você marca o placar por voz. O áudio não é gravado nem armazenado.",
+          "speechRecognitionPermission": "O reconhecimento de fala converte seus comandos em pontos no placar, direto no aparelho."
         }
       ]
     ],

@@ -5,7 +5,9 @@ import { View, ActivityIndicator, Text, TextInput } from 'react-native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
-import './src/i18n';
+import { useEffect, useState } from 'react';
+import { setLocale } from './src/i18n';
+import { loadSettings, type ThemeMode } from './src/utils/appSettings';
 
 // Prevent Android system font/display zoom from compounding with our ms() scaling.
 // ms() already handles responsive sizing — we don't want the OS to double-scale.
@@ -26,7 +28,32 @@ export default function App() {
     Minecraft: PressStart2P_400Regular,
   });
 
-  if (!fontsLoaded) {
+  /**
+   * `translate` é imperativo: as telas leem o idioma no render e não reagem a uma troca
+   * depois. Por isso a preferência gravada tem de ser aplicada **antes** do primeiro
+   * render — daí o portão, e não um efeito que corrige a tela já montada.
+   */
+  const [settings, setSettings] = useState<{ themeMode: ThemeMode | null } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void loadSettings()
+      .then((saved) => {
+        if (!active) return;
+        // Só substitui o idioma do aparelho quando houve escolha explícita.
+        if (saved.locale !== null) setLocale(saved.locale);
+        setSettings({ themeMode: saved.themeMode });
+      })
+      .catch(() => {
+        // Preferências ilegíveis não podem travar o app: segue o aparelho.
+        if (active) setSettings({ themeMode: null });
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!fontsLoaded || settings === null) {
     return (
       <View
         style={{
@@ -43,7 +70,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
+      <ThemeProvider initialMode={settings.themeMode ?? undefined}>
         <ErrorBoundary>
           <NavigationContainer>
             <RootNavigator />

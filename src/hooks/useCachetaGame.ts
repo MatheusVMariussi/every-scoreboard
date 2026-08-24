@@ -12,11 +12,35 @@ export interface CachetaPlayer {
   currentAction: CachetaAction;
 }
 
-interface CachetaPlayerWithPoints extends CachetaPlayer {
+export interface CachetaPlayerWithPoints extends CachetaPlayer {
   currentPoints: number;
 }
 
+/** Uma alteração proposta pela voz, já resolvida para um jogador. */
+export interface CachetaVoiceEntry {
+  playerId: string;
+  action: CachetaAction;
+}
+
 // --- PURE FUNCTIONS ---
+
+/**
+ * Pontos derivados do histórico. Extraído do `useMemo` do hook porque `applyVoiceBatch`
+ * precisa recalcular a partir do estado *já alterado*, e não do estado do render atual.
+ */
+export const calculatePlayerPoints = (
+  players: CachetaPlayer[],
+  initialPoints: number,
+): CachetaPlayerWithPoints[] => {
+  return players.map((p) => {
+    let pts = initialPoints;
+    p.history.forEach((act) => {
+      if (act === 'fold') pts -= 1;
+      if (act === 'lost') pts -= 2;
+    });
+    return { ...p, currentPoints: Math.max(0, pts) };
+  });
+};
 export const processNextRound = (
   players: CachetaPlayer[],
   playersWithPoints: CachetaPlayerWithPoints[],
@@ -69,6 +93,73 @@ export const updatePlayerActionInList = (
     if (p.id !== pId) return p;
     return { ...p, currentAction: action === p.currentAction ? null : action };
   });
+};
+
+/**
+ * Define a ação de um jogador de forma absoluta.
+ *
+ * Diferente de `updatePlayerActionInList`, que alterna: repetir a mesma ação lá limpa o
+ * valor. Alternar é o certo para um toque, mas errado para um lote de voz — se o usuário
+ * já tivesse marcado "correu" no dedo e a voz dissesse a mesma coisa, a ação sumiria.
+ * A regra de ganhador único continua valendo.
+ */
+export const setPlayerActionInList = (
+  players: CachetaPlayer[],
+  pId: string,
+  action: CachetaAction,
+): CachetaPlayer[] => {
+  return players.map((p) => {
+    if (p.id === pId) return { ...p, currentAction: action };
+    if (action === 'won' && p.currentAction === 'won') return { ...p, currentAction: null };
+    return p;
+  });
+};
+
+/**
+ * Aplica um lote de voz e, opcionalmente, avança a rodada — numa única operação pura.
+ *
+ * Precisa ser atômico: `handleNextRound` lê `playersWithPoints`, que é um `useMemo` e
+ * fica velho no mesmo tick de um `setPlayers`. Chamar "aplica" e depois "avança" faria a
+ * validação rodar contra o estado anterior ao lote.
+ *
+ * Em caso de erro, as ações continuam aplicadas e só o avanço é segurado — o usuário não
+ * perde o que falou, só corrige o que está errado.
+ */
+export const applyVoiceBatch = (
+  players: CachetaPlayer[],
+  initialPoints: number,
+  batch: readonly CachetaVoiceEntry[],
+  options: { advance: boolean },
+): {
+  updatedPlayers: CachetaPlayer[];
+  /** `true` só quando a rodada de fato fechou. */
+  advanced: boolean;
+  hasError: boolean;
+  errorKey?: string;
+} => {
+  const staged = batch.reduce(
+    (acc, entry) => setPlayerActionInList(acc, entry.playerId, entry.action),
+    players,
+  );
+
+  if (!options.advance) return { updatedPlayers: staged, advanced: false, hasError: false };
+
+  // Sem ganhador entre os vivos, o lote é entrada de MEIO de rodada — "matheus e joão
+  // correram" enquanto a mão ainda rola. Aplicar as ações e parar por aí é o certo;
+  // tentar fechar aqui só produzia um Alert de erro a cada fala parcial.
+  //
+  // A condição espelha a REGRA 1 de `processNextRound`: com a mesa toda estourada, não
+  // há ganhador a exigir.
+  const withPoints = calculatePlayerPoints(staged, initialPoints);
+  const hasActivePlayers = withPoints.some((p) => p.currentPoints > 0);
+  const hasWinner = staged.some((p) => p.currentAction === 'won');
+
+  if (hasActivePlayers && !hasWinner) {
+    return { updatedPlayers: staged, advanced: false, hasError: false };
+  }
+
+  const result = processNextRound(staged, withPoints);
+  return { ...result, advanced: !result.hasError };
 };
 
 export const updateHistoryInList = (
@@ -143,16 +234,10 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
     void saveData(STORAGE_KEYS.CACHETA_DATA, { players, initialPoints });
   }, [players, initialPoints]);
 
-  const playersWithPoints = useMemo(() => {
-    return players.map((p) => {
-      let pts = initialPoints;
-      p.history.forEach((act) => {
-        if (act === 'fold') pts -= 1;
-        if (act === 'lost') pts -= 2;
-      });
-      return { ...p, currentPoints: Math.max(0, pts) };
-    });
-  }, [players, initialPoints]);
+  const playersWithPoints = useMemo(
+    () => calculatePlayerPoints(players, initialPoints),
+    [players, initialPoints],
+  );
 
   const rounds = useMemo(() => {
     if (players.length === 0) return [];
@@ -174,6 +259,30 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
 
   const updateAction = (pId: string, action: CachetaAction) => {
     setPlayers((prev) => updatePlayerActionInList(prev, pId, action));
+  };
+
+  /**
+   * Aplica o lote pendente da voz. Com `advance`, fecha a rodada **se houver ganhador**.
+   * Devolve `true` quando o lote foi aplicado — a fila limpa mesmo sem fechar a rodada.
+   */
+  const applyVoiceEntries = (batch: readonly CachetaVoiceEntry[], advance: boolean): boolean => {
+    const result = applyVoiceBatch(players, initialPoints, batch, { advance });
+    setPlayers(result.updatedPlayers);
+
+    if (result.hasError) {
+      Alert.alert(translate('common.error'), translate(result.errorKey ?? 'cacheta.need_winner'));
+      return false;
+    }
+
+    if (result.advanced) {
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 200);
+    }
+
+    // Aplicou sem erro: a fila limpa mesmo quando a rodada não fechou, porque as ações
+    // já estão visíveis no placar.
+    return true;
   };
 
   const updateHistoryAction = (pId: string, action: CachetaAction, roundIdx: number) => {
@@ -231,6 +340,7 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
     rounds,
     handleNextRound,
     updateAction,
+    applyVoiceEntries,
     updateHistoryAction,
     deleteRound,
     handleReset,

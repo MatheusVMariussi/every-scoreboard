@@ -56,6 +56,133 @@ export const logicUpdateValue = (
   });
 };
 
+/**
+ * Define aposta ou vazas com um valor absoluto.
+ *
+ * `logicUpdateValue` trabalha com delta (+1/-1), que é o que os botões da tela precisam.
+ * A voz fala valor absoluto ("apostou dois"), então precisa deste caminho. Mesmo limite:
+ * nunca sai de 0..cardsInRound.
+ */
+export const logicSetValue = (
+  players: Player[],
+  pId: string,
+  value: number,
+  phase: 'betting' | 'results',
+  cardsInRound: number,
+) => {
+  return players.map((p) => {
+    if (p.id !== pId) return p;
+    const clamped = Math.max(0, Math.min(cardsInRound, value));
+    return phase === 'betting' ? { ...p, currentBid: clamped } : { ...p, currentWon: clamped };
+  });
+};
+
+/** Uma alteração proposta pela voz, já resolvida para um jogador. */
+export interface FodinhaVoiceEntry {
+  playerId: string;
+  value: number;
+}
+
+export interface FodinhaBatchResult {
+  updatedPlayers: Player[];
+  nextPhase: 'betting' | 'results';
+  /** `true` quando a fase mudou ou a rodada fechou. */
+  advanced: boolean;
+  /** `true` quando a rodada fechou — quem chama precisa incrementar `cardsInRound`. */
+  roundFinished: boolean;
+  hasError: boolean;
+  /** Prefixo da chave de i18n: `fodinha.<errorKey>_title` / `_message`. */
+  errorKey?: 'invalid_bets' | 'wrong_count';
+  errorParams?: { total: number; cards: number };
+}
+
+/**
+ * Aplica um lote de voz e, opcionalmente, avança a fase — numa única operação pura.
+ *
+ * Precisa ser atômico: `handlePhaseChange` valida contra `totalBids`/`totalWon`, que são
+ * `useMemo` e ficam velhos no mesmo tick de um `setPlayers`. Aplicar e depois avançar
+ * validaria contra o estado anterior ao lote.
+ *
+ * Em caso de erro os valores continuam aplicados e só o avanço é segurado.
+ */
+export const applyVoiceBatch = (
+  players: Player[],
+  batch: readonly FodinhaVoiceEntry[],
+  config: {
+    phase: 'betting' | 'results';
+    cardsInRound: number;
+    penaltyMode: 'fixed' | 'difference';
+  },
+  options: { advance: boolean },
+): FodinhaBatchResult => {
+  const staged = batch.reduce(
+    (acc, entry) =>
+      logicSetValue(acc, entry.playerId, entry.value, config.phase, config.cardsInRound),
+    players,
+  );
+
+  const base = { updatedPlayers: staged, advanced: false, roundFinished: false, hasError: false };
+  if (!options.advance) return { ...base, nextPhase: config.phase };
+
+  // A exigência de cobertura vale só para as APOSTAS.
+  //
+  // Ali o silêncio é ambíguo: `currentBid` nasce 0, então quem não foi citado é
+  // indistinguível de quem pediu zero. Um valor explícito de zero conta como aposta feita
+  // ("não vai fazer nada" cobre o jogador); o silêncio, não.
+  //
+  // No RESULTADO não há ambiguidade: a soma das vazas TEM de bater com o número de
+  // cartas, e essa igualdade já é a prova de que a fase acabou. Com 1 carta, um único
+  // "matheus fez" fecha a rodada — exigir cobertura ali só travaria o caminho normal.
+  const living = staged.filter((p) => p.lives > 0);
+  const covered = new Set(batch.map((entry) => entry.playerId));
+  if (config.phase === 'betting' && living.length > 0 && !living.every((p) => covered.has(p.id))) {
+    return { ...base, nextPhase: config.phase };
+  }
+
+  if (config.phase === 'betting') {
+    // Regra da Fodinha: a soma das apostas não pode fechar com o número de cartas.
+    const total = staged.reduce((acc, p) => acc + p.currentBid, 0);
+    if (total === config.cardsInRound) {
+      return {
+        ...base,
+        nextPhase: 'betting',
+        hasError: true,
+        errorKey: 'invalid_bets',
+        errorParams: { total, cards: config.cardsInRound },
+      };
+    }
+    return { ...base, nextPhase: 'results', advanced: true };
+  }
+
+  const total = staged.reduce((acc, p) => acc + p.currentWon, 0);
+
+  // Ainda faltam vazas: aplica o que foi dito e espera. Cantar vaza a vaza é o caminho
+  // normal da fase de resultado, não um erro — alertar aqui era barulho a cada anúncio.
+  if (total < config.cardsInRound) {
+    return { ...base, nextPhase: 'results' };
+  }
+
+  // Passar do número de cartas, por outro lado, é engano de verdade: mais vazas do que
+  // existem na mão. Vale avisar, senão a rodada fecha com um placar impossível.
+  if (total > config.cardsInRound) {
+    return {
+      ...base,
+      nextPhase: 'results',
+      hasError: true,
+      errorKey: 'wrong_count',
+      errorParams: { total, cards: config.cardsInRound },
+    };
+  }
+
+  return {
+    updatedPlayers: logicFinishRound(staged, config.penaltyMode),
+    nextPhase: 'betting',
+    advanced: true,
+    roundFinished: true,
+    hasError: false,
+  };
+};
+
 export const logicRemoveRound = (players: Player[], roundIdx: number, initialLives: number) => {
   return players.map((p) => {
     const newHistory = [...p.history];
@@ -194,6 +321,41 @@ export const useFodinhaGame = (scrollRef: RefObject<ScrollView>) => {
     setPlayers((prev) => logicUpdateValue(prev, playerId, delta, roundPhase, cardsInRound));
   };
 
+  /**
+   * Aplica o lote pendente da voz. Com `advance`, confirma a fase **se o lote cobriu todos
+   * os jogadores vivos**. Devolve `true` quando o lote foi aplicado.
+   */
+  const applyVoiceEntries = (batch: readonly FodinhaVoiceEntry[], advance: boolean): boolean => {
+    const result = applyVoiceBatch(
+      players,
+      batch,
+      { phase: roundPhase, cardsInRound, penaltyMode },
+      { advance },
+    );
+
+    setPlayers(result.updatedPlayers);
+
+    if (result.hasError) {
+      Alert.alert(
+        translate(`fodinha.${result.errorKey ?? 'wrong_count'}_title`),
+        translate(`fodinha.${result.errorKey ?? 'wrong_count'}_message`, result.errorParams),
+      );
+      return false;
+    }
+
+    setRoundPhase(result.nextPhase);
+    if (result.roundFinished) {
+      setCardsInRound((prev) => prev + 1);
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 200);
+    }
+
+    // Aplicou sem erro: a fila limpa mesmo quando a fase não mudou, porque os valores já
+    // estão visíveis no placar.
+    return true;
+  };
+
   const adjustHistoryDamage = (playerId: string, delta: number, roundIdx: number) => {
     setPlayers((prev) => logicUpdateHistoryDamage(prev, playerId, delta, roundIdx, initialLives));
   };
@@ -258,6 +420,7 @@ export const useFodinhaGame = (scrollRef: RefObject<ScrollView>) => {
     rounds,
     handlePhaseChange,
     adjustValue,
+    applyVoiceEntries,
     adjustHistoryDamage,
     deleteRound,
     handleReset,

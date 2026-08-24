@@ -12,8 +12,9 @@ import { Ionicons } from '@expo/vector-icons';
 import VersionCheck from 'react-native-version-check';
 
 import { useTheme } from '../theme/useTheme';
-import i18n, { translate } from '../i18n';
+import { type AppLocale, getLocale, setLocale, translate } from '../i18n';
 import { clearAllData } from '../utils/storage';
+import { updateSettings } from '../utils/appSettings';
 import { ms, wp } from '../theme/responsive';
 
 interface SettingsModalProps {
@@ -31,18 +32,21 @@ export const SettingsModal = ({
 }: SettingsModalProps) => {
   const { theme } = useTheme();
 
-  const [currentLocale, setCurrentLocale] = useState(i18n.locale);
+  const [currentLocale, setCurrentLocale] = useState<AppLocale>(getLocale());
+  const [termsVisible, setTermsVisible] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      setCurrentLocale(i18n.locale);
+      setCurrentLocale(getLocale());
     }
   }, [visible]);
 
-  const changeLanguage = (lang: 'pt-BR' | 'en') => {
-    if (lang === i18n.locale) return;
-    i18n.locale = lang;
+  const changeLanguage = (lang: AppLocale) => {
+    if (lang === currentLocale) return;
+    setLocale(lang);
     setCurrentLocale(lang);
+    // A escolha explícita substitui o idioma do aparelho a partir de agora.
+    void updateSettings({ locale: lang });
   };
 
   const handleFullReset = () => {
@@ -60,8 +64,13 @@ export const SettingsModal = ({
   };
 
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
+    <Modal
+      animationType="fade"
+      transparent
+      visible={visible}
+      onRequestClose={termsVisible ? () => setTermsVisible(false) : onClose}
+    >
+      <TouchableWithoutFeedback onPress={termsVisible ? () => setTermsVisible(false) : onClose}>
         <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
           <TouchableWithoutFeedback>
             <View
@@ -113,14 +122,14 @@ export const SettingsModal = ({
                 <View style={styles.row}>
                   <OptionBtn
                     label={translate('settings.portuguese')}
-                    active={currentLocale.includes('pt')}
+                    active={currentLocale === 'pt-BR'}
                     onPress={() => {
                       changeLanguage('pt-BR');
                     }}
                   />
                   <OptionBtn
                     label={translate('settings.english')}
-                    active={currentLocale.includes('en')}
+                    active={currentLocale === 'en'}
                     onPress={() => {
                       changeLanguage('en');
                     }}
@@ -129,6 +138,12 @@ export const SettingsModal = ({
               </View>
 
               <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
+
+              <TouchableOpacity style={styles.termsBtn} onPress={() => setTermsVisible(true)}>
+                <Text style={[styles.termsText, { color: theme.colors.text.secondary }]}>
+                  {translate('settings.terms_of_use')}
+                </Text>
+              </TouchableOpacity>
 
               <TouchableOpacity style={styles.resetBtn} onPress={handleFullReset}>
                 <Text style={[styles.resetText, { color: theme.colors.status.error }]}>
@@ -145,6 +160,50 @@ export const SettingsModal = ({
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
+
+      {termsVisible && (
+        <TouchableWithoutFeedback onPress={() => setTermsVisible(false)}>
+          <View
+            style={[
+              styles.overlay,
+              styles.termsOverlay,
+              { backgroundColor: theme.colors.background.overlay },
+            ]}
+          >
+            <TouchableWithoutFeedback>
+              <View
+                style={[
+                  styles.container,
+                  {
+                    backgroundColor: theme.colors.modal.background,
+                    borderColor: theme.colors.neon.primary,
+                  },
+                ]}
+              >
+                <View style={styles.header}>
+                  <Text style={[styles.title, { color: theme.colors.text.primary }]}>
+                    {translate('settings.terms_title')}
+                  </Text>
+                  <TouchableOpacity onPress={() => setTermsVisible(false)} style={styles.closeBtn}>
+                    <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.termsBody, { color: theme.colors.text.secondary }]}>
+                  {translate('settings.terms_body')}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.termsCloseBtn, { borderColor: theme.colors.neon.primary }]}
+                  onPress={() => setTermsVisible(false)}
+                >
+                  <Text style={[styles.termsCloseBtnText, { color: theme.colors.neon.primary }]}>
+                    {translate('settings.terms_close')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      )}
     </Modal>
   );
 };
@@ -176,6 +235,7 @@ const OptionBtn = ({ label, active, onPress }: any) => {
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  termsOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   container: {
     width: wp('85%'),
     maxWidth: ms(500),
@@ -204,6 +264,16 @@ const styles = StyleSheet.create({
   },
   optText: { fontFamily: 'Minecraft', fontSize: ms(12) },
   divider: { height: 1, marginBottom: ms(20) },
+  termsBtn: { padding: ms(12), alignItems: 'center', marginBottom: ms(5) },
+  termsText: { fontFamily: 'Minecraft', fontSize: ms(11) },
+  termsBody: {
+    fontFamily: 'Minecraft',
+    fontSize: ms(10),
+    lineHeight: ms(18),
+    marginBottom: ms(24),
+  },
+  termsCloseBtn: { borderWidth: 1, borderRadius: ms(8), padding: ms(12), alignItems: 'center' },
+  termsCloseBtnText: { fontFamily: 'Minecraft', fontSize: ms(12) },
   resetBtn: { padding: ms(12), alignItems: 'center', marginBottom: ms(15) },
   resetText: { fontFamily: 'Minecraft', fontSize: ms(11) },
   versionText: { textAlign: 'center', fontSize: ms(10), fontFamily: 'Minecraft', opacity: 0.5 },

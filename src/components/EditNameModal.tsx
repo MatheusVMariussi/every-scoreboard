@@ -108,7 +108,11 @@ export const EditNameModal = ({
 
               <View style={styles.buttonRow}>
                 <TouchableOpacity onPress={onClose} style={styles.btn}>
-                  <Text style={{ color: theme.colors.status.error, fontFamily: 'Minecraft' }}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    style={[styles.btnLabel, { color: theme.colors.status.error }]}
+                  >
                     {translate('common.cancel')}
                   </Text>
                 </TouchableOpacity>
@@ -120,7 +124,11 @@ export const EditNameModal = ({
                     { backgroundColor: theme.colors.brand.primary },
                   ]}
                 >
-                  <Text style={{ color: theme.colors.text.white, fontFamily: 'Minecraft' }}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    style={[styles.btnLabel, { color: theme.colors.text.white }]}
+                  >
                     {translate('common.save')}
                   </Text>
                 </TouchableOpacity>
@@ -159,7 +167,20 @@ const styles = StyleSheet.create({
     fontSize: ms(14),
     marginBottom: ms(20),
   },
-  buttonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: ms(15) },
-  btn: { padding: ms(10) },
-  saveBtn: { borderRadius: ms(8), paddingHorizontal: ms(20) },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: ms(12),
+  },
+  btn: {
+    flexShrink: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: ms(10),
+    paddingHorizontal: ms(12),
+  },
+  btnLabel: { fontFamily: 'Minecraft', fontSize: ms(13), textAlign: 'center' },
+  saveBtn: { borderRadius: ms(8), paddingHorizontal: ms(18) },
 });

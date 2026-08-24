@@ -3,25 +3,40 @@ import { useColorScheme } from 'react-native';
 import { type Theme } from './types';
 import { lightTheme } from './light';
 import { darkTheme } from './dark';
+import { type ThemeMode, updateSettings } from '../utils/appSettings';
 
 interface ThemeContextProps {
   theme: Theme; //
-  themeName: 'light' | 'dark';
+  themeName: ThemeMode;
   toggleTheme: () => void;
 }
 
 export const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
-export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+interface ThemeProviderProps {
+  children: ReactNode;
+  /**
+   * Tema gravado, lido pelo `App` antes do primeiro render. `undefined` significa que o
+   * usuário nunca escolheu — só aí seguimos o aparelho.
+   */
+  initialMode?: ThemeMode;
+}
+
+export const ThemeProvider = ({ children, initialMode }: ThemeProviderProps) => {
   const systemScheme = useColorScheme();
 
-  const [mode, setMode] = useState<'light' | 'dark'>(systemScheme === 'dark' ? 'dark' : 'light');
+  const [mode, setMode] = useState<ThemeMode>(
+    initialMode ?? (systemScheme === 'dark' ? 'dark' : 'light'),
+  );
 
   const theme = useMemo(() => (mode === 'dark' ? darkTheme : lightTheme), [mode]);
 
   const toggleTheme = useCallback(() => {
-    setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
-  }, []);
+    // Calculado fora do updater: gravar dentro dele duplicaria a escrita sob StrictMode.
+    const next: ThemeMode = mode === 'light' ? 'dark' : 'light';
+    setMode(next);
+    void updateSettings({ themeMode: next });
+  }, [mode]);
 
   return (
     <ThemeContext.Provider

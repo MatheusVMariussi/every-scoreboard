@@ -17,6 +17,9 @@ import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 import { useFodinhaGame } from '../hooks/useFodinhaGame';
 import { ms, wp } from '../theme/responsive';
+import { getVoiceLocale, VoiceFooter, VoicePanel } from '../components/voice/VoiceFooter';
+import { useVoiceScoring } from '../voice/useVoiceScoring';
+import { toFodinhaBatch, type PendingState } from '../voice/pendingQueue';
 
 export const FodinhaScreen = () => {
   useTransitionBack();
@@ -37,6 +40,23 @@ export const FodinhaScreen = () => {
   const [layoutReady, setLayoutReady] = useState(false);
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
+
+  const voice = useVoiceScoring({
+    game: 'fodinha',
+    // Fixado na montagem: a gramática e o reconhecedor seguem o idioma do app.
+    locale: getVoiceLocale(),
+    players: game.players,
+    // A fase decide se o número falado vira aposta ou vazas, e `cardsInRound` limita o
+    // valor já na fila — para o usuário aprovar o que realmente será aplicado.
+    phase: game.roundPhase,
+    cardsInRound: game.cardsInRound,
+    // "matheus fez" soma uma vaza ao que ele já tem, então a fila precisa do valor atual.
+    baseline: Object.fromEntries(
+      game.players.map((p) => [p.id, game.roundPhase === 'betting' ? p.currentBid : p.currentWon]),
+    ),
+    onApply: (pending: PendingState, advance: boolean) =>
+      game.applyVoiceEntries(toFodinhaBatch(pending), advance),
+  });
 
   const targetCards = useTutorialTarget(tutorialActive && tutorialStep === 0);
   const targetLives = useTutorialTarget(tutorialActive && tutorialStep === 1);
@@ -123,6 +143,17 @@ export const FodinhaScreen = () => {
   };
 
   const getEditingPlayerName = () => game.players.find((p) => p.id === editingPlayerId)?.name || '';
+
+  /**
+   * Na fase de resultado o botão só libera com as vazas fechando o número de cartas.
+   *
+   * Antes ele estava sempre ativo e respondia com um Alert quando a conta não batia — o
+   * contador "{total}/{cartas}" logo acima já diz o que falta, então desabilitar comunica
+   * a mesma coisa sem interromper.
+   *
+   * Nas apostas a regra é outra (a soma não PODE fechar), e ali o botão continua livre.
+   */
+  const canAdvancePhase = game.roundPhase !== 'results' || game.totalWon === game.cardsInRound;
 
   const getProjectedDamage = (p: any) => {
     const diff = Math.abs(p.currentBid - p.currentWon);
@@ -458,6 +489,7 @@ export const FodinhaScreen = () => {
         </ScrollView>
 
         <View style={styles.footer} ref={targetButton.ref} collapsable={false}>
+          <VoiceFooter voice={voice} players={game.players} />
           <View style={{ width: ms(250), height: ms(50) }}>
             <GameButton
               title={
@@ -467,6 +499,7 @@ export const FodinhaScreen = () => {
               }
               onPress={game.handlePhaseChange}
               variant={game.roundPhase === 'betting' ? 'secondary' : 'primary'}
+              disabled={!canAdvancePhase}
             />
           </View>
         </View>
@@ -650,6 +683,9 @@ export const FodinhaScreen = () => {
       />
 
       {/* TUTORIAL */}
+      {/* Painel da fila: na raiz, senão o Android não entrega toque fora do rodapé. */}
+      <VoicePanel voice={voice} players={game.players} />
+
       {layoutReady && (
         <TutorialOverlay
           visible={tutorialActive}

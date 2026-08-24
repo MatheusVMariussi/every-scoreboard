@@ -36,6 +36,33 @@ export default {
     reset_all: 'APAGAR TODOS OS DADOS',
     confirm_reset_all:
       'Isso apagará permanentemente todos os nomes de times e históricos. Continuar?',
+    terms_of_use: 'TERMOS DE USO',
+    terms_title: 'TERMOS DE USO',
+    terms_body:
+      'Este app não coleta, transmite, compartilha nem armazena nenhum dado pessoal em servidores externos.\n\nTodos os dados (nomes de times, histórico de partidas e configurações) são salvos exclusivamente no seu dispositivo e nunca saem dele.\n\nO microfone é usado somente quando você ativa o placar por voz, e apenas enquanto está ouvindo. O áudio não é gravado, não é armazenado e não é enviado para os nossos servidores: quem transcreve a fala é o próprio sistema do aparelho. No Android 12 ou anterior, essa transcrição é feita pelo serviço de voz do Google, e não no aparelho.\n\nO app não utiliza câmera, localização, contatos, galeria de fotos nem qualquer outro recurso sensível do dispositivo.\n\nNão há criação de conta, login, nem qualquer forma de identificação do usuário.',
+    terms_close: 'ENTENDIDO',
+  },
+  voice: {
+    hold_to_talk: 'SEGURE PARA FALAR',
+    listening: 'OUVINDO...',
+    always_on: 'SEMPRE OUVINDO',
+    pending_title: 'PENDENTES',
+    pending_count: '{{count}} PENDENTES',
+    apply: 'APLICAR',
+    clear: 'LIMPAR',
+    corrected: 'CORRIGIDO',
+    confirm: 'CONFERIR',
+    who_was_it: 'Não reconheci "{{token}}". Quem foi?',
+    permission_denied: 'Sem acesso ao microfone. Libere nas configurações do aparelho.',
+    error_generic: 'O reconhecimento de voz falhou. Tente de novo.',
+    warning_title: 'ANTES DE ATIVAR',
+    warning_battery:
+      'Deixar o microfone ligado o tempo todo consome bateria bem mais rápido que o normal.',
+    warning_noise:
+      'Numa mesa barulhenta o reconhecimento erra. Por isso nada é aplicado sozinho: tudo entra numa fila para você conferir e aprovar.',
+    warning_dont_show: 'NÃO AVISAR NOVAMENTE',
+    warning_enable: 'ATIVAR',
+    warning_cancel: 'AGORA NÃO',
   },
   common: {
     how_to_play: 'COMO JOGAR',

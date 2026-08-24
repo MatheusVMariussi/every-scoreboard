@@ -79,6 +79,17 @@ export const darkTheme: Theme = {
       activeRound: 'rgba(0,240,255,0.1)', // Um leve brilho neon para a rodada ativa
       text: palette.white,
     },
+    voice: {
+      surface: palette.voidSurface,
+      panel: palette.voidPanel,
+      border: palette.goldSoft,
+      idle: palette.goldAccent,
+      idleText: palette.cardWhite,
+      active: palette.cyanNeon,
+      activeSoft: palette.cyanSoft,
+      recording: palette.cardRed,
+      recordingSoft: palette.cardRedSoft,
+    },
     fodinha: {
       cardBackground: palette.white15,
       damageText: palette.systemRed,

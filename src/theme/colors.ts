@@ -45,6 +45,13 @@ export const palette = {
   yellowFold: '#FFD700', // Amarelo para "Correu"
   orangeLost: '#FF8C00', // Laranja para "Perdeu"
 
+  // Superfícies da mesa (telas de jogo são sempre feltro escuro, tema à parte)
+  voidSurface: 'rgba(9, 9, 16, 0.72)', // Pastilha escura sobre o feltro
+  voidPanel: 'rgba(9, 9, 16, 0.94)', // Painéis/modais sobre o feltro
+  goldSoft: 'rgba(212, 175, 55, 0.45)', // Borda dourada discreta
+  cyanSoft: 'rgba(0, 240, 255, 0.14)', // Preenchimento do estado ativo
+  cardRedSoft: 'rgba(230, 57, 70, 0.16)', // Preenchimento do estado gravando
+
   // Common transparent
   white10: 'rgba(255,255,255,0.1)',
   white15: 'rgba(255,255,255,0.15)',
