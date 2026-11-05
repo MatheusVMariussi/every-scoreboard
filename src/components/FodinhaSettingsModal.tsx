@@ -1,14 +1,24 @@
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../theme/useTheme';
+import { useWindowDimensions } from 'react-native';
 import { translate } from '../i18n';
 import { ms } from '../theme/responsive';
-import { MAX_DECKS, MIN_DECKS } from '../hooks/useFodinhaGame';
+import {
+  MAX_DECKS,
+  MAX_LIVES,
+  MIN_DECKS,
+  MIN_LIVES,
+  type PenaltyMode,
+} from '../hooks/useFodinhaGame';
 import { SettingsModalShell } from './settings/SettingsModalShell';
-import { OptionButton } from './settings/OptionButton';
+import { SettingRow } from './settings/SettingRow';
+import { Stepper } from './settings/Stepper';
+import { SegmentedControl, type SegmentOption } from './settings/SegmentedControl';
 
-const MIN_LIVES = 1;
-const MAX_LIVES = 50;
+/**
+ * A largura segue o `ms()` do conteúdo, não a tela: em tablet tudo cresce na mesma
+ * proporção e as linhas continuam cabendo. A fração da tela só manda em aparelho estreito.
+ */
+const MAX_WIDTH = ms(540);
+const SCREEN_WIDTH_RATIO = 0.9;
 
 interface FodinhaSettingsModalProps {
   visible: boolean;
@@ -17,8 +27,8 @@ interface FodinhaSettingsModalProps {
   onOpenHelp: () => void;
   initialLives: number;
   setInitialLives: (lives: number) => void;
-  penaltyMode: 'fixed' | 'difference';
-  setPenaltyMode: (mode: 'fixed' | 'difference') => void;
+  penaltyMode: PenaltyMode;
+  setPenaltyMode: (mode: PenaltyMode) => void;
   deckCount: number;
   setDeckCount: (count: number) => void;
   /** Limite de cartas por jogador com os baralhos e os vivos de agora. */
@@ -26,6 +36,10 @@ interface FodinhaSettingsModalProps {
   livingCount: number;
 }
 
+/**
+ * Uma opção por linha, regras primeiro (vidas e punição) e a mesa por último (baralhos,
+ * que dependem de quantos jogam). Cada linha diz em texto o efeito do valor atual.
+ */
 export const FodinhaSettingsModal = ({
   visible,
   onClose,
@@ -40,150 +54,69 @@ export const FodinhaSettingsModal = ({
   maxCards,
   livingCount,
 }: FodinhaSettingsModalProps) => {
-  const { theme } = useTheme();
   const { width } = useWindowDimensions();
 
-  const adjustLives = (amount: number) => {
-    setInitialLives(Math.max(MIN_LIVES, Math.min(MAX_LIVES, initialLives + amount)));
-  };
+  const livesLabel = translate('fodinha.initial_lives');
+  const penaltyLabel = translate('fodinha.penalty_mode');
+  const decksLabel = translate('fodinha.decks');
+
+  const penaltyOptions: SegmentOption<PenaltyMode>[] = [
+    { value: 'fixed', label: translate('fodinha.fixed') },
+    { value: 'difference', label: translate('fodinha.difference') },
+  ];
 
   return (
     <SettingsModalShell
       visible={visible}
       onClose={onClose}
-      title={translate('fodinha.settings_title')}
+      title={translate('settings.title')}
       onOpenHelp={onOpenHelp}
       onReset={onReset}
-      width={width * 0.65}
+      width={Math.min(width * SCREEN_WIDTH_RATIO, MAX_WIDTH)}
       compact
     >
-      {/* VIDAS E BARALHOS: lado a lado, o modal já é alto para a paisagem */}
-      <View style={styles.countersRow}>
-        <Counter
-          label={translate('fodinha.initial_lives')}
+      <SettingRow label={livesLabel}>
+        <Stepper
+          label={livesLabel}
           value={initialLives}
           canDecrease={initialLives > MIN_LIVES}
           canIncrease={initialLives < MAX_LIVES}
-          onChange={adjustLives}
+          onChange={(delta) => {
+            setInitialLives(Math.max(MIN_LIVES, Math.min(MAX_LIVES, initialLives + delta)));
+          }}
         />
-        <Counter
-          label={translate('fodinha.decks')}
+      </SettingRow>
+
+      <SettingRow
+        divided
+        label={penaltyLabel}
+        description={translate(
+          penaltyMode === 'fixed' ? 'fodinha.fixed_desc' : 'fodinha.difference_desc',
+        )}
+      >
+        <SegmentedControl
+          label={penaltyLabel}
+          options={penaltyOptions}
+          value={penaltyMode}
+          onChange={setPenaltyMode}
+        />
+      </SettingRow>
+
+      <SettingRow
+        divided
+        label={decksLabel}
+        description={translate('fodinha.max_cards_hint', { players: livingCount, max: maxCards })}
+      >
+        <Stepper
+          label={decksLabel}
           value={deckCount}
           canDecrease={deckCount > MIN_DECKS}
           canIncrease={deckCount < MAX_DECKS}
           onChange={(delta) => {
             setDeckCount(deckCount + delta);
           }}
-          hint={translate('fodinha.max_cards_hint', {
-            players: livingCount,
-            max: maxCards,
-          })}
         />
-      </View>
-
-      {/* MODO DE PUNIÇÃO */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: theme.colors.text.secondary }]}>
-          {translate('fodinha.penalty_mode')}
-        </Text>
-        <View style={styles.row}>
-          <OptionButton
-            label={translate('fodinha.fixed')}
-            subLabel={translate('fodinha.fixed_desc')}
-            active={penaltyMode === 'fixed'}
-            onPress={() => {
-              setPenaltyMode('fixed');
-            }}
-            compact
-          />
-          <OptionButton
-            label={translate('fodinha.difference')}
-            subLabel={translate('fodinha.difference_desc')}
-            active={penaltyMode === 'difference'}
-            onPress={() => {
-              setPenaltyMode('difference');
-            }}
-            compact
-          />
-        </View>
-      </View>
+      </SettingRow>
     </SettingsModalShell>
   );
 };
-
-interface CounterProps {
-  label: string;
-  value: number;
-  canDecrease: boolean;
-  canIncrease: boolean;
-  onChange: (delta: number) => void;
-  hint?: string;
-}
-
-const Counter = ({ label, value, canDecrease, canIncrease, onChange, hint }: CounterProps) => {
-  const { theme } = useTheme();
-  const buttonStyle = [
-    styles.counterBtn,
-    { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay },
-  ];
-
-  return (
-    <View style={styles.counter}>
-      <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{label}</Text>
-      <View style={styles.counterRow}>
-        <TouchableOpacity
-          onPress={() => {
-            onChange(-1);
-          }}
-          disabled={!canDecrease}
-          style={[buttonStyle, !canDecrease && styles.counterBtnDisabled]}
-          accessibilityRole="button"
-          accessibilityLabel={translate('a11y.decrease', { item: label })}
-        >
-          <Ionicons name="remove" size={ms(24)} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.pointsValue, { color: theme.colors.truco.scoreText }]}>{value}</Text>
-        <TouchableOpacity
-          onPress={() => {
-            onChange(1);
-          }}
-          disabled={!canIncrease}
-          style={[buttonStyle, !canIncrease && styles.counterBtnDisabled]}
-          accessibilityRole="button"
-          accessibilityLabel={translate('a11y.increase', { item: label })}
-        >
-          <Ionicons name="add" size={ms(24)} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-      </View>
-      {hint !== undefined && (
-        <Text style={[styles.hint, { color: theme.colors.text.secondary }]}>{hint}</Text>
-      )}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  section: { marginBottom: ms(5), alignItems: 'center', width: '100%' },
-  countersRow: { flexDirection: 'row', marginBottom: ms(15), width: '100%' },
-  counter: { flex: 1, alignItems: 'center' },
-  counterBtnDisabled: { opacity: 0.3 },
-  hint: {
-    fontSize: ms(7),
-    fontFamily: 'Minecraft',
-    marginTop: ms(6),
-    opacity: 0.6,
-    textAlign: 'center',
-  },
-  label: { fontSize: ms(10), fontFamily: 'Minecraft', marginBottom: ms(5), opacity: 0.8 },
-  counterRow: { flexDirection: 'row', alignItems: 'center', gap: ms(16) },
-  counterBtn: {
-    width: ms(40),
-    height: ms(40),
-    borderRadius: ms(20),
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pointsValue: { fontFamily: 'Minecraft', fontSize: ms(28) },
-  row: { flexDirection: 'row', gap: ms(10), width: '100%' },
-});

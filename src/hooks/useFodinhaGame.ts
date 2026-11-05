@@ -22,6 +22,11 @@ export interface FodinhaPlayer {
   history: (number | null)[];
   currentBid: number;
   currentWon: number;
+  /**
+   * Vidas somadas (ou tiradas) à mão pelo modal do jogador, por cima da conta do
+   * histórico. Ausente = 0. Ver `logicSetLives`.
+   */
+  livesAdjustment?: number;
 }
 type Player = FodinhaPlayer;
 
@@ -41,10 +46,13 @@ export const CARDS_PER_DECK = 40;
 export const VIRA_CARDS = 1;
 export const MIN_DECKS = 1;
 export const MAX_DECKS = 4;
+export const MIN_LIVES = 1;
+export const MAX_LIVES = 50;
 const DEFAULT_LIVES = 7;
-const MAX_LIVES = 50;
 /** Teto de sanidade para valores lidos do disco: nenhuma mão passa de todos os baralhos. */
 const MAX_CARDS_SANITY = CARDS_PER_DECK * MAX_DECKS;
+/** Teto de sanidade para a correção manual lida do disco. */
+const MAX_LIVES_ADJUSTMENT_SANITY = 10_000;
 
 const ROUND_PHASES: readonly RoundPhase[] = ['betting', 'results'];
 const PENALTY_MODES: readonly PenaltyMode[] = ['fixed', 'difference'];
@@ -81,8 +89,52 @@ export const getRoundDamage = (bid: number, won: number, penaltyMode: PenaltyMod
   return penaltyMode === 'fixed' ? 1 : diff;
 };
 
-export const computeLives = (initialLives: number, history: readonly (number | null)[]): number =>
-  Math.max(0, initialLives - history.reduce<number>((acc, damage) => acc + (damage ?? 0), 0));
+/** Dano somado do histórico; rodada não jogada (`null`) não conta. */
+const sumDamage = (history: readonly (number | null)[]): number =>
+  history.reduce<number>((acc, damage) => acc + (damage ?? 0), 0);
+
+/** Vidas pela conta do histórico, com a correção manual do jogador (`livesAdjustment`). */
+export const computeLives = (
+  initialLives: number,
+  history: readonly (number | null)[],
+  adjustment = 0,
+): number => Math.max(0, initialLives + adjustment - sumDamage(history));
+
+/**
+ * Vidas corrigidas à mão pelo modal do jogador: um engano no placar, ou uma regra da casa.
+ *
+ * A correção é guardada como ajuste sobre a conta do histórico, não como um número solto:
+ * editar ou apagar uma rodada depois recalcula as vidas a partir do histórico, e o ajuste
+ * continua valendo em cima dele. O ajuste entra antes do piso de 0, senão quem voltasse
+ * ao jogo depois de cair com folga não perderia mais vidas.
+ */
+export const logicSetLives = (
+  players: Player[],
+  pId: string,
+  lives: number,
+  initialLives: number,
+): Player[] =>
+  players.map((p) => {
+    if (p.id !== pId) return p;
+    const target = Math.max(0, Math.min(MAX_LIVES, Math.round(lives)));
+    if (target === p.lives) return p;
+    return {
+      ...p,
+      lives: target,
+      livesAdjustment: target - (initialLives - sumDamage(p.history)),
+    };
+  });
+
+/** Partida nova: mesmas cadeiras e nomes, vidas cheias, sem histórico nem correções. */
+export const logicResetPlayers = (players: readonly Player[], initialLives: number): Player[] =>
+  players.map((p) => ({
+    id: p.id,
+    name: p.name,
+    lives: initialLives,
+    history: [],
+    currentBid: 0,
+    currentWon: 0,
+  }));
 
 /**
  * Máximo de cartas por jogador numa rodada: o baralho, menos a vira, dividido igualmente
@@ -217,7 +269,7 @@ export const logicUpdateHistoryDamage = (
     const history = p.history.map((damage, i) =>
       i === roundIdx ? Math.max(0, currentDamage + delta) : damage,
     );
-    return { ...p, history, lives: computeLives(initialLives, history) };
+    return { ...p, history, lives: computeLives(initialLives, history, p.livesAdjustment) };
   });
 };
 
@@ -381,7 +433,7 @@ export const applyVoiceBatch = (
 export const logicRemoveRound = (players: Player[], roundIdx: number, initialLives: number) => {
   return players.map((p) => {
     const history = p.history.filter((_, i) => i !== roundIdx);
-    return { ...p, history, lives: computeLives(initialLives, history) };
+    return { ...p, history, lives: computeLives(initialLives, history, p.livesAdjustment) };
   });
 };
 
@@ -450,13 +502,24 @@ const parsePlayer = (raw: unknown, initialLives: number): Player | null => {
     ? raw.history.map((damage: unknown) => (isNonNegativeNumber(damage) ? damage : null))
     : [];
 
+  const livesAdjustment = intInRange(
+    raw.livesAdjustment,
+    -MAX_LIVES_ADJUSTMENT_SANITY,
+    MAX_LIVES_ADJUSTMENT_SANITY,
+    0,
+  );
+
   return {
     id: raw.id,
     name: raw.name,
-    lives: isNonNegativeNumber(raw.lives) ? raw.lives : computeLives(initialLives, history),
+    lives: isNonNegativeNumber(raw.lives)
+      ? raw.lives
+      : computeLives(initialLives, history, livesAdjustment),
     history,
     currentBid: intInRange(raw.currentBid, 0, MAX_CARDS_SANITY, 0),
     currentWon: intInRange(raw.currentWon, 0, MAX_CARDS_SANITY, 0),
+    // Só quem foi corrigido leva o campo: saves sem correção continuam com o mesmo formato.
+    ...(livesAdjustment === 0 ? {} : { livesAdjustment }),
   };
 };
 
@@ -480,7 +543,7 @@ const isPlayer = (player: Player | null): player is Player => player !== null;
 export const parseFodinhaSave = (raw: unknown): FodinhaSave | null => {
   if (!isRecord(raw) || !Array.isArray(raw.players)) return null;
 
-  const initialLives = intInRange(raw.initialLives, 1, MAX_LIVES, DEFAULT_LIVES);
+  const initialLives = intInRange(raw.initialLives, MIN_LIVES, MAX_LIVES, DEFAULT_LIVES);
   const parsed = raw.players.map((entry: unknown) => parsePlayer(entry, initialLives));
   if (!parsed.every(isPlayer)) return null;
 
@@ -697,6 +760,19 @@ export const useFodinhaGame = () => {
     updateTable((prev) => logicUpdateHistoryDamage(prev, playerId, delta, roundIdx, initialLives));
   };
 
+  /**
+   * Correção manual das vidas pelo modal do jogador. Pode trazer alguém de volta (a mesa
+   * cresce e o limite de cartas cai junto) ou eliminar.
+   */
+  const setPlayerLives = (playerId: string, lives: number) => {
+    // Depois do fim o placar está fechado: mexer nas vidas mudaria quem venceu.
+    if (isGameOver) return;
+    const update = (prev: Player[]) => logicSetLives(prev, playerId, lives, initialLives);
+    updateTable(update);
+    // Zerar alguém pode deixar um só vivo: o fim é avisado como numa rodada.
+    if (getGameOutcome(update(players)).status !== 'playing') setGameOverVisible(true);
+  };
+
   // Função auxiliar para o Alert não ficar aninhado
   const confirmDeleteRound = (roundIdx: number, onCloseOverlay: () => void) => {
     const result = getRoundDeletion(players, roundIdx, {
@@ -725,9 +801,7 @@ export const useFodinhaGame = () => {
   };
 
   const handleReset = () => {
-    setPlayers((prev) =>
-      prev.map((p) => ({ ...p, lives: initialLives, history: [], currentBid: 0, currentWon: 0 })),
-    );
+    setPlayers((prev) => logicResetPlayers(prev, initialLives));
     setCardsInRound(1);
     setCardsDirection('up');
     setRoundPhase('betting');
@@ -793,5 +867,6 @@ export const useFodinhaGame = () => {
     handleReset,
     handleAddPlayer,
     removePlayer,
+    setPlayerLives,
   };
 };

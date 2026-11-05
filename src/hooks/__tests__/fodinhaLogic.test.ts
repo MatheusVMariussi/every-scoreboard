@@ -15,6 +15,9 @@ import {
   logicUpdateHistoryDamage,
   logicRemoveRound,
   logicRemovePlayer,
+  logicResetPlayers,
+  logicSetLives,
+  MAX_LIVES,
   parseFodinhaSave,
   sumLiving,
   type CardsDirection,
@@ -623,5 +626,130 @@ describe('getRoundDeletion', () => {
     });
     expect(result.cardsInRound).toBe(9);
     expect(result.players[0].currentBid).toBe(9);
+  });
+});
+
+describe('logicSetLives', () => {
+  // Vidas iniciais 7, perdeu 1 e 2: a conta do histórico dá 4.
+  const player = () => makePlayer({ id: '1', history: [1, 2], lives: 4 });
+
+  it('sets the lives typed in the player modal', () => {
+    const [result] = logicSetLives([player()], '1', 6, 7);
+    expect(result.lives).toBe(6);
+  });
+
+  it('keeps the correction when a past round is edited later', () => {
+    const corrected = logicSetLives([player()], '1', 6, 7);
+    // A rodada 2 custou 1 a menos: as 6 corrigidas viram 7, não as 5 do histórico puro.
+    const [result] = logicUpdateHistoryDamage(corrected, '1', -1, 1, 7);
+    expect(result.lives).toBe(7);
+  });
+
+  it('keeps the correction when a round is deleted later', () => {
+    const corrected = logicSetLives([player()], '1', 6, 7);
+    const [result] = logicRemoveRound(corrected, 1, 7);
+    expect(result.lives).toBe(8);
+  });
+
+  it('keeps counting damage after bringing an eliminated player back', () => {
+    // Caiu com folga: 3 vidas e 5 de dano na última rodada.
+    const fallen = makePlayer({ id: '1', history: [5], lives: 0 });
+    const revived = logicSetLives([fallen], '1', 2, 3);
+    expect(revived[0].lives).toBe(2);
+
+    const [afterRound] = logicFinishRound(
+      [{ ...revived[0], currentBid: 0, currentWon: 1 }],
+      'fixed',
+    );
+    expect(afterRound.lives).toBe(1);
+    // A conta do histórico chega ao mesmo número.
+    const [recounted] = logicUpdateHistoryDamage([afterRound], '1', 0, 1, 3);
+    expect(recounted.lives).toBe(1);
+  });
+
+  it('eliminates the player when set to zero', () => {
+    const [result] = logicSetLives([player()], '1', 0, 7);
+    expect(result.lives).toBe(0);
+  });
+
+  it('stays between zero and the lives limit', () => {
+    expect(logicSetLives([player()], '1', -3, 7)[0].lives).toBe(0);
+    expect(logicSetLives([player()], '1', MAX_LIVES + 10, 7)[0].lives).toBe(MAX_LIVES);
+  });
+
+  it('leaves the player untouched when the lives did not change', () => {
+    const players = [player()];
+    expect(logicSetLives(players, '1', 4, 7)[0]).toBe(players[0]);
+  });
+
+  it('only touches the chosen player', () => {
+    const other = makePlayer({ id: '2', lives: 5 });
+    const result = logicSetLives([player(), other], '1', 6, 7);
+    expect(result[1]).toBe(other);
+  });
+});
+
+describe('logicResetPlayers', () => {
+  it('drops manual corrections when a new match starts', () => {
+    const corrected = logicSetLives(
+      [makePlayer({ id: '1', history: [1, 2], lives: 4 })],
+      '1',
+      6,
+      7,
+    );
+    const [restarted] = logicResetPlayers(corrected, 7);
+    expect(restarted.lives).toBe(7);
+    expect(restarted.history).toEqual([]);
+
+    // Sem ajuste sobrando: a primeira rodada da partida nova conta a partir de 7.
+    const [afterEdit] = logicUpdateHistoryDamage(
+      logicFinishRound([{ ...restarted, currentBid: 1, currentWon: 0 }], 'fixed'),
+      '1',
+      0,
+      0,
+      7,
+    );
+    expect(afterEdit.lives).toBe(6);
+  });
+
+  it('keeps names and seats', () => {
+    const players = [makePlayer({ id: '1', name: 'Ana' }), makePlayer({ id: '2', name: 'Leo' })];
+    expect(logicResetPlayers(players, 5).map((p) => [p.id, p.name, p.lives])).toEqual([
+      ['1', 'Ana', 5],
+      ['2', 'Leo', 5],
+    ]);
+  });
+});
+
+describe('parseFodinhaSave lives corrections', () => {
+  const save = (player: Record<string, unknown>) => ({
+    players: [player],
+    initialLives: 7,
+    penaltyMode: 'fixed',
+    cardsInRound: 1,
+    roundPhase: 'betting',
+  });
+
+  it('restores a manual correction', () => {
+    const parsed = parseFodinhaSave(
+      save({ id: '1', name: 'Ana', lives: 6, history: [1, 2], livesAdjustment: 2 }),
+    );
+    // Editar a rodada depois de reabrir o app continua respeitando a correção.
+    const [edited] = logicUpdateHistoryDamage(parsed?.players ?? [], '1', -1, 1, 7);
+    expect(edited.lives).toBe(7);
+  });
+
+  it('uses the correction when lives must be recomputed from the history', () => {
+    const parsed = parseFodinhaSave(
+      save({ id: '1', name: 'Ana', history: [1, 2], livesAdjustment: 2 }),
+    );
+    expect(parsed?.players[0].lives).toBe(6);
+  });
+
+  it('ignores an invalid correction', () => {
+    const parsed = parseFodinhaSave(
+      save({ id: '1', name: 'Ana', history: [1, 2], livesAdjustment: 'two' }),
+    );
+    expect(parsed?.players[0].lives).toBe(4);
   });
 });

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
   type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,6 +57,14 @@ export const FodinhaScreen = () => {
   const tablePlayers = useMemo(() => orderForTable(game.players), [game.players]);
 
   const [showEditName, setShowEditName] = useState(false);
+  /**
+   * O modal do jogador ainda na tela, contando a animação de saída. No iOS um Modal não
+   * abre enquanto outro ainda está saindo — o UIKit recusa e o aviso de fim de jogo
+   * sumiria —, então o aviso espera o `onDismiss`, que só existe no iOS. No Android basta o
+   * modal estar fechado.
+   */
+  const [isEditNamePresented, setEditNamePresented] = useState(false);
+  const isEditNameOnScreen = showEditName || (Platform.OS === 'ios' && isEditNamePresented);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
@@ -129,7 +138,7 @@ export const FodinhaScreen = () => {
     ]);
   };
 
-  const getEditingPlayerName = () => game.players.find((p) => p.id === editingPlayerId)?.name || '';
+  const editingPlayer = game.players.find((p) => p.id === editingPlayerId);
 
   // Estável para o `memo` do histórico: os setters do React não mudam de identidade.
   const handlePressRound = useCallback((roundIndex: number) => {
@@ -297,6 +306,7 @@ export const FodinhaScreen = () => {
                     onPress={() => {
                       setEditingPlayerId(p.id);
                       setShowEditName(true);
+                      setEditNamePresented(true);
                     }}
                   >
                     <Text
@@ -462,21 +472,30 @@ export const FodinhaScreen = () => {
       />
       <EditNameModal
         visible={showEditName}
-        initialValue={getEditingPlayerName()}
+        initialValue={editingPlayer?.name ?? ''}
+        // Depois do fim o placar está fechado: corrigir vidas mudaria quem venceu.
+        initialLives={game.isGameOver ? undefined : editingPlayer?.lives}
         onClose={() => {
           setShowEditName(false);
         }}
-        onSave={(n) => {
-          if (n.trim() && editingPlayerId)
+        onSave={(n, lives) => {
+          if (!editingPlayerId) return;
+          if (n.trim())
             game.setPlayers((prev) =>
               prev.map((p) => (p.id === editingPlayerId ? { ...p, name: n } : p)),
             );
+          if (lives !== undefined && lives !== editingPlayer?.lives)
+            game.setPlayerLives(editingPlayerId, lives);
         }}
         // Depois do fim o placar está fechado: tirar alguém mudaria quem venceu.
         onDelete={game.isGameOver ? undefined : handleDeletePlayer}
+        onDismiss={() => {
+          setEditNamePresented(false);
+        }}
       />
       <FodinhaGameOverModal
-        visible={game.gameOverVisible && game.isGameOver}
+        // Zerar as vidas ou remover alguém pelo modal do jogador pode fechar o jogo.
+        visible={game.gameOverVisible && game.isGameOver && !isEditNameOnScreen}
         outcome={game.outcome}
         onViewBoard={game.dismissGameOver}
         onNewMatch={game.handleReset}

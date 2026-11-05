@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import {
+  Alert,
   Modal,
   View,
   Text,
@@ -18,7 +19,7 @@ interface SettingsModalShellProps {
   title: string;
   /** Abre o "como jogar"; quem chama troca este modal pelo de ajuda. */
   onOpenHelp: () => void;
-  /** Zera a partida. O modal fecha logo em seguida. */
+  /** Zera a partida, depois de confirmada. O modal fecha logo em seguida. */
   onReset: () => void;
   width: number;
   /** Paisagem: espaçamentos menores e as duas ações lado a lado. */
@@ -40,6 +41,26 @@ export const SettingsModalShell = ({
 }: SettingsModalShellProps) => {
   const { theme } = useTheme();
   const size = compact ? compactStyles : regularStyles;
+  const iconSize = compact ? ms(18) : ms(20);
+
+  // Zerar apaga a partida inteira: pede confirmação, e o modal só fecha se confirmar.
+  const confirmReset = () => {
+    Alert.alert(
+      translate('common.confirm_reset_title'),
+      translate('common.confirm_reset_message'),
+      [
+        { text: translate('common.cancel'), style: 'cancel' },
+        {
+          text: translate('common.confirm'),
+          style: 'destructive',
+          onPress: () => {
+            onReset();
+            onClose();
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <Modal
@@ -80,11 +101,12 @@ export const SettingsModalShell = ({
 
               {children}
 
+              {/* `modal.divider` é a cor do próprio cartão: o traço sumia. */}
               <View
                 style={[
                   styles.divider,
                   size.divider,
-                  { backgroundColor: theme.colors.modal.divider },
+                  { backgroundColor: theme.colors.truco.divider },
                 ]}
               />
 
@@ -93,16 +115,12 @@ export const SettingsModalShell = ({
                   style={[
                     styles.actionBtn,
                     size.actionBtn,
-                    { borderColor: theme.colors.text.secondary, borderWidth: 1 },
+                    { borderColor: theme.colors.text.secondary },
                   ]}
                   onPress={onOpenHelp}
+                  accessibilityRole="button"
                 >
-                  <Ionicons
-                    name="book-outline"
-                    size={ms(20)}
-                    color={theme.colors.text.primary}
-                    style={{ marginRight: ms(8) }}
-                  />
+                  <Ionicons name="book-outline" size={iconSize} color={theme.colors.text.primary} />
                   <Text
                     style={[
                       styles.actionText,
@@ -114,19 +132,26 @@ export const SettingsModalShell = ({
                   </Text>
                 </TouchableOpacity>
 
+                {/*
+                 * Destrutivo, mas não o elemento mais chamativo do modal: o vermelho fica no
+                 * contorno e no ícone, e o texto continua legível sobre o cartão.
+                 */}
                 <TouchableOpacity
                   style={[
                     styles.actionBtn,
                     size.actionBtn,
-                    { backgroundColor: theme.colors.status.error },
+                    { borderColor: theme.colors.status.error },
                   ]}
-                  onPress={() => {
-                    onReset();
-                    onClose();
-                  }}
+                  onPress={confirmReset}
+                  accessibilityRole="button"
                 >
+                  <Ionicons name="refresh" size={iconSize} color={theme.colors.status.error} />
                   <Text
-                    style={[styles.actionText, size.actionText, { color: theme.colors.text.white }]}
+                    style={[
+                      styles.actionText,
+                      size.actionText,
+                      { color: theme.colors.text.primary },
+                    ]}
                   >
                     {translate('common.reset_match')}
                   </Text>
@@ -148,11 +173,14 @@ const styles = StyleSheet.create({
   divider: { height: 1, width: '100%' },
   actionBtn: {
     flexDirection: 'row',
+    gap: ms(8),
     borderRadius: ms(10),
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionText: { fontFamily: 'Minecraft' },
+  // Encolhe ao lado do ícone e quebra a linha quando o modal é estreito (Cacheta).
+  actionText: { fontFamily: 'Minecraft', flexShrink: 1, textAlign: 'center' },
 });
 
 const regularStyles = StyleSheet.create({
@@ -172,5 +200,6 @@ const compactStyles = StyleSheet.create({
   divider: { marginTop: ms(10), marginBottom: ms(10) },
   actions: { flexDirection: 'row', gap: ms(15) },
   actionBtn: { flex: 1, padding: ms(10) },
-  actionText: { fontSize: ms(12) },
+  // 11, não 12: "REINICIAR PARTIDA" cabe numa linha ao lado do ícone na Fodinha.
+  actionText: { fontSize: ms(11) },
 });
