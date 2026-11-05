@@ -2,7 +2,7 @@
   "expo": {
     "name": "Every Scoreboard",
     "slug": "every-scoreboard",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
