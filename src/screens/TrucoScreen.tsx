@@ -1,5 +1,11 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState, useLayoutEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  type AccessibilityActionEvent,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,10 +21,13 @@ import { EditNameModal } from '../components/EditNameModal';
 import { TrucoHelpModal } from '../components/TrucoHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { MatchHistoryGraph } from '../components/MatchHistoryGraph';
-import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
+import { STORAGE_KEYS } from '../utils/storage';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
+import { useGameTutorial } from '../hooks/useGameTutorial';
 import { useTrucoGame } from '../hooks/useTrucoGame';
 import { ms, hp } from '../theme/responsive';
+
+const TUTORIAL_MESSAGE_KEYS = ['truco.tutorial.score', 'truco.tutorial.settings'];
 
 // --- COMPONENTE EXTRAÍDO ---
 interface TeamScoreAreaProps {
@@ -77,6 +86,13 @@ const TeamScoreArea = ({
       }),
   );
 
+  // Leitores de tela não fazem o toque/deslize do placar: os mesmos pontos viram ações.
+  const handleAccessibilityAction = ({ nativeEvent }: AccessibilityActionEvent) => {
+    if (nativeEvent.actionName === 'increment') onPointChange(team, basePoints);
+    else if (nativeEvent.actionName === 'decrement') onPointChange(team, -basePoints);
+    else if (nativeEvent.actionName === 'truco') onPointChange(team, trucoPoints);
+  };
+
   return (
     <View style={styles.teamColumn}>
       <View style={[styles.colorBar, { backgroundColor: color }]} />
@@ -89,6 +105,9 @@ const TeamScoreArea = ({
           style={styles.nameContainer}
           activeOpacity={0.6}
           hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
+          accessibilityRole="button"
+          accessibilityLabel={name}
+          accessibilityHint={translate('a11y.edit_name')}
         >
           <Text style={[styles.teamName, { color: theme.colors.text.white }]}>
             {name} <Ionicons name="pencil" size={ms(12)} color={theme.colors.text.secondary} />
@@ -107,7 +126,20 @@ const TeamScoreArea = ({
       </View>
 
       <GestureDetector gesture={gesture}>
-        <View style={styles.gestureArea} collapsable={false}>
+        <View
+          style={styles.gestureArea}
+          collapsable={false}
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel={translate('a11y.score_of', { name })}
+          accessibilityValue={{ text: String(score) }}
+          accessibilityActions={[
+            { name: 'increment' },
+            { name: 'decrement' },
+            { name: 'truco', label: translate('a11y.add_truco', { points: trucoPoints }) },
+          ]}
+          onAccessibilityAction={handleAccessibilityAction}
+        >
           <Animated.View style={[styles.scoreContainer, animatedStyle]}>
             <View ref={targetProp?.ref} collapsable={false}>
               <Text style={[styles.scoreNumber, { color: theme.colors.truco.scoreText }]}>
@@ -151,57 +183,19 @@ export const TrucoScreen = () => {
   const [editNameVisible, setEditNameVisible] = useState(false);
   const [editingTeam, setEditingTeam] = useState<'us' | 'them'>('us');
 
-  const [tutorialActive, setTutorialActive] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
-
-  const scoreTarget = useTutorialTarget(tutorialActive && tutorialStep === 0);
-  const settingsTarget = useTutorialTarget(tutorialActive && tutorialStep === 1);
+  const tutorial = useGameTutorial({
+    storageKey: STORAGE_KEYS.TUTORIAL_TRUCO,
+    stepCount: TUTORIAL_MESSAGE_KEYS.length,
+    // O placar, alvo do primeiro passo, só aparece depois do save.
+    isReady: game.isLoaded,
+  });
+  const scoreTarget = useTutorialTarget(tutorial.isStepActive(0));
+  const settingsTarget = useTutorialTarget(tutorial.isStepActive(1));
+  const tutorialTargets = [scoreTarget, settingsTarget];
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
-
-  useEffect(() => {
-    const checkTutorial = async () => {
-      const hasSeen = (await getData(STORAGE_KEYS.TUTORIAL_TRUCO)) as boolean | null;
-      if (!hasSeen) {
-        setTutorialActive(true);
-        setTutorialStep(0);
-      }
-    };
-    void checkTutorial();
-  }, []);
-
-  const handleNextTutorial = async () => {
-    if (tutorialStep < 1) {
-      setTutorialStep((prev) => prev + 1);
-    } else {
-      setTutorialActive(false);
-      await saveData(STORAGE_KEYS.TUTORIAL_TRUCO, true);
-    }
-  };
-
-  const getTutorialMessage = () => {
-    switch (tutorialStep) {
-      case 0:
-        return translate('truco.tutorial.score');
-      case 1:
-        return translate('truco.tutorial.settings');
-      default:
-        return '';
-    }
-  };
-
-  const getTutorialSpotlight = () => {
-    switch (tutorialStep) {
-      case 0:
-        return scoreTarget.layout;
-      case 1:
-        return settingsTarget.layout;
-      default:
-        return null;
-    }
-  };
 
   const handleSaveName = (newName: string) => {
     if (newName.trim()) {
@@ -235,68 +229,80 @@ export const TrucoScreen = () => {
               navigation.goBack();
             }}
             style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={translate('a11y.back')}
           >
             <Ionicons name="arrow-back" size={ms(24)} color={theme.colors.text.white} />
           </TouchableOpacity>
-          <Text style={[styles.gameTitle, { color: theme.colors.text.white }]}>
-            TRUCO {translate(`truco.${game.gameMode}`).toUpperCase()}
-          </Text>
+          {/* O modo vem do save: antes dele o título diria "paulista" e trocaria em seguida. */}
+          {game.isLoaded && (
+            <Text style={[styles.gameTitle, { color: theme.colors.text.white }]}>
+              TRUCO {translate(`truco.${game.gameMode}`).toUpperCase()}
+            </Text>
+          )}
           <View ref={settingsTarget.ref} collapsable={false}>
             <TouchableOpacity
               onPress={() => {
                 setSettingsVisible(true);
               }}
               style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={translate('a11y.settings')}
             >
               <Ionicons name="settings-sharp" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.scoreboardRow}>
-          <TeamScoreArea
-            team="them"
-            score={game.scoreThem}
-            name={game.nameThem}
-            wins={game.matchWinsThem}
-            color={COLOR_THEM}
-            basePoints={basePoints}
-            trucoPoints={trucoPoints}
-            onPointChange={game.handlePointChange}
-            onEditName={handleEditName}
-          />
-          <View style={[styles.verticalDivider, { backgroundColor: theme.colors.truco.divider }]} />
-          <TeamScoreArea
-            team="us"
-            score={game.scoreUs}
-            name={game.nameUs}
-            wins={game.matchWinsUs}
-            color={COLOR_US}
-            targetProp={scoreTarget}
-            basePoints={basePoints}
-            trucoPoints={trucoPoints}
-            onPointChange={game.handlePointChange}
-            onEditName={handleEditName}
-          />
-        </View>
+        {/* Espera o save: antes dele o placar mostraria 00 x 00 e pularia para o salvo. */}
+        {game.isLoaded && (
+          <>
+            <View style={styles.scoreboardRow}>
+              <TeamScoreArea
+                team="them"
+                score={game.scoreThem}
+                name={game.nameThem}
+                wins={game.matchWinsThem}
+                color={COLOR_THEM}
+                basePoints={basePoints}
+                trucoPoints={trucoPoints}
+                onPointChange={game.handlePointChange}
+                onEditName={handleEditName}
+              />
+              <View
+                style={[styles.verticalDivider, { backgroundColor: theme.colors.truco.divider }]}
+              />
+              <TeamScoreArea
+                team="us"
+                score={game.scoreUs}
+                name={game.nameUs}
+                wins={game.matchWinsUs}
+                color={COLOR_US}
+                targetProp={scoreTarget}
+                basePoints={basePoints}
+                trucoPoints={trucoPoints}
+                onPointChange={game.handlePointChange}
+                onEditName={handleEditName}
+              />
+            </View>
 
-        <View style={[styles.footerHistory, { borderTopColor: theme.colors.truco.divider }]}>
-          <MatchHistoryGraph
-            history={game.pointHistory}
-            colorThem={COLOR_THEM}
-            colorUs={COLOR_US}
-          />
-        </View>
+            <View style={[styles.footerHistory, { borderTopColor: theme.colors.truco.divider }]}>
+              <MatchHistoryGraph
+                history={game.pointHistory}
+                colorThem={COLOR_THEM}
+                colorUs={COLOR_US}
+              />
+            </View>
+          </>
+        )}
       </SafeAreaView>
 
       <TutorialOverlay
-        visible={tutorialActive}
-        spotlight={getTutorialSpotlight()}
-        message={getTutorialMessage()}
-        nextText={tutorialStep === 1 ? translate('common.got_it') : translate('common.next')}
-        onNext={() => {
-          void handleNextTutorial();
-        }}
+        visible={tutorial.isActive}
+        spotlight={tutorialTargets[tutorial.step].layout}
+        message={translate(TUTORIAL_MESSAGE_KEYS[tutorial.step])}
+        nextText={tutorial.isLastStep ? translate('common.got_it') : translate('common.next')}
+        onNext={tutorial.next}
       />
 
       <TrucoSettingsModal

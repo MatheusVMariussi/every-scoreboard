@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, type RefObject } from 'react';
 import { Alert, type ScrollView } from 'react-native';
-import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
+import { getData, STORAGE_KEYS } from '../utils/storage';
+import { intInRange, isRecord } from '../utils/parse';
 import { translate } from '../i18n';
+import { useAutoSave } from './useAutoSave';
 
 export type CachetaAction = 'won' | 'fold' | 'lost' | null;
 
@@ -207,32 +209,96 @@ export const resetAllPlayers = (players: CachetaPlayer[]): CachetaPlayer[] => {
   return players.map((p) => ({ ...p, history: [], currentAction: null }));
 };
 
+// --- PERSISTENCE ---
+
+export const DEFAULT_INITIAL_POINTS = 10;
+export const MIN_INITIAL_POINTS = 1;
+export const MAX_INITIAL_POINTS = 99;
+
+const PLAYED_ACTIONS: readonly string[] = ['won', 'fold', 'lost'];
+
+export interface CachetaSave {
+  players: CachetaPlayer[];
+  initialPoints: number;
+}
+
+/** Ação desconhecida vira "sem ação", o mesmo de quem não jogou a rodada. */
+const parseAction = (value: unknown): CachetaAction =>
+  typeof value === 'string' && PLAYED_ACTIONS.includes(value) ? (value as CachetaAction) : null;
+
+const parsePlayer = (raw: unknown): CachetaPlayer | null => {
+  if (!isRecord(raw) || typeof raw.id !== 'string' || typeof raw.name !== 'string') return null;
+  return {
+    id: raw.id,
+    name: raw.name,
+    history: Array.isArray(raw.history) ? raw.history.map(parseAction) : [],
+    currentAction: parseAction(raw.currentAction),
+  };
+};
+
+const isPlayer = (player: CachetaPlayer | null): player is CachetaPlayer => player !== null;
+
+/**
+ * Valida o que veio do disco. Um jogador sem id ou nome invalida o save inteiro; o resto
+ * cai no padrão campo a campo. Históricos curtos são completados no fim com "sem ação",
+ * para cada rodada ter uma célula de cada jogador. Devolve `null` quando nem é um save.
+ */
+export const parseCachetaSave = (raw: unknown): CachetaSave | null => {
+  if (!isRecord(raw) || !Array.isArray(raw.players)) return null;
+
+  const parsed = raw.players.map(parsePlayer);
+  if (!parsed.every(isPlayer)) return null;
+
+  const roundCount = Math.max(0, ...parsed.map((p) => p.history.length));
+  const players = parsed.map((p) => ({
+    ...p,
+    history: [...p.history, ...new Array<CachetaAction>(roundCount - p.history.length).fill(null)],
+  }));
+
+  return {
+    players,
+    initialPoints: intInRange(
+      raw.initialPoints,
+      MIN_INITIAL_POINTS,
+      MAX_INITIAL_POINTS,
+      DEFAULT_INITIAL_POINTS,
+    ),
+  };
+};
+
 // --- HOOK ---
 export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
-  const [initialPoints, setInitialPoints] = useState(10);
+  const [initialPoints, setInitialPoints] = useState(DEFAULT_INITIAL_POINTS);
   const [players, setPlayers] = useState<CachetaPlayer[]>([
     { id: '1', name: translate('common.player') + ' 1', history: [], currentAction: null },
     { id: '2', name: translate('common.player') + ' 2', history: [], currentAction: null },
     { id: '3', name: translate('common.player') + ' 3', history: [], currentAction: null },
   ]);
 
+  const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
+    let active = true;
     const loadData = async () => {
-      const saved = (await getData(STORAGE_KEYS.CACHETA_DATA)) as {
-        players: CachetaPlayer[];
-        initialPoints: number;
-      } | null;
+      const saved = parseCachetaSave(await getData(STORAGE_KEYS.CACHETA_DATA));
+      if (!active) return;
       if (saved) {
         setPlayers(saved.players);
         setInitialPoints(saved.initialPoints);
       }
+      setIsLoaded(true);
     };
     void loadData();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  useEffect(() => {
-    void saveData(STORAGE_KEYS.CACHETA_DATA, { players, initialPoints });
-  }, [players, initialPoints]);
+  const snapshot = useMemo<CachetaSave>(
+    () => ({ players, initialPoints }),
+    [players, initialPoints],
+  );
+  useAutoSave(STORAGE_KEYS.CACHETA_DATA, snapshot, isLoaded);
 
   const playersWithPoints = useMemo(
     () => calculatePlayerPoints(players, initialPoints),
@@ -332,6 +398,7 @@ export const useCachetaGame = (scrollRef: RefObject<ScrollView>) => {
   };
 
   return {
+    isLoaded,
     players,
     setPlayers,
     initialPoints,

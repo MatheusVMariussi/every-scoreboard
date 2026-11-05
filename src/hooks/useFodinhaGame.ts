@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Alert } from 'react-native';
-import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
+import { getData, STORAGE_KEYS } from '../utils/storage';
+import { intInRange, isNonNegativeNumber, isRecord, oneOf } from '../utils/parse';
 import { translate } from '../i18n';
+import { useAutoSave } from './useAutoSave';
 
 export type RoundPhase = 'betting' | 'results';
 export type PenaltyMode = 'fixed' | 'difference';
@@ -388,22 +390,6 @@ export interface FodinhaSave {
   cardsDirection: CardsDirection;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const isNonNegativeNumber = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0;
-
-const intInRange = (value: unknown, min: number, max: number, fallback: number): number =>
-  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
-    ? value
-    : fallback;
-
-const oneOf = <T extends string>(value: unknown, options: readonly T[], fallback: T): T =>
-  typeof value === 'string' && (options as readonly string[]).includes(value)
-    ? (value as T)
-    : fallback;
-
 const parsePlayer = (raw: unknown, initialLives: number): Player | null => {
   if (!isRecord(raw) || typeof raw.id !== 'string' || typeof raw.name !== 'string') return null;
 
@@ -510,10 +496,8 @@ export const useFodinhaGame = () => {
     };
   }, []);
 
-  useEffect(() => {
-    // Antes do load terminar o estado ainda é o padrão: gravar agora apagaria o save.
-    if (!isLoaded) return;
-    const save: FodinhaSave = {
+  const save = useMemo<FodinhaSave>(
+    () => ({
       players,
       initialLives,
       penaltyMode,
@@ -521,18 +505,10 @@ export const useFodinhaGame = () => {
       roundPhase,
       deckCount,
       cardsDirection,
-    };
-    void saveData(STORAGE_KEYS.FODINHA_DATA, save);
-  }, [
-    isLoaded,
-    players,
-    initialLives,
-    penaltyMode,
-    cardsInRound,
-    roundPhase,
-    deckCount,
-    cardsDirection,
-  ]);
+    }),
+    [players, initialLives, penaltyMode, cardsInRound, roundPhase, deckCount, cardsDirection],
+  );
+  useAutoSave(STORAGE_KEYS.FODINHA_DATA, save, isLoaded);
 
   const outcome = useMemo(() => getGameOutcome(players), [players]);
   const isGameOver = outcome.status !== 'playing';

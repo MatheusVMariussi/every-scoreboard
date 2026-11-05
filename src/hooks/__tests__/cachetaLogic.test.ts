@@ -5,6 +5,7 @@ import {
   removeRoundFromList,
   removePlayerFromList,
   resetAllPlayers,
+  parseCachetaSave,
   type CachetaPlayer,
 } from '../useCachetaGame';
 
@@ -199,5 +200,62 @@ describe('resetAllPlayers', () => {
     // Names and ids should be preserved
     expect(result[0].id).toBe('1');
     expect(result[1].id).toBe('2');
+  });
+});
+
+// --- parseCachetaSave ---
+
+describe('parseCachetaSave', () => {
+  const validSave = {
+    players: [
+      makePlayer({ id: '1', name: 'Ana', history: ['won', 'lost'], currentAction: 'fold' }),
+      makePlayer({ id: '2', name: 'Leo', history: ['lost', null] }),
+    ],
+    initialPoints: 7,
+  };
+
+  it('reads a valid save as it was stored', () => {
+    expect(parseCachetaSave(validSave)).toEqual(validSave);
+  });
+
+  it('accepts a table with no players', () => {
+    expect(parseCachetaSave({ players: [], initialPoints: 10 })).toEqual({
+      players: [],
+      initialPoints: 10,
+    });
+  });
+
+  it('turns unknown actions into "no action"', () => {
+    const save = parseCachetaSave({
+      players: [{ id: '1', name: 'Ana', history: ['won', 'dance', 3], currentAction: 'nap' }],
+      initialPoints: 10,
+    });
+    expect(save?.players[0].history).toEqual(['won', null, null]);
+    expect(save?.players[0].currentAction).toBeNull();
+  });
+
+  it('pads shorter histories so every round has a cell for every player', () => {
+    const save = parseCachetaSave({
+      players: [
+        { id: '1', name: 'Ana', history: ['won', 'lost', 'fold'], currentAction: null },
+        { id: '2', name: 'Leo', currentAction: null },
+      ],
+      initialPoints: 10,
+    });
+    expect(save?.players[0].history).toEqual(['won', 'lost', 'fold']);
+    expect(save?.players[1].history).toEqual([null, null, null]);
+  });
+
+  it('falls back to 10 initial points when the stored value is not usable', () => {
+    expect(parseCachetaSave({ ...validSave, initialPoints: 0 })?.initialPoints).toBe(10);
+    expect(parseCachetaSave({ ...validSave, initialPoints: '7' })?.initialPoints).toBe(10);
+    expect(parseCachetaSave({ players: validSave.players })?.initialPoints).toBe(10);
+  });
+
+  it('rejects data that is not a save', () => {
+    expect(parseCachetaSave(null)).toBeNull();
+    expect(parseCachetaSave('oops')).toBeNull();
+    expect(parseCachetaSave({ players: 'nope' })).toBeNull();
+    expect(parseCachetaSave({ players: [{ name: 'sem id' }] })).toBeNull();
   });
 });

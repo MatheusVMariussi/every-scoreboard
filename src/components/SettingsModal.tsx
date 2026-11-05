@@ -79,7 +79,12 @@ export const SettingsModal = ({ visible, onClose }: SettingsModalProps) => {
                 <Text style={[styles.title, { color: theme.colors.text.primary }]}>
                   {translate('settings.title')}
                 </Text>
-                <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={styles.closeBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={translate('a11y.close')}
+                >
                   <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
                 </TouchableOpacity>
               </View>
@@ -154,7 +159,12 @@ export const SettingsModal = ({ visible, onClose }: SettingsModalProps) => {
                   <Text style={[styles.title, { color: theme.colors.text.primary }]}>
                     {translate('settings.terms_title')}
                   </Text>
-                  <TouchableOpacity onPress={() => setTermsVisible(false)} style={styles.closeBtn}>
+                  <TouchableOpacity
+                    onPress={() => setTermsVisible(false)}
+                    style={styles.closeBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={translate('a11y.close')}
+                  >
                     <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
                   </TouchableOpacity>
                 </View>
@@ -178,11 +188,19 @@ export const SettingsModal = ({ visible, onClose }: SettingsModalProps) => {
   );
 };
 
-const OptionBtn = ({ label, active, onPress }: any) => {
+interface OptionBtnProps {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}
+
+const OptionBtn = ({ label, active, onPress }: OptionBtnProps) => {
   const { theme } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
       style={[
         styles.optBtn,
         {

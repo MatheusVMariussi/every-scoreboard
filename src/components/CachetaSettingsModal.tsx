@@ -1,16 +1,10 @@
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  useWindowDimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { ms } from '../theme/responsive';
+import { SettingsModalShell } from './settings/SettingsModalShell';
+import { MAX_INITIAL_POINTS, MIN_INITIAL_POINTS } from '../hooks/useCachetaGame';
 
 interface CachetaSettingsModalProps {
   visible: boolean;
@@ -32,140 +26,66 @@ export const CachetaSettingsModal = ({
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
 
+  const pointsLabel = translate('cacheta.initial_points');
+  const counterBtnStyle = [
+    styles.counterBtn,
+    { borderColor: theme.colors.text.secondary, backgroundColor: theme.colors.background.overlay },
+  ];
+
   const adjustPoints = (amount: number) => {
-    const newVal = Math.max(1, Math.min(99, initialPoints + amount));
-    setInitialPoints(newVal);
+    setInitialPoints(
+      Math.max(MIN_INITIAL_POINTS, Math.min(MAX_INITIAL_POINTS, initialPoints + amount)),
+    );
   };
 
   return (
-    <Modal
+    <SettingsModalShell
       visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={onClose}
+      title={translate('settings.title')}
+      onOpenHelp={onOpenHelp}
+      onReset={onReset}
+      width={width * 0.45}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
-          <TouchableWithoutFeedback>
-            <View
-              style={[
-                styles.container,
-                {
-                  width: width * 0.45,
-                  backgroundColor: theme.colors.background.secondary,
-                  borderColor: theme.colors.truco.scoreText,
-                },
-              ]}
-            >
-              {/* Header do Modal */}
-              <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-                  {translate('settings.title')}
-                </Text>
-                <TouchableOpacity onPress={onClose}>
-                  <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
-                </TouchableOpacity>
-              </View>
+      {/* Controle de Pontos Iniciais */}
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: theme.colors.text.secondary }]}>{pointsLabel}</Text>
 
-              {/* Controle de Pontos Iniciais */}
-              <View style={styles.section}>
-                <Text style={[styles.label, { color: theme.colors.text.secondary }]}>
-                  {translate('cacheta.initial_points')}
-                </Text>
+        <View style={styles.counterRow}>
+          <TouchableOpacity
+            onPress={() => {
+              adjustPoints(-1);
+            }}
+            style={counterBtnStyle}
+            accessibilityRole="button"
+            accessibilityLabel={translate('a11y.decrease', { item: pointsLabel })}
+          >
+            <Ionicons name="remove" size={ms(24)} color={theme.colors.text.primary} />
+          </TouchableOpacity>
 
-                <View style={styles.counterRow}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      adjustPoints(-1);
-                    }}
-                    style={[
-                      styles.counterBtn,
-                      {
-                        borderColor: theme.colors.text.secondary,
-                        backgroundColor: theme.colors.background.overlay,
-                      },
-                    ]}
-                  >
-                    <Ionicons name="remove" size={ms(24)} color={theme.colors.text.primary} />
-                  </TouchableOpacity>
+          <Text style={[styles.pointsValue, { color: theme.colors.truco.scoreText }]}>
+            {initialPoints}
+          </Text>
 
-                  <Text style={[styles.pointsValue, { color: theme.colors.truco.scoreText }]}>
-                    {initialPoints}
-                  </Text>
-
-                  <TouchableOpacity
-                    onPress={() => {
-                      adjustPoints(1);
-                    }}
-                    style={[
-                      styles.counterBtn,
-                      {
-                        borderColor: theme.colors.text.secondary,
-                        backgroundColor: theme.colors.background.overlay,
-                      },
-                    ]}
-                  >
-                    <Ionicons name="add" size={ms(24)} color={theme.colors.text.primary} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={[styles.divider, { backgroundColor: theme.colors.modal.divider }]} />
-
-              <View style={styles.actionsRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.actionBtn,
-                    { borderColor: theme.colors.text.secondary, borderWidth: 1 },
-                  ]}
-                  onPress={onOpenHelp}
-                >
-                  <Ionicons
-                    name="book-outline"
-                    size={ms(20)}
-                    color={theme.colors.text.primary}
-                    style={{ marginRight: ms(8) }}
-                  />
-                  <Text style={[styles.actionText, { color: theme.colors.text.primary }]}>
-                    {translate('common.how_to_play')}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: theme.colors.status.error }]}
-                  onPress={() => {
-                    onReset();
-                    onClose();
-                  }}
-                >
-                  <Text style={[styles.actionText, { color: theme.colors.text.white }]}>
-                    {translate('common.reset_match')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
+          <TouchableOpacity
+            onPress={() => {
+              adjustPoints(1);
+            }}
+            style={counterBtnStyle}
+            accessibilityRole="button"
+            accessibilityLabel={translate('a11y.increase', { item: pointsLabel })}
+          >
+            <Ionicons name="add" size={ms(24)} color={theme.colors.text.primary} />
+          </TouchableOpacity>
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+      </View>
+    </SettingsModalShell>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  container: { padding: ms(24), borderRadius: ms(20), borderWidth: 1 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: ms(20),
-  },
-  title: { fontFamily: 'Minecraft', fontSize: ms(18) },
   section: { marginBottom: ms(20), alignItems: 'center' },
   label: { fontSize: ms(12), fontFamily: 'Minecraft', marginBottom: ms(10), opacity: 0.8 },
-
   counterRow: { flexDirection: 'row', alignItems: 'center', gap: ms(20) },
   counterBtn: {
     width: ms(44),
@@ -176,15 +96,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pointsValue: { fontFamily: 'Minecraft', fontSize: ms(32) },
-
-  divider: { height: 1, marginBottom: ms(20) },
-  actionsRow: { gap: ms(10) },
-  actionBtn: {
-    flexDirection: 'row',
-    padding: ms(12),
-    borderRadius: ms(10),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionText: { fontFamily: 'Minecraft', fontSize: ms(14) },
 });

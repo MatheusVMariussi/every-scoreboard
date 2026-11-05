@@ -1,6 +1,7 @@
 import { memo, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { FodinhaPlayer, FodinhaRound } from '../../hooks/useFodinhaGame';
+import { translate } from '../../i18n';
 import { ms } from '../../theme/responsive';
 import { useTheme } from '../../theme/useTheme';
 import { TABLE } from './tableMetrics';
@@ -57,6 +58,8 @@ export const FodinhaHistoryGrid = memo(function FodinhaHistoryGrid({
           onPress={() => {
             onPressRound(round.index);
           }}
+          accessibilityRole="button"
+          accessibilityLabel={translate('common.edit_round', { index: round.index + 1 })}
         >
           <View style={styles.header}>
             <Text style={styles.headerText}>{round.index + 1}</Text>

@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  TouchableWithoutFeedback,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,12 +17,14 @@ import { useTheme } from '../theme/useTheme';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
 import { useTransitionBack } from '../hooks/useTransitionBack';
-import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
+import { STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
+import { EditRoundOverlay } from '../components/EditRoundOverlay';
 import { CachetaSettingsModal } from '../components/CachetaSettingsModal';
 import { CachetaHelpModal } from '../components/CachetaHelpModal';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
+import { useGameTutorial } from '../hooks/useGameTutorial';
 import { useCachetaGame } from '../hooks/useCachetaGame';
 import { ms, wp } from '../theme/responsive';
 import { getVoiceLocale, VoiceFooter, VoicePanel } from '../components/voice/VoiceFooter';
@@ -30,6 +32,18 @@ import { useVoiceScoring } from '../voice/useVoiceScoring';
 import { toCachetaBatch, type PendingState } from '../voice/pendingQueue';
 
 type Action = 'won' | 'fold' | 'lost' | null;
+type PlayableAction = Exclude<Action, null>;
+
+/** Ordem dos botões na linha de cada jogador. */
+const PLAYABLE_ACTIONS: readonly PlayableAction[] = ['fold', 'lost', 'won'];
+
+const TUTORIAL_MESSAGE_KEYS = [
+  'cacheta.tutorial.step_names',
+  'cacheta.tutorial.step_actions',
+  'cacheta.tutorial.step_button',
+];
+/** Dá tempo da rotação para paisagem assentar antes de medir os alvos do spotlight. */
+const TUTORIAL_START_DELAY_MS = 500;
 
 export const CachetaScreen = () => {
   useTransitionBack();
@@ -48,8 +62,6 @@ export const CachetaScreen = () => {
   const [helpVisible, setHelpVisible] = useState(false);
 
   const [layoutReady, setLayoutReady] = useState(false);
-  const [tutorialActive, setTutorialActive] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
 
   const voice = useVoiceScoring({
     game: 'cacheta',
@@ -63,67 +75,26 @@ export const CachetaScreen = () => {
       game.applyVoiceEntries(toCachetaBatch(pending), advance),
   });
 
-  const targetNames = useTutorialTarget(tutorialActive && tutorialStep === 0);
-  const targetActions = useTutorialTarget(tutorialActive && tutorialStep === 1);
-  const targetButton = useTutorialTarget(tutorialActive && tutorialStep === 2);
+  const tutorial = useGameTutorial({
+    storageKey: STORAGE_KEYS.TUTORIAL_CACHETA,
+    stepCount: TUTORIAL_MESSAGE_KEYS.length,
+    // Paisagem assentada e tabela (alvo dos passos) já desenhada com o save.
+    isReady: layoutReady && game.isLoaded,
+    startDelayMs: TUTORIAL_START_DELAY_MS,
+  });
+  const targetNames = useTutorialTarget(tutorial.isStepActive(0));
+  const targetActions = useTutorialTarget(tutorial.isStepActive(1));
+  const targetButton = useTutorialTarget(tutorial.isStepActive(2));
+  const tutorialTargets = [targetNames, targetActions, targetButton];
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const handleLayout = (event: any) => {
+  const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     if (width > height) {
       setLayoutReady(true);
-    }
-  };
-
-  useEffect(() => {
-    if (!layoutReady) return;
-    const checkTutorial = async () => {
-      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_CACHETA);
-      if (!hasSeen) {
-        setTimeout(() => {
-          setTutorialActive(true);
-          setTutorialStep(0);
-        }, 500);
-      }
-    };
-    checkTutorial();
-  }, [layoutReady]);
-
-  const handleNextTutorial = async () => {
-    if (tutorialStep < 2) {
-      setTutorialStep((prev) => prev + 1);
-    } else {
-      setTutorialActive(false);
-      await saveData(STORAGE_KEYS.TUTORIAL_CACHETA, true);
-    }
-  };
-
-  const getTutorialMessage = () => {
-    switch (tutorialStep) {
-      case 0:
-        return translate('cacheta.tutorial.step_names');
-      case 1:
-        return translate('cacheta.tutorial.step_actions');
-      case 2:
-        return translate('cacheta.tutorial.step_button');
-      default:
-        return '';
-    }
-  };
-
-  const getTutorialSpotlight = () => {
-    switch (tutorialStep) {
-      case 0:
-        return targetNames.layout;
-      case 1:
-        return targetActions.layout;
-      case 2:
-        return targetButton.layout;
-      default:
-        return null;
     }
   };
 
@@ -198,6 +169,8 @@ export const CachetaScreen = () => {
                 navigation.goBack();
               }}
               style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={translate('a11y.back')}
             >
               <Ionicons name="arrow-back" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
@@ -213,165 +186,162 @@ export const CachetaScreen = () => {
                 setSettingsVisible(true);
               }}
               style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={translate('a11y.settings')}
             >
               <Ionicons name="settings-sharp" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Espera o save: antes dele a tabela seria a padrão, com 3 jogadores zerados. */}
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          <ScrollView
-            ref={horizontalScrollRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tableScroll}
-          >
-            {/* 1. NOMES */}
-            <View style={styles.namesColumn} ref={targetNames.ref} collapsable={false}>
-              <View style={styles.cellHeader}>
-                <Text style={styles.headerText}>{translate('common.player').toUpperCase()}</Text>
-              </View>
-              {game.playersWithPoints.map((p) => (
-                <View key={p.id}>
-                  <TouchableOpacity
-                    style={[
-                      styles.playerCell,
-                      { backgroundColor: theme.colors.truco.cardBackground },
-                    ]}
-                    onPress={() => {
-                      setEditingPlayerId(p.id);
-                      setShowEditName(true);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.playerName,
-                        { color: theme.colors.text.white },
-                        p.currentPoints <= 0 && styles.outText,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {p.name}
-                    </Text>
-                    <Text style={[styles.playerPoints, { color: theme.colors.truco.scoreText }]}>
-                      {p.currentPoints}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              <TouchableOpacity style={styles.addBtn} onPress={game.handleAddPlayer}>
-                <Ionicons name="add-circle" size={ms(26)} color={theme.colors.neon.primary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* 2. HISTÓRICO */}
-            <View style={{ flexDirection: 'row' }}>
-              {game.rounds.map((round) => (
-                <View key={round.id}>
-                  <TouchableOpacity
-                    style={styles.historyColumn}
-                    onPress={() => {
-                      setEditingRoundIdx(round.index);
-                      setShowEditHistory(true);
-                    }}
-                  >
-                    <View style={styles.cellHeader}>
-                      <Text style={styles.headerText}>
-                        {translate('common.round')[0]}
-                        {round.index + 1}
-                      </Text>
-                    </View>
-                    {game.playersWithPoints.map((p) => (
-                      <View
-                        key={p.id}
-                        style={[
-                          styles.historyCell,
-                          { backgroundColor: getActionColor(p.history[round.index]) + '22' },
-                        ]}
-                      >
-                        <View
-                          style={[
-                            styles.dot,
-                            {
-                              backgroundColor:
-                                getActionColor(p.history[round.index]) ||
-                                theme.colors.truco.divider,
-                            },
-                          ]}
-                        />
-                      </View>
-                    ))}
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-
-            {/* 3. AÇÕES */}
-            <View
-              style={[
-                styles.activeColumn,
-                {
-                  backgroundColor: theme.colors.truco.cardBackground,
-                  borderColor: theme.colors.truco.divider,
-                },
-              ]}
+          {game.isLoaded && (
+            <ScrollView
+              ref={horizontalScrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tableScroll}
             >
+              {/* 1. NOMES */}
+              <View style={styles.namesColumn} ref={targetNames.ref} collapsable={false}>
+                <View style={styles.cellHeader}>
+                  <Text style={styles.headerText}>{translate('common.player').toUpperCase()}</Text>
+                </View>
+                {game.playersWithPoints.map((p) => (
+                  <View key={p.id}>
+                    <TouchableOpacity
+                      style={[
+                        styles.playerCell,
+                        { backgroundColor: theme.colors.truco.cardBackground },
+                      ]}
+                      onPress={() => {
+                        setEditingPlayerId(p.id);
+                        setShowEditName(true);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.playerName,
+                          { color: theme.colors.text.white },
+                          p.currentPoints <= 0 && styles.outText,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {p.name}
+                      </Text>
+                      <Text style={[styles.playerPoints, { color: theme.colors.truco.scoreText }]}>
+                        {p.currentPoints}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={styles.addBtn}
+                  onPress={game.handleAddPlayer}
+                  accessibilityRole="button"
+                  accessibilityLabel={translate('a11y.add_player')}
+                >
+                  <Ionicons name="add-circle" size={ms(26)} color={theme.colors.neon.primary} />
+                </TouchableOpacity>
+              </View>
+
+              {/* 2. HISTÓRICO */}
+              <View style={{ flexDirection: 'row' }}>
+                {game.rounds.map((round) => (
+                  <View key={round.id}>
+                    <TouchableOpacity
+                      style={styles.historyColumn}
+                      onPress={() => {
+                        setEditingRoundIdx(round.index);
+                        setShowEditHistory(true);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={translate('common.edit_round', {
+                        index: round.index + 1,
+                      })}
+                    >
+                      <View style={styles.cellHeader}>
+                        <Text style={styles.headerText}>
+                          {translate('common.round')[0]}
+                          {round.index + 1}
+                        </Text>
+                      </View>
+                      {game.playersWithPoints.map((p) => (
+                        <View
+                          key={p.id}
+                          style={[
+                            styles.historyCell,
+                            { backgroundColor: getActionColor(p.history[round.index]) + '22' },
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.dot,
+                              {
+                                backgroundColor:
+                                  getActionColor(p.history[round.index]) ||
+                                  theme.colors.truco.divider,
+                              },
+                            ]}
+                          />
+                        </View>
+                      ))}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+
+              {/* 3. AÇÕES */}
               <View
                 style={[
-                  styles.cellHeaderActive,
-                  { backgroundColor: theme.colors.neon.primary + '22' },
+                  styles.activeColumn,
+                  {
+                    backgroundColor: theme.colors.truco.cardBackground,
+                    borderColor: theme.colors.truco.divider,
+                  },
                 ]}
               >
-                <Text style={[styles.headerText, { color: theme.colors.neon.primary }]}>
-                  {translate('cacheta.current')}
-                </Text>
-              </View>
-              {game.playersWithPoints.map((p, index) => (
                 <View
-                  key={p.id}
-                  style={styles.activeCell}
-                  ref={index === 0 ? targetActions.ref : undefined}
-                  collapsable={false}
+                  style={[
+                    styles.cellHeaderActive,
+                    { backgroundColor: theme.colors.neon.primary + '22' },
+                  ]}
                 >
-                  {p.currentPoints > 0 ? (
-                    <View style={styles.actionRow}>
-                      <ActionCircle
-                        theme={theme}
-                        label={translate('cacheta.actions.fold')}
-                        color={theme.colors.cacheta.fold}
-                        active={p.currentAction === 'fold'}
-                        onPress={() => {
-                          game.updateAction(p.id, 'fold');
-                        }}
-                      />
-                      <ActionCircle
-                        theme={theme}
-                        label={translate('cacheta.actions.lost')}
-                        color={theme.colors.cacheta.loss}
-                        active={p.currentAction === 'lost'}
-                        onPress={() => {
-                          game.updateAction(p.id, 'lost');
-                        }}
-                      />
-                      <ActionCircle
-                        theme={theme}
-                        label={translate('cacheta.actions.won')}
-                        color={theme.colors.cacheta.win}
-                        active={p.currentAction === 'won'}
-                        onPress={() => {
-                          game.updateAction(p.id, 'won');
-                        }}
-                      />
-                    </View>
-                  ) : (
-                    <Text style={[styles.outLabel, { color: theme.colors.status.error }]}>
-                      {translate('cacheta.out_of_game')}
-                    </Text>
-                  )}
+                  <Text style={[styles.headerText, { color: theme.colors.neon.primary }]}>
+                    {translate('cacheta.current')}
+                  </Text>
                 </View>
-              ))}
-            </View>
-          </ScrollView>
+                {game.playersWithPoints.map((p, index) => (
+                  <View
+                    key={p.id}
+                    style={styles.activeCell}
+                    ref={index === 0 ? targetActions.ref : undefined}
+                    collapsable={false}
+                  >
+                    {p.currentPoints > 0 ? (
+                      <View style={styles.actionRow}>
+                        {PLAYABLE_ACTIONS.map((action) => (
+                          <ActionCircle
+                            key={action}
+                            action={action}
+                            active={p.currentAction === action}
+                            onPress={() => {
+                              game.updateAction(p.id, action);
+                            }}
+                          />
+                        ))}
+                      </View>
+                    ) : (
+                      <Text style={[styles.outLabel, { color: theme.colors.status.error }]}>
+                        {translate('cacheta.out_of_game')}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          )}
         </ScrollView>
 
         {/* 4. BOTÃO */}
@@ -385,110 +355,39 @@ export const CachetaScreen = () => {
 
       {/* OVERLAY: EDITAR HISTÓRICO */}
       {showEditHistory && editingRoundIdx !== null && (
-        <TouchableWithoutFeedback onPress={handleSaveHistory}>
-          <View
-            style={[styles.absoluteOverlay, { backgroundColor: theme.colors.background.overlay }]}
-          >
-            <TouchableWithoutFeedback
-              onPress={(e) => {
-                e.stopPropagation();
-              }}
+        <EditRoundOverlay
+          roundIndex={editingRoundIdx}
+          width={wp('85%')}
+          onClose={handleSaveHistory}
+          onDelete={() => {
+            game.deleteRound(editingRoundIdx, () => {
+              setShowEditHistory(false);
+            });
+          }}
+        >
+          {game.players.map((p) => (
+            <View
+              key={p.id}
+              style={[styles.editHistoryRow, { borderBottomColor: theme.colors.modal.divider }]}
             >
-              <View
-                style={[
-                  styles.overlayContent,
-                  { width: wp('85%'), backgroundColor: theme.colors.background.secondary },
-                ]}
-              >
-                <View style={styles.modalHeader}>
-                  <Text style={[styles.overlayTitle, { color: theme.colors.text.primary }]}>
-                    {translate('common.edit_round', { index: editingRoundIdx + 1 })}
-                  </Text>
-                  <TouchableOpacity onPress={handleSaveHistory}>
-                    <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView style={{ maxHeight: ms(200) }} showsVerticalScrollIndicator={false}>
-                  {game.players.map((p) => (
-                    <View
-                      key={p.id}
-                      style={[
-                        styles.editHistoryRow,
-                        { borderBottomColor: theme.colors.modal.divider },
-                      ]}
-                    >
-                      <Text
-                        style={{
-                          color: theme.colors.text.primary,
-                          fontFamily: 'Minecraft',
-                          fontSize: ms(10),
-                          flex: 1,
-                        }}
-                      >
-                        {p.name}
-                      </Text>
-                      <View style={styles.actionRow}>
-                        <ActionCircle
-                          theme={theme}
-                          label={translate('cacheta.actions.fold')}
-                          color={theme.colors.cacheta.fold}
-                          active={p.history[editingRoundIdx] === 'fold'}
-                          onPress={() => {
-                            game.updateHistoryAction(p.id, 'fold', editingRoundIdx);
-                          }}
-                        />
-                        <ActionCircle
-                          theme={theme}
-                          label={translate('cacheta.actions.lost')}
-                          color={theme.colors.cacheta.loss}
-                          active={p.history[editingRoundIdx] === 'lost'}
-                          onPress={() => {
-                            game.updateHistoryAction(p.id, 'lost', editingRoundIdx);
-                          }}
-                        />
-                        <ActionCircle
-                          theme={theme}
-                          label={translate('cacheta.actions.won')}
-                          color={theme.colors.cacheta.win}
-                          active={p.history[editingRoundIdx] === 'won'}
-                          onPress={() => {
-                            game.updateHistoryAction(p.id, 'won', editingRoundIdx);
-                          }}
-                        />
-                      </View>
-                    </View>
-                  ))}
-                </ScrollView>
-
-                <View
-                  style={[styles.modalFooterRow, { borderTopColor: theme.colors.modal.divider }]}
-                >
-                  <TouchableOpacity
-                    style={styles.textBtn}
+              <Text style={[styles.editHistoryName, { color: theme.colors.text.primary }]}>
+                {p.name}
+              </Text>
+              <View style={styles.actionRow}>
+                {PLAYABLE_ACTIONS.map((action) => (
+                  <ActionCircle
+                    key={action}
+                    action={action}
+                    active={p.history[editingRoundIdx] === action}
                     onPress={() => {
-                      game.deleteRound(editingRoundIdx, () => {
-                        setShowEditHistory(false);
-                      });
+                      game.updateHistoryAction(p.id, action, editingRoundIdx);
                     }}
-                  >
-                    <Text style={[styles.deleteLinkText, { color: theme.colors.status.error }]}>
-                      {translate('cacheta.delete_round')}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.saveBtnSmall, { backgroundColor: theme.colors.brand.primary }]}
-                    onPress={handleSaveHistory}
-                  >
-                    <Text style={[styles.saveBtnText, { color: theme.colors.text.white }]}>
-                      {translate('common.save')}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                  />
+                ))}
               </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
+            </View>
+          ))}
+        </EditRoundOverlay>
       )}
 
       <CachetaSettingsModal
@@ -498,7 +397,7 @@ export const CachetaScreen = () => {
         }}
         onReset={() => {
           game.handleReset();
-          if (tutorialActive) handleNextTutorial();
+          if (tutorial.isActive) tutorial.next();
         }}
         onOpenHelp={() => {
           setSettingsVisible(false);
@@ -531,29 +430,48 @@ export const CachetaScreen = () => {
 
       {layoutReady && (
         <TutorialOverlay
-          visible={tutorialActive}
-          spotlight={getTutorialSpotlight()}
-          message={getTutorialMessage()}
-          onNext={() => {
-            handleNextTutorial();
-          }}
-          nextText={tutorialStep === 2 ? translate('common.got_it') : translate('common.next')}
+          visible={tutorial.isActive}
+          spotlight={tutorialTargets[tutorial.step].layout}
+          message={translate(TUTORIAL_MESSAGE_KEYS[tutorial.step])}
+          onNext={tutorial.next}
+          nextText={tutorial.isLastStep ? translate('common.got_it') : translate('common.next')}
         />
       )}
     </View>
   );
 };
 
-const ActionCircle = ({ label, color, active, onPress, theme }: any) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[styles.circle, { borderColor: color, backgroundColor: active ? color : 'transparent' }]}
-  >
-    <Text style={[styles.circleText, { color: active ? theme.colors.text.black : color }]}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
+/** Chave da cor de cada ação em `theme.colors.cacheta`. */
+const ACTION_COLOR_KEY = { fold: 'fold', lost: 'loss', won: 'win' } as const;
+
+interface ActionCircleProps {
+  action: PlayableAction;
+  active: boolean;
+  onPress: () => void;
+}
+
+const ActionCircle = ({ action, active, onPress }: ActionCircleProps) => {
+  const { theme } = useTheme();
+  const color = theme.colors.cacheta[ACTION_COLOR_KEY[action]];
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.circle,
+        { borderColor: color, backgroundColor: active ? color : 'transparent' },
+      ]}
+      // A letra sozinha ("C", "P", "G") não diz nada a um leitor de tela.
+      accessibilityRole="button"
+      accessibilityLabel={translate(`cacheta.help.${action}_title`)}
+      accessibilityState={{ selected: active }}
+    >
+      <Text style={[styles.circleText, { color: active ? theme.colors.text.black : color }]}>
+        {translate(`cacheta.actions.${action}`)}
+      </Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
@@ -611,25 +529,6 @@ const styles = StyleSheet.create({
   circleText: { fontFamily: 'Minecraft', fontSize: ms(12) },
   outLabel: { fontFamily: 'Minecraft', fontSize: ms(8), textAlign: 'center' },
   footer: { height: ms(60), justifyContent: 'center', alignItems: 'center' },
-  absoluteOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
-  },
-  overlayContent: { padding: ms(20), borderRadius: ms(20), borderWidth: 1 },
-  overlayTitle: {
-    fontFamily: 'Minecraft',
-    fontSize: ms(14),
-    marginBottom: ms(15),
-    textAlign: 'center',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: ms(15),
-  },
   editHistoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -637,16 +536,5 @@ const styles = StyleSheet.create({
     paddingBottom: ms(10),
     borderBottomWidth: 1,
   },
-  modalFooterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: ms(15),
-    paddingTop: ms(10),
-    borderTopWidth: 1,
-  },
-  textBtn: { paddingVertical: ms(10) },
-  deleteLinkText: { fontFamily: 'Minecraft', fontSize: ms(10), textDecorationLine: 'underline' },
-  saveBtnSmall: { paddingHorizontal: ms(25), paddingVertical: ms(10), borderRadius: ms(8) },
-  saveBtnText: { fontFamily: 'Minecraft', fontSize: ms(12) },
+  editHistoryName: { fontFamily: 'Minecraft', fontSize: ms(10), flex: 1 },
 });

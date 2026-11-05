@@ -104,6 +104,18 @@ export default {
     points_12: '12 PONTOS',
     points_24: '24 PONTOS',
   },
+  // Lido só por leitores de tela (VoiceOver/TalkBack): rótulos dos botões que são só ícone.
+  a11y: {
+    back: 'Voltar',
+    settings: 'Configurações',
+    close: 'Fechar',
+    add_player: 'Adicionar jogador',
+    edit_name: 'Editar nome',
+    decrease: 'Diminuir {{item}}',
+    increase: 'Aumentar {{item}}',
+    score_of: 'Placar: {{name}}',
+    add_truco: 'Truco, mais {{points}}',
+  },
   truco: {
     help: {
       title: 'COMO JOGAR',

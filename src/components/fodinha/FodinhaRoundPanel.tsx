@@ -138,6 +138,7 @@ const Stepper = ({ player, phase, penaltyMode, onAdjust }: StepperProps) => {
     <View style={[styles.stepper, { backgroundColor: theme.colors.background.overlay }]}>
       <StepButton
         icon="remove"
+        label={translate('a11y.decrease', { item: player.name })}
         onPress={() => {
           onAdjust(player.id, -1);
         }}
@@ -158,6 +159,7 @@ const Stepper = ({ player, phase, penaltyMode, onAdjust }: StepperProps) => {
       </View>
       <StepButton
         icon="add"
+        label={translate('a11y.increase', { item: player.name })}
         onPress={() => {
           onAdjust(player.id, 1);
         }}
@@ -169,11 +171,20 @@ const Stepper = ({ player, phase, penaltyMode, onAdjust }: StepperProps) => {
   );
 };
 
-const StepButton = ({ icon, onPress }: { icon: 'add' | 'remove'; onPress: () => void }) => {
+interface StepButtonProps {
+  icon: 'add' | 'remove';
+  /** O ícone sozinho não diz a um leitor de tela de quem é o valor. */
+  label: string;
+  onPress: () => void;
+}
+
+const StepButton = ({ icon, label, onPress }: StepButtonProps) => {
   const { theme } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
       style={[styles.stepButton, { backgroundColor: theme.colors.fodinha.divider }]}
     >
       <Ionicons name={icon} size={ms(16)} color={theme.colors.text.white} />

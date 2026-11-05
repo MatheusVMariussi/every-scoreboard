@@ -66,6 +66,8 @@ export const UpdateModal = ({
                 <TouchableOpacity
                   onPress={onClose}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={translate('a11y.close')}
                 >
                   <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
                 </TouchableOpacity>

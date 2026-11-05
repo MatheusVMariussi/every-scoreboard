@@ -105,6 +105,18 @@ export default {
     points_12: '12 POINTS',
     points_24: '24 POINTS',
   },
+  // Read only by screen readers (VoiceOver/TalkBack): labels for icon-only buttons.
+  a11y: {
+    back: 'Back',
+    settings: 'Settings',
+    close: 'Close',
+    add_player: 'Add player',
+    edit_name: 'Edit name',
+    decrease: 'Decrease {{item}}',
+    increase: 'Increase {{item}}',
+    score_of: 'Score: {{name}}',
+    add_truco: 'Truco, plus {{points}}',
+  },
   truco: {
     help: {
       title: 'HOW TO PLAY',

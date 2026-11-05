@@ -108,7 +108,12 @@ export const EditNameModal = ({
                     {translate('common.edit_name')}
                   </Text>
                   {onDelete && (
-                    <TouchableOpacity onPress={handleDelete} style={styles.trashBtn}>
+                    <TouchableOpacity
+                      onPress={handleDelete}
+                      style={styles.trashBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={translate('common.delete_player')}
+                    >
                       <Ionicons
                         name="trash-outline"
                         size={ms(22)}

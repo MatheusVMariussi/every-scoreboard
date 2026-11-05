@@ -1,5 +1,13 @@
 import { useState, useLayoutEffect, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  type LayoutChangeEvent,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,8 +18,9 @@ import type { Theme } from '../theme/types';
 import { translate } from '../i18n';
 import { GameButton } from '../components/GameButton';
 import { useTransitionBack } from '../hooks/useTransitionBack';
-import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
+import { STORAGE_KEYS } from '../utils/storage';
 import { EditNameModal } from '../components/EditNameModal';
+import { EditRoundOverlay } from '../components/EditRoundOverlay';
 import { FodinhaSettingsModal } from '../components/FodinhaSettingsModal';
 import { FodinhaHelpModal } from '../components/FodinhaHelpModal';
 import { FodinhaGameOverModal } from '../components/fodinha/FodinhaGameOverModal';
@@ -20,11 +29,21 @@ import { FodinhaRoundPanel } from '../components/fodinha/FodinhaRoundPanel';
 import { TABLE } from '../components/fodinha/tableMetrics';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
+import { useGameTutorial } from '../hooks/useGameTutorial';
 import { useFodinhaGame } from '../hooks/useFodinhaGame';
 import { ms, wp } from '../theme/responsive';
 import { getVoiceLocale, VoiceFooter, VoicePanel } from '../components/voice/VoiceFooter';
 import { useVoiceScoring } from '../voice/useVoiceScoring';
 import { toFodinhaBatch, type PendingState } from '../voice/pendingQueue';
+
+const TUTORIAL_MESSAGE_KEYS = [
+  'fodinha.tutorial.step_cards',
+  'fodinha.tutorial.step_lives',
+  'fodinha.tutorial.step_inputs',
+  'fodinha.tutorial.step_button',
+];
+/** Dá tempo da rotação para paisagem assentar antes de medir os alvos do spotlight. */
+const TUTORIAL_START_DELAY_MS = 500;
 
 export const FodinhaScreen = () => {
   useTransitionBack();
@@ -42,8 +61,6 @@ export const FodinhaScreen = () => {
   const [editingRoundIdx, setEditingRoundIdx] = useState<number | null>(null);
 
   const [layoutReady, setLayoutReady] = useState(false);
-  const [tutorialActive, setTutorialActive] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
 
   const voice = useVoiceScoring({
     game: 'fodinha',
@@ -72,73 +89,27 @@ export const FodinhaScreen = () => {
     if (voiceCount > 0) clearVoice();
   }, [game.isGameOver, voiceMode, voiceCount, stopContinuous, clearVoice]);
 
-  const targetCards = useTutorialTarget(tutorialActive && tutorialStep === 0);
-  const targetLives = useTutorialTarget(tutorialActive && tutorialStep === 1);
-  const targetInputs = useTutorialTarget(tutorialActive && tutorialStep === 2);
-  const targetButton = useTutorialTarget(tutorialActive && tutorialStep === 3);
+  const tutorial = useGameTutorial({
+    storageKey: STORAGE_KEYS.TUTORIAL_FODINHA,
+    stepCount: TUTORIAL_MESSAGE_KEYS.length,
+    // Paisagem assentada e tabela (alvo dos passos) já desenhada com o save.
+    isReady: layoutReady && game.isLoaded,
+    startDelayMs: TUTORIAL_START_DELAY_MS,
+  });
+  const targetCards = useTutorialTarget(tutorial.isStepActive(0));
+  const targetLives = useTutorialTarget(tutorial.isStepActive(1));
+  const targetInputs = useTutorialTarget(tutorial.isStepActive(2));
+  const targetButton = useTutorialTarget(tutorial.isStepActive(3));
+  const tutorialTargets = [targetCards, targetLives, targetInputs, targetButton];
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const handleLayout = (event: any) => {
+  const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     if (width > height) {
       setLayoutReady(true);
-    }
-  };
-
-  useEffect(() => {
-    if (!layoutReady) return;
-
-    const checkTutorial = async () => {
-      const hasSeen = await getData(STORAGE_KEYS.TUTORIAL_FODINHA);
-      if (!hasSeen) {
-        setTimeout(() => {
-          setTutorialActive(true);
-          setTutorialStep(0);
-        }, 500);
-      }
-    };
-    checkTutorial();
-  }, [layoutReady]);
-
-  const handleNextTutorial = async () => {
-    if (tutorialStep < 3) {
-      setTutorialStep((prev) => prev + 1);
-    } else {
-      setTutorialActive(false);
-      await saveData(STORAGE_KEYS.TUTORIAL_FODINHA, true);
-    }
-  };
-
-  const getTutorialMessage = () => {
-    switch (tutorialStep) {
-      case 0:
-        return translate('fodinha.tutorial.step_cards');
-      case 1:
-        return translate('fodinha.tutorial.step_lives');
-      case 2:
-        return translate('fodinha.tutorial.step_inputs');
-      case 3:
-        return translate('fodinha.tutorial.step_button');
-      default:
-        return '';
-    }
-  };
-
-  const getTutorialSpotlight = () => {
-    switch (tutorialStep) {
-      case 0:
-        return targetCards.layout;
-      case 1:
-        return targetLives.layout;
-      case 2:
-        return targetInputs.layout;
-      case 3:
-        return targetButton.layout;
-      default:
-        return null;
     }
   };
 
@@ -210,6 +181,8 @@ export const FodinhaScreen = () => {
                 navigation.goBack();
               }}
               style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={translate('a11y.back')}
             >
               <Ionicons name="arrow-back" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
@@ -237,6 +210,10 @@ export const FodinhaScreen = () => {
                 onPress={game.decreaseCards}
                 style={styles.cardsStepBtn}
                 disabled={!canRemoveCard}
+                accessibilityRole="button"
+                accessibilityLabel={translate('a11y.decrease', {
+                  item: translate('fodinha.cards'),
+                })}
               >
                 <Ionicons
                   name="remove"
@@ -262,6 +239,10 @@ export const FodinhaScreen = () => {
                 onPress={game.increaseCards}
                 style={styles.cardsStepBtn}
                 disabled={!canAddCard}
+                accessibilityRole="button"
+                accessibilityLabel={translate('a11y.increase', {
+                  item: translate('fodinha.cards'),
+                })}
               >
                 <Ionicons
                   name="add"
@@ -276,6 +257,8 @@ export const FodinhaScreen = () => {
                 setSettingsVisible(true);
               }}
               style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={translate('a11y.settings')}
             >
               <Ionicons name="settings-sharp" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
@@ -334,7 +317,12 @@ export const FodinhaScreen = () => {
                 ))}
                 {/* Entrar alguém depois do fim reabriria o jogo sem querer. */}
                 {!game.isGameOver && (
-                  <TouchableOpacity style={styles.addBtn} onPress={game.handleAddPlayer}>
+                  <TouchableOpacity
+                    style={styles.addBtn}
+                    onPress={game.handleAddPlayer}
+                    accessibilityRole="button"
+                    accessibilityLabel={translate('a11y.add_player')}
+                  >
                     <Ionicons name="add-circle" size={ms(26)} color={theme.colors.neon.primary} />
                   </TouchableOpacity>
                 )}
@@ -378,136 +366,67 @@ export const FodinhaScreen = () => {
 
       {/* OVERLAY: EDITAR HISTÓRICO */}
       {showEditHistory && editingRoundIdx !== null && (
-        <View
-          style={[styles.absoluteOverlay, { backgroundColor: theme.colors.background.overlay }]}
-        >
-          <TouchableOpacity
-            style={StyleSheet.absoluteFill}
-            activeOpacity={1}
-            onPress={() => {
+        <EditRoundOverlay
+          roundIndex={editingRoundIdx}
+          width={wp('50%')}
+          onClose={() => {
+            setShowEditHistory(false);
+          }}
+          onDelete={() => {
+            game.deleteRound(editingRoundIdx, () => {
               setShowEditHistory(false);
-            }}
-          />
-          <View
-            style={[
-              styles.overlayContent,
-              {
-                width: wp('50%'),
-                maxHeight: '85%',
-                backgroundColor: theme.colors.background.secondary,
-                borderColor: theme.colors.text.secondary,
-              },
-            ]}
-          >
-            <View style={styles.modalHeader}>
-              <Text style={[styles.overlayTitle, { color: theme.colors.text.primary }]}>
-                {translate('common.edit_round', { index: editingRoundIdx + 1 })}
-              </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowEditHistory(false);
-                }}
+            });
+          }}
+        >
+          {game.players.map((p) => {
+            const damage = p.history[editingRoundIdx];
+            // Não jogou a rodada (já estava fora ou entrou depois): nada a ajustar.
+            const didPlay = typeof damage === 'number';
+            return (
+              <View
+                key={p.id}
+                style={[styles.editHistoryRow, { borderBottomColor: theme.colors.fodinha.divider }]}
               >
-                <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ flexShrink: 1 }}>
-              <ScrollView
-                showsVerticalScrollIndicator={true}
-                contentContainerStyle={{ paddingBottom: ms(20) }}
-              >
-                {game.players.map((p) => {
-                  const damage = p.history[editingRoundIdx];
-                  // Não jogou a rodada (já estava fora ou entrou depois): nada a ajustar.
-                  const didPlay = typeof damage === 'number';
-                  return (
-                    <View
-                      key={p.id}
-                      style={[
-                        styles.editHistoryRow,
-                        { borderBottomColor: theme.colors.fodinha.divider },
-                      ]}
-                    >
-                      <Text
-                        style={{
-                          color: theme.colors.text.primary,
-                          fontFamily: 'Minecraft',
-                          fontSize: ms(12),
-                          flex: 1,
-                        }}
-                      >
-                        {p.name}
-                      </Text>
-                      <View
-                        style={[
-                          styles.stepperContainer,
-                          { backgroundColor: theme.colors.background.overlay },
-                          !didPlay && styles.stepperDisabled,
-                        ]}
-                      >
-                        <TouchableOpacity
-                          onPress={() => {
-                            game.adjustHistoryDamage(p.id, -1, editingRoundIdx);
-                          }}
-                          style={styles.stepBtn}
-                          disabled={!didPlay}
-                        >
-                          <Ionicons name="remove" size={ms(16)} color={theme.colors.text.white} />
-                        </TouchableOpacity>
-                        <Text
-                          style={[styles.mainValue, { color: getHistoryValueColor(damage, theme) }]}
-                        >
-                          {getHistoryValueLabel(damage)}
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => {
-                            game.adjustHistoryDamage(p.id, 1, editingRoundIdx);
-                          }}
-                          style={styles.stepBtn}
-                          disabled={!didPlay}
-                        >
-                          <Ionicons name="add" size={ms(16)} color={theme.colors.text.white} />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-            </View>
-            <View style={[styles.modalFooterRow, { borderTopColor: theme.colors.fodinha.divider }]}>
-              <TouchableOpacity
-                onPress={() => {
-                  game.deleteRound(editingRoundIdx, () => {
-                    setShowEditHistory(false);
-                  });
-                }}
-                style={{ padding: ms(10) }}
-              >
-                <Text
-                  style={{
-                    color: theme.colors.status.error,
-                    fontFamily: 'Minecraft',
-                    fontSize: ms(12),
-                    textDecorationLine: 'underline',
-                  }}
+                <Text style={[styles.editHistoryName, { color: theme.colors.text.primary }]}>
+                  {p.name}
+                </Text>
+                <View
+                  style={[
+                    styles.stepperContainer,
+                    { backgroundColor: theme.colors.background.overlay },
+                    !didPlay && styles.stepperDisabled,
+                  ]}
                 >
-                  {translate('cacheta.delete_round')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowEditHistory(false);
-                }}
-                style={[styles.saveBtnSmall, { backgroundColor: theme.colors.brand.primary }]}
-              >
-                <Text style={{ color: theme.colors.text.white, fontFamily: 'Minecraft' }}>
-                  {translate('common.save')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      game.adjustHistoryDamage(p.id, -1, editingRoundIdx);
+                    }}
+                    style={styles.stepBtn}
+                    disabled={!didPlay}
+                    accessibilityRole="button"
+                    accessibilityLabel={translate('a11y.decrease', { item: p.name })}
+                  >
+                    <Ionicons name="remove" size={ms(16)} color={theme.colors.text.white} />
+                  </TouchableOpacity>
+                  <Text style={[styles.mainValue, { color: getHistoryValueColor(damage, theme) }]}>
+                    {getHistoryValueLabel(damage)}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      game.adjustHistoryDamage(p.id, 1, editingRoundIdx);
+                    }}
+                    style={styles.stepBtn}
+                    disabled={!didPlay}
+                    accessibilityRole="button"
+                    accessibilityLabel={translate('a11y.increase', { item: p.name })}
+                  >
+                    <Ionicons name="add" size={ms(16)} color={theme.colors.text.white} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
+        </EditRoundOverlay>
       )}
 
       <FodinhaSettingsModal
@@ -517,7 +436,7 @@ export const FodinhaScreen = () => {
         }}
         onReset={() => {
           game.handleReset();
-          if (tutorialActive) handleNextTutorial();
+          if (tutorial.isActive) tutorial.next();
         }}
         onOpenHelp={() => {
           setSettingsVisible(false);
@@ -567,13 +486,11 @@ export const FodinhaScreen = () => {
       {/* TUTORIAL */}
       {layoutReady && (
         <TutorialOverlay
-          visible={tutorialActive}
-          spotlight={getTutorialSpotlight()}
-          message={getTutorialMessage()}
-          onNext={() => {
-            handleNextTutorial();
-          }}
-          nextText={tutorialStep === 3 ? translate('common.got_it') : translate('common.next')}
+          visible={tutorial.isActive}
+          spotlight={tutorialTargets[tutorial.step].layout}
+          message={translate(TUTORIAL_MESSAGE_KEYS[tutorial.step])}
+          onNext={tutorial.next}
+          nextText={tutorial.isLastStep ? translate('common.got_it') : translate('common.next')}
         />
       )}
     </View>
@@ -659,20 +576,6 @@ const styles = StyleSheet.create({
   },
   mainValue: { fontFamily: 'Minecraft', fontSize: ms(18), width: ms(50), textAlign: 'center' },
   footer: { height: ms(60), justifyContent: 'center', alignItems: 'center' },
-  absoluteOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
-  },
-  overlayContent: { padding: ms(20), borderRadius: ms(20), borderWidth: 1 },
-  overlayTitle: { fontFamily: 'Minecraft', fontSize: ms(14), textAlign: 'center' },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: ms(10),
-  },
   editHistoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -680,13 +583,5 @@ const styles = StyleSheet.create({
     paddingBottom: ms(8),
     borderBottomWidth: 1,
   },
-  modalFooterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: ms(15),
-    paddingTop: ms(10),
-    borderTopWidth: 1,
-  },
-  saveBtnSmall: { paddingHorizontal: ms(20), paddingVertical: ms(8), borderRadius: ms(8) },
+  editHistoryName: { fontFamily: 'Minecraft', fontSize: ms(12), flex: 1 },
 });

@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Alert } from 'react-native';
-import { getData, saveData, STORAGE_KEYS } from '../utils/storage';
+import { getData, STORAGE_KEYS } from '../utils/storage';
+import { intInRange, isRecord, nonBlankString, oneOf } from '../utils/parse';
+import { useAutoSave } from './useAutoSave';
 import { translate } from '../i18n';
 import { type HistoryItem } from '../components/MatchHistoryGraph';
 
@@ -57,13 +59,71 @@ export const calculateNewScore = (
   return { score: newScore, isVictory: false };
 };
 
+// --- PERSISTENCE ---
+
+type GameMode = 'paulista' | 'mineiro';
+
+const GAME_MODES: readonly GameMode[] = ['paulista', 'mineiro'];
+const DEFAULT_MAX_SCORE = 12;
+/** Troféus mostrados por time: a contagem para aqui. */
+const MAX_MATCH_WINS = 5;
+
+export interface TrucoSave {
+  scoreUs: number;
+  scoreThem: number;
+  gameMode: GameMode;
+  maxScore: number;
+  matchWinsUs: number;
+  matchWinsThem: number;
+  pointHistory: HistoryItem[];
+  nameUs: string;
+  nameThem: string;
+}
+
+const parseHistoryItem = (raw: unknown): HistoryItem | null => {
+  if (!isRecord(raw) || typeof raw.id !== 'string') return null;
+  if (raw.team !== 'us' && raw.team !== 'them') return null;
+  if (typeof raw.points !== 'number' || !Number.isInteger(raw.points) || raw.points <= 0) {
+    return null;
+  }
+  return { id: raw.id, team: raw.team, points: raw.points };
+};
+
+const isHistoryItem = (item: HistoryItem | null): item is HistoryItem => item !== null;
+
+/**
+ * Valida o que veio do disco campo a campo: o que não der para confiar volta ao padrão.
+ * Saves de antes da pontuação máxima não têm o campo e viram jogo de 12; entradas do
+ * gráfico que não dá para desenhar são descartadas. Devolve `null` quando nem é um save.
+ */
+export const parseTrucoSave = (raw: unknown): TrucoSave | null => {
+  if (!isRecord(raw)) return null;
+
+  // Só existem jogos de 12 e de 24.
+  const maxScore = raw.maxScore === 24 ? 24 : DEFAULT_MAX_SCORE;
+
+  return {
+    scoreUs: intInRange(raw.scoreUs, 0, maxScore, 0),
+    scoreThem: intInRange(raw.scoreThem, 0, maxScore, 0),
+    gameMode: oneOf(raw.gameMode, GAME_MODES, 'paulista'),
+    maxScore,
+    matchWinsUs: intInRange(raw.matchWinsUs, 0, MAX_MATCH_WINS, 0),
+    matchWinsThem: intInRange(raw.matchWinsThem, 0, MAX_MATCH_WINS, 0),
+    pointHistory: Array.isArray(raw.pointHistory)
+      ? raw.pointHistory.map(parseHistoryItem).filter(isHistoryItem)
+      : [],
+    nameUs: nonBlankString(raw.nameUs, translate('truco.us')),
+    nameThem: nonBlankString(raw.nameThem, translate('truco.them')),
+  };
+};
+
 // --- HOOK ---
 export const useTrucoGame = () => {
   // --- STATES ---
   const [scoreUs, setScoreUs] = useState(0);
   const [scoreThem, setScoreThem] = useState(0);
-  const [gameMode, setGameMode] = useState<'paulista' | 'mineiro'>('paulista');
-  const [maxScore, setMaxScore] = useState(12);
+  const [gameMode, setGameMode] = useState<GameMode>('paulista');
+  const [maxScore, setMaxScore] = useState(DEFAULT_MAX_SCORE);
 
   const [matchWinsUs, setMatchWinsUs] = useState(0);
   const [matchWinsThem, setMatchWinsThem] = useState(0);
@@ -74,23 +134,15 @@ export const useTrucoGame = () => {
 
   // --- PERSISTENCE ---
   useEffect(() => {
-    const loadData = async () => {
-      const saved = (await getData(STORAGE_KEYS.TRUCO_DATA)) as {
-        scoreUs: number;
-        scoreThem: number;
-        gameMode: 'paulista' | 'mineiro';
-        maxScore?: number;
-        matchWinsUs: number;
-        matchWinsThem: number;
-        pointHistory: HistoryItem[];
-        nameUs: string;
-        nameThem: string;
-      } | null;
+    let active = true;
+    void getData(STORAGE_KEYS.TRUCO_DATA).then((raw) => {
+      if (!active) return;
+      const saved = parseTrucoSave(raw);
       if (saved) {
         setScoreUs(saved.scoreUs);
         setScoreThem(saved.scoreThem);
         setGameMode(saved.gameMode);
-        if (saved.maxScore) setMaxScore(saved.maxScore);
+        setMaxScore(saved.maxScore);
         setMatchWinsUs(saved.matchWinsUs);
         setMatchWinsThem(saved.matchWinsThem);
         setPointHistory(saved.pointHistory);
@@ -98,36 +150,37 @@ export const useTrucoGame = () => {
         setNameThem(saved.nameThem);
       }
       setIsLoaded(true);
+    });
+    return () => {
+      active = false;
     };
-    void loadData();
   }, []);
 
-  useEffect(() => {
-    if (isLoaded) {
-      void saveData(STORAGE_KEYS.TRUCO_DATA, {
-        scoreUs,
-        scoreThem,
-        gameMode,
-        maxScore,
-        matchWinsUs,
-        matchWinsThem,
-        pointHistory,
-        nameUs,
-        nameThem,
-      });
-    }
-  }, [
-    scoreUs,
-    scoreThem,
-    gameMode,
-    maxScore,
-    matchWinsUs,
-    matchWinsThem,
-    pointHistory,
-    nameUs,
-    nameThem,
-    isLoaded,
-  ]);
+  const snapshot = useMemo<TrucoSave>(
+    () => ({
+      scoreUs,
+      scoreThem,
+      gameMode,
+      maxScore,
+      matchWinsUs,
+      matchWinsThem,
+      pointHistory,
+      nameUs,
+      nameThem,
+    }),
+    [
+      scoreUs,
+      scoreThem,
+      gameMode,
+      maxScore,
+      matchWinsUs,
+      matchWinsThem,
+      pointHistory,
+      nameUs,
+      nameThem,
+    ],
+  );
+  useAutoSave(STORAGE_KEYS.TRUCO_DATA, snapshot, isLoaded);
 
   // --- LOGIC ---
   const resetGame = (fullReset = false) => {
@@ -147,7 +200,7 @@ export const useTrucoGame = () => {
    * Isto era um efeito que observava o placar: toda vez que ele voltava a 0 x 0 — como
    * logo depois de "Nova Partida" — os troféus eram apagados.
    */
-  const changeGameMode = (mode: 'paulista' | 'mineiro') => {
+  const changeGameMode = (mode: GameMode) => {
     if (mode === gameMode) return;
     setGameMode(mode);
     if (scoreUs === 0 && scoreThem === 0) resetGame(true);
@@ -160,8 +213,8 @@ export const useTrucoGame = () => {
   };
 
   const handleVictory = (winnerName: string, winnerTeam: 'us' | 'them') => {
-    if (winnerTeam === 'us') setMatchWinsUs((prev) => Math.min(prev + 1, 5));
-    else setMatchWinsThem((prev) => Math.min(prev + 1, 5));
+    if (winnerTeam === 'us') setMatchWinsUs((prev) => Math.min(prev + 1, MAX_MATCH_WINS));
+    else setMatchWinsThem((prev) => Math.min(prev + 1, MAX_MATCH_WINS));
 
     setTimeout(() => {
       Alert.alert(

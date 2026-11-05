@@ -175,6 +175,8 @@ export const HomeScreen = () => {
                 onPress={handleSettingsPress}
                 style={styles.iconButton}
                 hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                accessibilityRole="button"
+                accessibilityLabel={translate('a11y.settings')}
               >
                 <Ionicons name="settings-sharp" size={ms(28)} color={iconColor} />
               </TouchableOpacity>
@@ -183,6 +185,8 @@ export const HomeScreen = () => {
                 onPress={handleRemoveAdsPress}
                 style={styles.iconButton}
                 hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                accessibilityRole="button"
+                accessibilityLabel={translate('home.removeAds')}
               >
                 <MaterialCommunityIcons name="diamond-stone" size={ms(30)} color={removeAdsColor} />
               </TouchableOpacity>
