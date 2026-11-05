@@ -1,9 +1,10 @@
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { FodinhaOutcome } from '../../hooks/useFodinhaGame';
 import { translate } from '../../i18n';
-import { ms, wp } from '../../theme/responsive';
+import { ms } from '../../theme/responsive';
 import { useTheme } from '../../theme/useTheme';
+import { oneWordPerLine } from '../../utils/text';
 
 interface Props {
   visible: boolean;
@@ -12,6 +13,13 @@ interface Props {
   onViewBoard: () => void;
   onNewMatch: () => void;
 }
+
+/**
+ * Largura do cartão medida no render, não no `StyleSheet`: um `wp()` estático é avaliado
+ * ao importar o módulo, ainda em retrato, e em paisagem o cartão ficava estreito demais.
+ */
+const CARD_WIDTH_RATIO = 0.85;
+const CARD_MAX_WIDTH = ms(520);
 
 const getMessage = (outcome: FodinhaOutcome): string => {
   if (outcome.status === 'won') {
@@ -29,7 +37,9 @@ const getMessage = (outcome: FodinhaOutcome): string => {
 /** Aviso de fim de jogo, aberto quando a rodada que fecha o jogo é finalizada. */
 export const FodinhaGameOverModal = ({ visible, outcome, onViewBoard, onNewMatch }: Props) => {
   const { theme } = useTheme();
+  const { width } = useWindowDimensions();
   const gold = theme.colors.truco.trophy;
+  const cardWidth = Math.min(width * CARD_WIDTH_RATIO, CARD_MAX_WIDTH);
 
   return (
     <Modal
@@ -42,11 +52,14 @@ export const FodinhaGameOverModal = ({ visible, outcome, onViewBoard, onNewMatch
     >
       <View style={[styles.overlay, { backgroundColor: theme.colors.background.overlay }]}>
         <View
-          style={[styles.card, { backgroundColor: theme.colors.voice.panel, borderColor: gold }]}
+          style={[
+            styles.card,
+            { width: cardWidth, backgroundColor: theme.colors.voice.panel, borderColor: gold },
+          ]}
         >
           <Ionicons
             name={outcome.status === 'tie' ? 'skull' : 'trophy'}
-            size={ms(40)}
+            size={ms(48)}
             color={gold}
           />
           <Text style={[styles.title, { color: gold }]}>{translate('common.game_over')}</Text>
@@ -60,7 +73,7 @@ export const FodinhaGameOverModal = ({ visible, outcome, onViewBoard, onNewMatch
               onPress={onViewBoard}
             >
               <Text style={[styles.buttonText, { color: theme.colors.text.white }]}>
-                {translate('fodinha.view_board')}
+                {oneWordPerLine(translate('fodinha.view_board'))}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -68,7 +81,7 @@ export const FodinhaGameOverModal = ({ visible, outcome, onViewBoard, onNewMatch
               onPress={onNewMatch}
             >
               <Text style={[styles.buttonText, { color: theme.colors.text.black }]}>
-                {translate('common.new_match').toUpperCase()}
+                {oneWordPerLine(translate('common.new_match').toUpperCase())}
               </Text>
             </TouchableOpacity>
           </View>
@@ -81,24 +94,27 @@ export const FodinhaGameOverModal = ({ visible, outcome, onViewBoard, onNewMatch
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   card: {
-    width: wp('50%'),
-    maxWidth: ms(420),
-    padding: ms(20),
+    padding: ms(24),
     borderRadius: ms(20),
     borderWidth: 1,
     alignItems: 'center',
-    gap: ms(12),
+    gap: ms(14),
   },
-  title: { fontFamily: 'Minecraft', fontSize: ms(16), textAlign: 'center' },
-  message: { fontFamily: 'Minecraft', fontSize: ms(11), lineHeight: ms(18), textAlign: 'center' },
-  actions: { flexDirection: 'row', gap: ms(12), marginTop: ms(4), alignSelf: 'stretch' },
+  title: { fontFamily: 'Minecraft', fontSize: ms(20), lineHeight: ms(28), textAlign: 'center' },
+  message: { fontFamily: 'Minecraft', fontSize: ms(13), lineHeight: ms(21), textAlign: 'center' },
+  actions: { flexDirection: 'row', gap: ms(14), marginTop: ms(4), alignSelf: 'stretch' },
   button: {
     flex: 1,
-    paddingVertical: ms(10),
-    paddingHorizontal: ms(8),
-    borderRadius: ms(10),
+    paddingVertical: ms(14),
+    paddingHorizontal: ms(10),
+    borderRadius: ms(12),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: { fontFamily: 'Minecraft', fontSize: ms(11), textAlign: 'center' },
+  buttonText: {
+    fontFamily: 'Minecraft',
+    fontSize: ms(14),
+    lineHeight: ms(22),
+    textAlign: 'center',
+  },
 });

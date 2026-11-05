@@ -3,12 +3,15 @@ import {
   getGameOutcome,
   getMaxCards,
   getNextRoundCards,
+  getPreviousRoundCards,
+  getRoundDeletion,
   getRoundCount,
   getRoundTransition,
   logicAddPlayer,
   logicClampValues,
   logicFinishRound,
   logicUpdateValue,
+  orderForTable,
   logicUpdateHistoryDamage,
   logicRemoveRound,
   logicRemovePlayer,
@@ -475,6 +478,11 @@ describe('parseFodinhaSave', () => {
     expect(save?.initialLives).toBe(4);
   });
 
+  it('falls back to 7 initial lives when the save has none or an invalid value', () => {
+    expect(parseFodinhaSave({ ...legacySave, initialLives: undefined })?.initialLives).toBe(7);
+    expect(parseFodinhaSave({ ...legacySave, initialLives: 0 })?.initialLives).toBe(7);
+  });
+
   it('pads the shorter histories of eliminated players', () => {
     const save = parseFodinhaSave(legacySave);
     expect(save?.players[1].history).toEqual([1, null, null]);
@@ -518,5 +526,102 @@ describe('parseFodinhaSave', () => {
     expect(parseFodinhaSave('oops')).toBeNull();
     expect(parseFodinhaSave({ players: 'nope' })).toBeNull();
     expect(parseFodinhaSave({ players: [{ name: 'sem id' }] })).toBeNull();
+  });
+});
+
+// --- orderForTable ---
+
+describe('orderForTable', () => {
+  const seat = (id: string, lives: number) => makePlayer({ id, name: `P${id}`, lives });
+  const ids = (players: readonly FodinhaPlayer[]) => players.map((p) => p.id);
+
+  it('moves eliminated players below the living, keeping the seat order within each group', () => {
+    const players = [seat('1', 3), seat('2', 0), seat('3', 2), seat('4', 0), seat('5', 1)];
+    expect(ids(orderForTable(players))).toEqual(['1', '3', '5', '2', '4']);
+  });
+
+  it('keeps the seat order when nobody is out', () => {
+    const players = [seat('1', 3), seat('2', 1), seat('3', 2)];
+    expect(ids(orderForTable(players))).toEqual(['1', '2', '3']);
+  });
+
+  it('keeps the seat order when everyone is out (a tie)', () => {
+    const players = [seat('1', 0), seat('2', 0)];
+    expect(ids(orderForTable(players))).toEqual(['1', '2']);
+  });
+
+  it('does not reorder the stored players, so a restart puts everyone back in their seat', () => {
+    const players = [seat('1', 0), seat('2', 3)];
+    orderForTable(players);
+    expect(ids(players)).toEqual(['1', '2']);
+    const restarted = players.map((p) => ({ ...p, lives: 7 }));
+    expect(ids(orderForTable(restarted))).toEqual(['1', '2']);
+  });
+});
+
+// --- deleting a round rewinds the card sequence ---
+
+describe('getPreviousRoundCards', () => {
+  it('undoes one step of the sequence, including at both turning points', () => {
+    const max = 4;
+    let state: { cards: number; direction: CardsDirection } = { cards: 1, direction: 'up' };
+    // 1, 2, 3, 4, 3, 2, 1, 2, 3 — passa pelo topo e pelo fundo.
+    for (let i = 0; i < 8; i += 1) {
+      const next = getNextRoundCards(state.cards, state.direction, max);
+      const back = getPreviousRoundCards(next.cards, next.direction);
+      expect(back.cards).toBe(state.cards);
+      // Voltar e avançar de novo reproduz a mesma rodada.
+      expect(getNextRoundCards(back.cards, back.direction, max)).toEqual(next);
+      state = next;
+    }
+  });
+
+  it('stays at 1 card going up when there is nothing before it', () => {
+    expect(getPreviousRoundCards(1, 'up')).toEqual({ cards: 1, direction: 'up' });
+  });
+});
+
+describe('getRoundDeletion', () => {
+  const p = (id: string, history: (number | null)[]) =>
+    makePlayer({ id, history, lives: computeLives(7, history) });
+
+  it('puts the card count back when the last round is deleted', () => {
+    // Rodadas com 1 e 2 cartas jogadas; a próxima seria de 3.
+    const players = [p('1', [0, 1]), p('2', [1, 0]), p('3', [0, 1])];
+    const result = getRoundDeletion(players, 1, {
+      initialLives: 7,
+      cardsInRound: 3,
+      cardsDirection: 'up',
+      deckCount: 1,
+    });
+    expect(getRoundCount(result.players)).toBe(1);
+    expect(result.cardsInRound).toBe(2);
+    expect(result.cardsDirection).toBe('up');
+    expect(result.players.map((x) => x.lives)).toEqual([7, 6, 7]);
+  });
+
+  it('goes back to 1 card when the only round is deleted', () => {
+    const players = [p('1', [1]), p('2', [0])];
+    const result = getRoundDeletion(players, 0, {
+      initialLives: 7,
+      cardsInRound: 2,
+      cardsDirection: 'up',
+      deckCount: 1,
+    });
+    expect(getRoundCount(result.players)).toBe(0);
+    expect(result.cardsInRound).toBe(1);
+  });
+
+  it('keeps the rewound count within the limit and clamps bets above it', () => {
+    // 4 vivos com 1 baralho: limite de 9 cartas. A sequência voltaria para 10.
+    const players = [{ ...p('1', [0]), currentBid: 10 }, p('2', [0]), p('3', [0]), p('4', [0])];
+    const result = getRoundDeletion(players, 0, {
+      initialLives: 7,
+      cardsInRound: 9,
+      cardsDirection: 'down',
+      deckCount: 1,
+    });
+    expect(result.cardsInRound).toBe(9);
+    expect(result.players[0].currentBid).toBe(9);
   });
 });

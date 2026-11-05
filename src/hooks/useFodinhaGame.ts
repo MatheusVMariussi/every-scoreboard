@@ -41,7 +41,7 @@ export const CARDS_PER_DECK = 40;
 export const VIRA_CARDS = 1;
 export const MIN_DECKS = 1;
 export const MAX_DECKS = 4;
-const DEFAULT_LIVES = 10;
+const DEFAULT_LIVES = 7;
 const MAX_LIVES = 50;
 /** Teto de sanidade para valores lidos do disco: nenhuma mão passa de todos os baralhos. */
 const MAX_CARDS_SANITY = CARDS_PER_DECK * MAX_DECKS;
@@ -55,6 +55,16 @@ const CARDS_DIRECTIONS: readonly CardsDirection[] = ['up', 'down'];
 export const isAlive = (player: Player): boolean => player.lives > 0;
 
 export const countAlive = (players: readonly Player[]): number => players.filter(isAlive).length;
+
+/**
+ * Ordem de exibição da mesa: quem está vivo em cima, eliminados embaixo, cada grupo na
+ * ordem das cadeiras. É só para a tela: a lista guardada não muda, então ao reiniciar o
+ * jogo (todos com vidas de novo) cada um volta para a sua cadeira.
+ */
+export const orderForTable = <T extends Player>(players: readonly T[]): T[] => [
+  ...players.filter(isAlive),
+  ...players.filter((p) => !isAlive(p)),
+];
 
 /** Soma apostas ou vazas só de quem ainda está no jogo. */
 export const sumLiving = (players: readonly Player[], field: 'currentBid' | 'currentWon'): number =>
@@ -86,8 +96,7 @@ export const getMaxCards = (deckCount: number, alivePlayers: number): number =>
  * repetir os extremos (…8, 9, 8… 2, 1, 2…).
  *
  * `direction` é o sentido do PRÓXIMO passo, não do último. Por isso basta corrigir o
- * número de cartas à mão (por exemplo, depois de apagar a última rodada) para a sequência
- * seguir do ponto certo.
+ * número de cartas à mão para a sequência seguir do ponto certo.
  */
 export const getNextRoundCards = (
   current: number,
@@ -106,6 +115,21 @@ export const getNextRoundCards = (
   }
   return from > 1 ? { cards: from - 1, direction: 'down' } : { cards: 2, direction: 'up' };
 };
+
+/**
+ * Desfaz um passo de `getNextRoundCards`: quantas cartas teve a rodada anterior.
+ *
+ * Subindo, a anterior tinha uma a menos; descendo, uma a mais. Vale também nas viradas:
+ * o 2 que sobe veio do 1, e o máximo-1 que desce veio do máximo. O sentido é mantido,
+ * porque nas viradas os dois sentidos dão o mesmo próximo passo.
+ */
+export const getPreviousRoundCards = (
+  current: number,
+  direction: CardsDirection,
+): { cards: number; direction: CardsDirection } => ({
+  cards: direction === 'up' ? Math.max(1, current - 1) : current + 1,
+  direction,
+});
 
 /** Última rodada em que alguém da mesa de agora jogou; -1 se ninguém jogou nenhuma. */
 const getLastPlayedRound = (players: readonly Player[]): number => {
@@ -359,6 +383,34 @@ export const logicRemoveRound = (players: Player[], roundIdx: number, initialLiv
     const history = p.history.filter((_, i) => i !== roundIdx);
     return { ...p, history, lives: computeLives(initialLives, history) };
   });
+};
+
+/**
+ * Apagar uma rodada também volta um passo na sequência de cartas: com uma rodada a menos
+ * no histórico, a mão atual é a que vinha antes. Sem isso o contador ficava adiantado
+ * (1 rodada no histórico e a mesa já pedindo 3 cartas).
+ *
+ * O número voltado respeita o limite da mesa de agora — apagar a rodada pode trazer alguém
+ * de volta — e apostas ou vazas acima dele descem junto.
+ */
+export const getRoundDeletion = (
+  players: Player[],
+  roundIdx: number,
+  config: {
+    initialLives: number;
+    cardsInRound: number;
+    cardsDirection: CardsDirection;
+    deckCount: number;
+  },
+): { players: Player[]; cardsInRound: number; cardsDirection: CardsDirection } => {
+  const remaining = logicRemoveRound(players, roundIdx, config.initialLives);
+  const previous = getPreviousRoundCards(config.cardsInRound, config.cardsDirection);
+  const cards = Math.min(previous.cards, getMaxCards(config.deckCount, countAlive(remaining)));
+  return {
+    players: logicClampValues(remaining, cards),
+    cardsInRound: cards,
+    cardsDirection: previous.direction,
+  };
 };
 
 export const logicFinishRound = (players: Player[], penaltyMode: PenaltyMode) => {
@@ -647,7 +699,15 @@ export const useFodinhaGame = () => {
 
   // Função auxiliar para o Alert não ficar aninhado
   const confirmDeleteRound = (roundIdx: number, onCloseOverlay: () => void) => {
-    updateTable((prev) => logicRemoveRound(prev, roundIdx, initialLives));
+    const result = getRoundDeletion(players, roundIdx, {
+      initialLives,
+      cardsInRound,
+      cardsDirection,
+      deckCount,
+    });
+    setPlayers(result.players);
+    setCardsInRound(result.cardsInRound);
+    setCardsDirection(result.cardsDirection);
     onCloseOverlay();
   };
 

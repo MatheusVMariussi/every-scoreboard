@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useEffect, useCallback } from 'react';
+import { useState, useLayoutEffect, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -30,7 +30,7 @@ import { TABLE } from '../components/fodinha/tableMetrics';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useTutorialTarget } from '../hooks/useTutorialTarget';
 import { useGameTutorial } from '../hooks/useGameTutorial';
-import { useFodinhaGame } from '../hooks/useFodinhaGame';
+import { orderForTable, useFodinhaGame } from '../hooks/useFodinhaGame';
 import { ms, wp } from '../theme/responsive';
 import { getVoiceLocale, VoiceFooter, VoicePanel } from '../components/voice/VoiceFooter';
 import { useVoiceScoring } from '../voice/useVoiceScoring';
@@ -52,6 +52,8 @@ export const FodinhaScreen = () => {
   const navigation = useNavigation();
 
   const game = useFodinhaGame();
+  // Eliminados descem na tabela; a voz continua usando a ordem das cadeiras (`game.players`).
+  const tablePlayers = useMemo(() => orderForTable(game.players), [game.players]);
 
   const [showEditName, setShowEditName] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
@@ -285,7 +287,7 @@ export const FodinhaScreen = () => {
                 <View style={styles.cellHeader}>
                   <Text style={styles.headerText}>{translate('common.player').toUpperCase()}</Text>
                 </View>
-                {game.players.map((p) => (
+                {tablePlayers.map((p) => (
                   <TouchableOpacity
                     key={p.id}
                     style={[
@@ -330,14 +332,14 @@ export const FodinhaScreen = () => {
 
               {/* HISTÓRICO */}
               <FodinhaHistoryGrid
-                players={game.players}
+                players={tablePlayers}
                 rounds={game.rounds}
                 onPressRound={handlePressRound}
               />
 
               {/* PAINEL DA RODADA */}
               <FodinhaRoundPanel
-                players={game.players}
+                players={tablePlayers}
                 phase={game.roundPhase}
                 outcome={game.outcome}
                 cardsInRound={game.cardsInRound}
@@ -378,7 +380,7 @@ export const FodinhaScreen = () => {
             });
           }}
         >
-          {game.players.map((p) => {
+          {tablePlayers.map((p) => {
             const damage = p.history[editingRoundIdx];
             // Não jogou a rodada (já estava fora ou entrou depois): nada a ajustar.
             const didPlay = typeof damage === 'number';
