@@ -90,7 +90,7 @@ const TeamScoreArea = ({
           activeOpacity={0.6}
           hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
         >
-          <Text style={[styles.teamName, { color: theme.colors.text.inverse }]}>
+          <Text style={[styles.teamName, { color: theme.colors.text.white }]}>
             {name} <Ionicons name="pencil" size={ms(12)} color={theme.colors.text.secondary} />
           </Text>
           <View style={styles.trophyContainer}>
@@ -236,7 +236,7 @@ export const TrucoScreen = () => {
             }}
             style={styles.iconBtn}
           >
-            <Ionicons name="arrow-back" size={ms(24)} color={theme.colors.text.inverse} />
+            <Ionicons name="arrow-back" size={ms(24)} color={theme.colors.text.white} />
           </TouchableOpacity>
           <Text style={[styles.gameTitle, { color: theme.colors.text.white }]}>
             TRUCO {translate(`truco.${game.gameMode}`).toUpperCase()}
@@ -248,7 +248,7 @@ export const TrucoScreen = () => {
               }}
               style={styles.iconBtn}
             >
-              <Ionicons name="settings-sharp" size={ms(24)} color={theme.colors.text.inverse} />
+              <Ionicons name="settings-sharp" size={ms(24)} color={theme.colors.text.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -312,9 +312,9 @@ export const TrucoScreen = () => {
           setHelpVisible(true);
         }}
         gameMode={game.gameMode}
-        setGameMode={game.setGameMode}
+        setGameMode={game.changeGameMode}
         maxScore={game.maxScore}
-        setMaxScore={game.setMaxScore}
+        setMaxScore={game.changeMaxScore}
       />
 
       <TrucoHelpModal

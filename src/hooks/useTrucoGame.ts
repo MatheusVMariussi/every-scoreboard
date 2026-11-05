@@ -41,6 +41,10 @@ export const buildPointHistory = (
   return newHist;
 };
 
+/**
+ * Vitória é cruzar a linha de chegada: quem já estava na pontuação máxima (o aviso de fim
+ * de jogo foi fechado) não ganha outro troféu com mais um ponto.
+ */
 export const calculateNewScore = (
   currentScore: number,
   pointsToAdd: number,
@@ -48,7 +52,7 @@ export const calculateNewScore = (
 ): { score: number; isVictory: boolean } => {
   const newScore = Math.max(0, currentScore + pointsToAdd);
   if (newScore >= maxScore && pointsToAdd > 0) {
-    return { score: maxScore, isVictory: true };
+    return { score: maxScore, isVictory: currentScore < maxScore };
   }
   return { score: newScore, isVictory: false };
 };
@@ -125,10 +129,6 @@ export const useTrucoGame = () => {
     isLoaded,
   ]);
 
-  useEffect(() => {
-    if (isLoaded && scoreUs === 0 && scoreThem === 0) resetGame(true);
-  }, [gameMode, maxScore, isLoaded, scoreThem, scoreUs]);
-
   // --- LOGIC ---
   const resetGame = (fullReset = false) => {
     setScoreUs(0);
@@ -138,6 +138,25 @@ export const useTrucoGame = () => {
       setMatchWinsUs(0);
       setMatchWinsThem(0);
     }
+  };
+
+  /**
+   * Trocar o modo ou a pontuação máxima com o placar zerado começa uma série nova, e os
+   * troféus zeram. Com um jogo em andamento só a regra muda.
+   *
+   * Isto era um efeito que observava o placar: toda vez que ele voltava a 0 x 0 — como
+   * logo depois de "Nova Partida" — os troféus eram apagados.
+   */
+  const changeGameMode = (mode: 'paulista' | 'mineiro') => {
+    if (mode === gameMode) return;
+    setGameMode(mode);
+    if (scoreUs === 0 && scoreThem === 0) resetGame(true);
+  };
+
+  const changeMaxScore = (score: number) => {
+    if (score === maxScore) return;
+    setMaxScore(score);
+    if (scoreUs === 0 && scoreThem === 0) resetGame(true);
   };
 
   const handleVictory = (winnerName: string, winnerTeam: 'us' | 'them') => {
@@ -187,9 +206,9 @@ export const useTrucoGame = () => {
     scoreThem,
     setScoreThem,
     gameMode,
-    setGameMode,
+    changeGameMode,
     maxScore,
-    setMaxScore,
+    changeMaxScore,
     matchWinsUs,
     setMatchWinsUs,
     matchWinsThem,

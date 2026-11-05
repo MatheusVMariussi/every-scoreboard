@@ -117,6 +117,14 @@ describe('calculateNewScore', () => {
     expect(result.isVictory).toBe(false);
   });
 
+  it('does not count a second victory for a team already at maxScore', () => {
+    // Fechar o aviso de fim de jogo deixa o placar em 12; um toque a mais no vencedor
+    // não pode render outro troféu.
+    const result = calculateNewScore(12, 1, 12);
+    expect(result.score).toBe(12);
+    expect(result.isVictory).toBe(false);
+  });
+
   it('works with maxScore of 24', () => {
     const result = calculateNewScore(22, 3, 24);
     expect(result.score).toBe(24);
