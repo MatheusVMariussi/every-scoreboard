@@ -97,6 +97,7 @@ export const darkTheme: Theme = {
       eliminated: palette.red500,
       divider: palette.white10,
       countColor: palette.white,
+      muted: palette.white30,
     },
   },
   // Espaçamento e tipografia se mantêm

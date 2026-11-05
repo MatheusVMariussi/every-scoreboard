@@ -9,7 +9,7 @@ interface ScreenWrapperProps {
 }
 
 export const ScreenWrapper = ({ children, style }: ScreenWrapperProps) => {
-  const { theme, themeName } = useTheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
   const containerStyle = {
@@ -24,8 +24,8 @@ export const ScreenWrapper = ({ children, style }: ScreenWrapperProps) => {
   return (
     <View style={[containerStyle, style]}>
       <StatusBar
-        // Lógica automática: Fundo escuro -> Texto claro. Fundo claro -> Texto escuro.
-        barStyle={themeName === 'dark' ? 'light-content' : 'dark-content'}
+        // O app só tem o tema escuro: texto claro na barra de status.
+        barStyle="light-content"
         backgroundColor={theme.colors.background.primary}
       />
       {children}

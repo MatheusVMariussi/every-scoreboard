@@ -50,7 +50,7 @@ const GAMES: GameItem[] = [
 ];
 
 export const HomeScreen = () => {
-  const { theme, toggleTheme, themeName } = useTheme();
+  const { theme } = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -196,8 +196,6 @@ export const HomeScreen = () => {
         onClose={() => {
           setSettingsVisible(false);
         }}
-        toggleTheme={toggleTheme}
-        isDarkMode={themeName === 'dark'}
       />
 
       <RateModal

@@ -47,6 +47,11 @@ describe('logicSetValue', () => {
     expect(result[0].currentBid).toBe(0);
     expect(result[2].currentBid).toBe(0);
   });
+
+  it('ignores eliminated players', () => {
+    const players = [makePlayer({ id: '1', lives: 0 })];
+    expect(logicSetValue(players, '1', 2, 'betting', 3)[0].currentBid).toBe(0);
+  });
 });
 
 // --- applyVoiceBatch: apostas ---
@@ -215,7 +220,24 @@ describe('applyVoiceBatch / results phase', () => {
 
     expect(result.hasError).toBe(false);
     expect(result.updatedPlayers[0].lives).toBe(0);
-    expect(result.updatedPlayers[0].history).toEqual([]);
+    // A coluna da rodada existe para todos; o eliminado fica marcado como "não jogou".
+    expect(result.updatedPlayers[0].history).toEqual([null]);
+  });
+
+  it("closes the round on the living players' tricks, ignoring stale values of the eliminated", () => {
+    // Um eliminado com vazas velhas não pode inflar o total e travar o fechamento.
+    const players = [
+      makePlayer({ id: '1', lives: 0, currentWon: 2 }),
+      makePlayer({ id: '2' }),
+      makePlayer({ id: '3' }),
+    ];
+
+    const result = applyVoiceBatch(players, [{ playerId: '2', value: 1 }], results(1), {
+      advance: true,
+    });
+
+    expect(result.hasError).toBe(false);
+    expect(result.roundFinished).toBe(true);
   });
 
   it('is a no-op for an empty batch without advance', () => {

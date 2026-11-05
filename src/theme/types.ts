@@ -74,10 +74,7 @@ export interface ThemeColors {
     activeRound: string;
     text: string; // New: for text inside cards
   };
-  /**
-   * Camada de voz. As telas de jogo são sempre feltro escuro, independente do tema,
-   * então estes valores são iguais no claro e no escuro de propósito.
-   */
+  /** Camada de voz, desenhada sobre o feltro escuro das telas de jogo. */
   voice: {
     surface: string; // Pastilhas ancoradas no rodapé
     panel: string; // Painel da fila e modal de aviso
@@ -96,6 +93,7 @@ export interface ThemeColors {
     eliminated: string; // New
     divider: string; // New
     countColor: string; // New: for total counts
+    muted: string; // Rodada não jogada e controles desativados sobre o feltro
   };
 }
 

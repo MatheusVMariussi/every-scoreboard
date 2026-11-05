@@ -6,8 +6,9 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useEffect, useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { setLocale } from './src/i18n';
-import { loadSettings, type ThemeMode } from './src/utils/appSettings';
+import { loadSettings } from './src/utils/appSettings';
 
 // Prevent Android system font/display zoom from compounding with our ms() scaling.
 // ms() already handles responsive sizing — we don't want the OS to double-scale.
@@ -33,7 +34,7 @@ export default function App() {
    * depois. Por isso a preferência gravada tem de ser aplicada **antes** do primeiro
    * render — daí o portão, e não um efeito que corrige a tela já montada.
    */
-  const [settings, setSettings] = useState<{ themeMode: ThemeMode | null } | null>(null);
+  const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -42,18 +43,18 @@ export default function App() {
         if (!active) return;
         // Só substitui o idioma do aparelho quando houve escolha explícita.
         if (saved.locale !== null) setLocale(saved.locale);
-        setSettings({ themeMode: saved.themeMode });
+        setSettingsReady(true);
       })
       .catch(() => {
         // Preferências ilegíveis não podem travar o app: segue o aparelho.
-        if (active) setSettings({ themeMode: null });
+        if (active) setSettingsReady(true);
       });
     return () => {
       active = false;
     };
   }, []);
 
-  if (!fontsLoaded || settings === null) {
+  if (!fontsLoaded || !settingsReady) {
     return (
       <View
         style={{
@@ -70,7 +71,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider initialMode={settings.themeMode ?? undefined}>
+      {/* Só existe o tema escuro: texto claro na barra de status em todas as telas. */}
+      <StatusBar style="light" />
+      <ThemeProvider>
         <ErrorBoundary>
           <NavigationContainer>
             <RootNavigator />

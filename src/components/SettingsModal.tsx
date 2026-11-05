@@ -20,16 +20,9 @@ import { ms, wp } from '../theme/responsive';
 interface SettingsModalProps {
   visible: boolean;
   onClose: () => void;
-  toggleTheme: () => void;
-  isDarkMode: boolean;
 }
 
-export const SettingsModal = ({
-  visible,
-  onClose,
-  toggleTheme,
-  isDarkMode,
-}: SettingsModalProps) => {
+export const SettingsModal = ({ visible, onClose }: SettingsModalProps) => {
   const { theme } = useTheme();
 
   const [currentLocale, setCurrentLocale] = useState<AppLocale>(getLocale());
@@ -89,29 +82,6 @@ export const SettingsModal = ({
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                   <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
                 </TouchableOpacity>
-              </View>
-
-              {/* SEÇÃO TEMA */}
-              <View style={styles.section}>
-                <Text style={[styles.label, { color: theme.colors.text.secondary }]}>
-                  {translate('settings.theme')}
-                </Text>
-                <View style={styles.row}>
-                  <OptionBtn
-                    label={translate('settings.light')}
-                    active={!isDarkMode}
-                    onPress={() => {
-                      isDarkMode && toggleTheme();
-                    }}
-                  />
-                  <OptionBtn
-                    label={translate('settings.dark')}
-                    active={isDarkMode}
-                    onPress={() => {
-                      !isDarkMode && toggleTheme();
-                    }}
-                  />
-                </View>
               </View>
 
               {/* SEÇÃO IDIOMA */}

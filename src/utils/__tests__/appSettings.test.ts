@@ -16,28 +16,34 @@ describe('loadSettings', () => {
 
     // `null` é o que faz o app seguir o aparelho — não confundir com um padrão fixo.
     expect(settings.locale).toBeNull();
-    expect(settings.themeMode).toBeNull();
     expect(settings.voiceWarningDismissed).toBe(false);
   });
 
-  it('reads back a saved locale and theme', async () => {
-    await writeRaw({ locale: 'en', themeMode: 'dark', voiceWarningDismissed: true });
+  it('reads back a saved locale', async () => {
+    await writeRaw({ locale: 'en', voiceWarningDismissed: true });
 
     const settings = await loadSettings();
 
     expect(settings.locale).toBe('en');
-    expect(settings.themeMode).toBe('dark');
     expect(settings.voiceWarningDismissed).toBe(true);
   });
 
   it('falls back to following the system when a stored value is unrecognized', async () => {
     // Uma versão anterior gravava a tag crua do aparelho.
-    await writeRaw({ locale: 'en-US', themeMode: 'sepia' });
+    await writeRaw({ locale: 'en-US' });
 
     const settings = await loadSettings();
 
     expect(settings.locale).toBeNull();
-    expect(settings.themeMode).toBeNull();
+  });
+
+  it('ignores the theme saved by versions that still had a light theme', async () => {
+    await writeRaw({ locale: 'en', themeMode: 'light', voiceWarningDismissed: true });
+
+    await expect(loadSettings()).resolves.toEqual({
+      voiceWarningDismissed: true,
+      locale: 'en',
+    });
   });
 
   it('survives a corrupted payload', async () => {
@@ -46,7 +52,6 @@ describe('loadSettings', () => {
     await expect(loadSettings()).resolves.toEqual({
       voiceWarningDismissed: false,
       locale: null,
-      themeMode: null,
     });
   });
 });
@@ -59,14 +64,13 @@ describe('updateSettings', () => {
   });
 
   it('preserves the other preferences when patching one', async () => {
-    await updateSettings({ locale: 'en', voiceWarningDismissed: true });
-    await updateSettings({ themeMode: 'dark' });
+    await updateSettings({ locale: 'en' });
+    await updateSettings({ voiceWarningDismissed: true });
 
     const settings = await loadSettings();
 
     expect(settings.locale).toBe('en');
     expect(settings.voiceWarningDismissed).toBe(true);
-    expect(settings.themeMode).toBe('dark');
   });
 
   it('lets a later choice replace an earlier one', async () => {
