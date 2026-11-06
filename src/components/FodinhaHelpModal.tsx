@@ -1,212 +1,82 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../theme/useTheme';
+import { View, StyleSheet } from 'react-native';
 import { translate } from '../i18n';
 import { ms } from '../theme/responsive';
 import { HelpModalShell, type HelpStep } from './help/HelpModalShell';
-import { PlayingCard } from './help/PlayingCard';
+import { HelpCallout, HelpLabel, HelpSplit, HelpText } from './help/HelpLayout';
+import {
+  BetExample,
+  CancelOutExample,
+  CardRanking,
+  LivesExample,
+  PenaltyTable,
+  SuitOrder,
+} from './fodinha/help/FodinhaHelpVisuals';
 
 interface FodinhaHelpModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
+/**
+ * Cada passo cabe numa tela de celular deitado sem rolar: um exemplo desenhado como o
+ * placar e pouco texto. A anulação tem passo próprio porque é uma variante, que troca o
+ * desempate por naipe do passo das cartas.
+ */
 export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) => {
-  const { theme } = useTheme();
-
   const steps: HelpStep[] = [
     {
       title: translate('fodinha.help.objective_title'),
       content: (
-        <View style={styles.stepContainerRow}>
-          <View style={styles.iconColumn}>
-            <Ionicons
-              name="heart-dislike-outline"
-              size={ms(80)}
-              color={theme.colors.status.error}
-            />
-          </View>
-          <View style={styles.textColumn}>
-            <Text style={[styles.text, { color: theme.colors.text.primary }]}>
-              {translate('fodinha.help.objective_text')}
-            </Text>
-          </View>
-        </View>
+        <HelpSplit visual={<LivesExample />}>
+          <HelpText>{translate('fodinha.help.objective_text')}</HelpText>
+          <HelpCallout>{translate('fodinha.help.objective_note')}</HelpCallout>
+        </HelpSplit>
       ),
     },
     {
       title: translate('fodinha.help.betting_title'),
       content: (
-        <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: ms(20) }]}>
-            {translate('fodinha.help.betting_text')}
-          </Text>
-
-          <View
-            style={[
-              styles.alertBox,
-              { backgroundColor: 'rgba(255, 152, 0, 0.1)', borderColor: 'rgba(255, 152, 0, 0.5)' },
-            ]}
-          >
-            <View style={styles.alertHeader}>
-              <Ionicons name="warning" size={ms(24)} color="#F57C00" />
-              <Text style={[styles.alertTitle, { color: '#F57C00' }]}>
-                {translate('fodinha.help.betting_rule_title')}
-              </Text>
-            </View>
-            <Text style={[styles.alertText, { color: theme.colors.text.primary }]}>
-              {translate('fodinha.help.betting_rule_text')}
-            </Text>
-            <Text style={[styles.alertNote, { color: theme.colors.text.secondary }]}>
-              {translate('fodinha.help.betting_rule_note')}
-            </Text>
-          </View>
-        </View>
+        <HelpSplit visual={<BetExample />}>
+          <HelpText>{translate('fodinha.help.betting_text')}</HelpText>
+          <HelpCallout>{translate('fodinha.help.betting_rule_text')}</HelpCallout>
+        </HelpSplit>
       ),
     },
     {
       title: translate('fodinha.help.scoring_title'),
       content: (
-        <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary, marginBottom: ms(20) }]}>
-            {translate('fodinha.help.scoring_text')}
-          </Text>
-
-          <View style={styles.scoringRow}>
-            {/* Hit */}
-            <View
-              style={[styles.scoringCard, { backgroundColor: theme.colors.background.overlay }]}
-            >
-              <Ionicons
-                name="checkmark-circle"
-                size={ms(40)}
-                color={theme.colors.status.success}
-                style={{ marginBottom: ms(10) }}
-              />
-              <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>
-                {translate('fodinha.help.hit_title')}
-              </Text>
-              <Text style={[styles.cardText, { color: theme.colors.text.secondary }]}>
-                {translate('fodinha.help.hit_text')}
-              </Text>
-            </View>
-
-            {/* Miss */}
-            <View
-              style={[styles.scoringCard, { backgroundColor: theme.colors.background.overlay }]}
-            >
-              <Ionicons
-                name="close-circle"
-                size={ms(40)}
-                color={theme.colors.status.error}
-                style={{ marginBottom: ms(10) }}
-              />
-              <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>
-                {translate('fodinha.help.miss_title')}
-              </Text>
-              <Text style={[styles.cardText, { color: theme.colors.text.secondary }]}>
-                {translate('fodinha.help.miss_text')}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.penaltyRow}>
-            <View style={styles.penaltyItem}>
-              <Text style={[styles.penaltyTitle, { color: theme.colors.text.primary }]}>
-                {translate('fodinha.help.penalty_fixed_title')}
-              </Text>
-              <Text style={[styles.penaltyText, { color: theme.colors.text.secondary }]}>
-                {translate('fodinha.help.penalty_fixed_text')}
-              </Text>
-            </View>
-            <View
-              style={[styles.verticalDivider, { backgroundColor: theme.colors.modal.divider }]}
-            />
-            <View style={styles.penaltyItem}>
-              <Text style={[styles.penaltyTitle, { color: theme.colors.text.primary }]}>
-                {translate('fodinha.help.penalty_diff_title')}
-              </Text>
-              <Text style={[styles.penaltyText, { color: theme.colors.text.secondary }]}>
-                {translate('fodinha.help.penalty_diff_text')}
-              </Text>
-            </View>
-          </View>
+        <View style={styles.stack}>
+          <HelpText center>{translate('fodinha.help.scoring_text')}</HelpText>
+          <PenaltyTable />
+          <HelpText muted center>
+            {translate('fodinha.help.scoring_note')}
+          </HelpText>
         </View>
       ),
     },
     {
       title: translate('fodinha.help.cards_title'),
       content: (
-        <View style={styles.stepContainer}>
-          <Text style={[styles.text, { color: theme.colors.text.primary }]}>
-            {translate('fodinha.help.cards_text')}
-          </Text>
-
-          <View style={styles.cardsRow}>
-            <PlayingCard value="3" suit="♣" highlight />
-            <PlayingCard value="2" suit="♦" />
-            <PlayingCard value="A" suit="♠" />
-            <PlayingCard value="K" suit="♥" />
-            <PlayingCard value="J" suit="♣" />
+        <View style={styles.stack}>
+          <HelpText center>{translate('fodinha.help.cards_text')}</HelpText>
+          <CardRanking />
+          <View style={styles.tieRow}>
+            <HelpLabel>{translate('fodinha.help.cards_suit_title')}</HelpLabel>
+            <View style={styles.tieText}>
+              <HelpText muted>{translate('fodinha.help.cards_suit_text')}</HelpText>
+            </View>
+            <SuitOrder />
           </View>
-          <View style={styles.cardsRow}>
-            <PlayingCard value="Q" suit="♦" />
-            <PlayingCard value="7" suit="♠" />
-            <PlayingCard value="6" suit="♥" />
-            <PlayingCard value="5" suit="♣" />
-            <PlayingCard value="4" suit="♦" />
-          </View>
-
-          <View
-            style={{
-              width: '100%',
-              height: 1,
-              backgroundColor: theme.colors.modal.divider,
-              marginVertical: ms(15),
-            }}
-          />
-
-          <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>
-            {translate('fodinha.help.cards_suit_title')}
-          </Text>
-          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: ms(10) }]}>
-            {translate('fodinha.help.cards_suit_text')}
-          </Text>
-
-          <View style={styles.suitsRow}>
-            <View style={styles.suitItem}>
-              <Text style={[styles.suitText, { color: '#D32F2F' }]}>♦</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={ms(20)} color={theme.colors.text.secondary} />
-            <View style={styles.suitItem}>
-              <Text style={[styles.suitText, { color: 'black' }]}>♠</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={ms(20)} color={theme.colors.text.secondary} />
-            <View style={styles.suitItem}>
-              <Text style={[styles.suitText, { color: '#D32F2F' }]}>♥</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={ms(20)} color={theme.colors.text.secondary} />
-            <View style={styles.suitItem}>
-              <Text style={[styles.suitText, { color: 'black' }]}>♣</Text>
-            </View>
-          </View>
-
-          <View
-            style={{
-              width: '100%',
-              height: 1,
-              backgroundColor: theme.colors.modal.divider,
-              marginVertical: ms(15),
-            }}
-          />
-
-          <Text style={[styles.subTitle, { color: theme.colors.text.primary }]}>
-            {translate('fodinha.help.cards_suit_title_cancelOut')}
-          </Text>
-          <Text style={[styles.text, { color: theme.colors.text.secondary, marginBottom: ms(10) }]}>
-            {translate('fodinha.help.cards_suit_text_cancelOut')}
-          </Text>
         </View>
+      ),
+    },
+    {
+      title: translate('fodinha.help.cancel_title'),
+      content: (
+        <HelpSplit visual={<CancelOutExample />}>
+          <HelpText>{translate('fodinha.help.cancel_text')}</HelpText>
+          <HelpText muted>{translate('fodinha.help.cancel_double')}</HelpText>
+        </HelpSplit>
       ),
     },
   ];
@@ -217,92 +87,15 @@ export const FodinhaHelpModal = ({ visible, onClose }: FodinhaHelpModalProps) =>
       onClose={onClose}
       title={translate('fodinha.help.title')}
       steps={steps}
-      widthRatio={0.7}
+      widthRatio={0.72}
       maxHeightRatio={0.9}
+      fixedHeight
     />
   );
 };
 
 const styles = StyleSheet.create({
-  stepContainer: { alignItems: 'center' },
-
-  // Row Layout
-  stepContainerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: ms(20),
-    paddingHorizontal: ms(20),
-  },
-  iconColumn: { width: '30%', alignItems: 'center' },
-  textColumn: { width: '70%' },
-  text: { fontSize: ms(16), lineHeight: ms(24), textAlign: 'center' },
-
-  // Betting Rule Alert
-  alertBox: {
-    width: '80%',
-    padding: ms(15),
-    borderRadius: ms(10),
-    borderWidth: 1,
-    marginTop: ms(10),
-  },
-  alertHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ms(10),
-    marginBottom: ms(10),
-    justifyContent: 'center',
-  },
-  alertTitle: { fontSize: ms(18), fontWeight: 'bold' },
-  alertText: { fontSize: ms(15), lineHeight: ms(22), textAlign: 'center', fontWeight: '500' },
-  alertNote: { fontSize: ms(13), marginTop: ms(10), textAlign: 'center', fontStyle: 'italic' },
-
-  // Scoring Grid
-  scoringRow: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: ms(15),
-    justifyContent: 'center',
-    marginBottom: ms(20),
-  },
-  scoringCard: { flex: 1, padding: ms(15), borderRadius: ms(10), alignItems: 'center' },
-  cardTitle: { fontSize: ms(16), fontWeight: 'bold', marginBottom: ms(5) },
-  cardText: { fontSize: ms(13), textAlign: 'center' },
-
-  // Penalties
-  penaltyRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '90%',
-    marginTop: ms(10),
-  },
-  penaltyItem: { flex: 1, alignItems: 'center', paddingHorizontal: ms(10) },
-  verticalDivider: { width: 1, height: '80%', marginHorizontal: ms(10) },
-  penaltyTitle: { fontSize: ms(14), fontWeight: 'bold', marginBottom: ms(5) },
-  penaltyText: { fontSize: ms(12), textAlign: 'center' },
-
-  // Cards Step
-  cardsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: ms(8),
-    marginTop: ms(15),
-  },
-
-  subTitle: { fontSize: ms(18), fontWeight: 'bold', marginBottom: ms(8) },
-  suitsRow: { flexDirection: 'row', alignItems: 'center', gap: ms(10), justifyContent: 'center' },
-  suitItem: {
-    width: ms(36),
-    height: ms(36),
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: ms(18),
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: '#EEE',
-  },
-  suitText: { fontSize: ms(20), fontWeight: 'bold' },
+  stack: { gap: ms(14) },
+  tieRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ms(12) },
+  tieText: { flexShrink: 1 },
 });

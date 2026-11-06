@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
+  Animated,
   Modal,
   View,
   Text,
@@ -21,15 +22,32 @@ export interface HelpStep {
 interface HelpModalShellProps {
   visible: boolean;
   onClose: () => void;
+  /** Nome do guia, acima do título do passo. */
   title: string;
   steps: readonly HelpStep[];
   /** Fração da largura da tela. */
   widthRatio: number;
-  /** Fração da altura da tela. */
+  /** Fração da altura da tela: limite do cartão, ou a altura dele com `fixedHeight`. */
   maxHeightRatio?: number;
+  /**
+   * Cartão com a mesma altura em todos os passos e o conteúdo centralizado, para não pular
+   * de tamanho na troca. Para guias cujos passos cabem sem rolar; sem isso, o cartão
+   * acompanha o conteúdo até o limite.
+   */
+  fixedHeight?: boolean;
 }
 
-/** Guia "como jogar" em passos: cabeçalho, o passo atual e a navegação com os pontos. */
+/** Troca de passo: o conteúdo novo aparece num fade curto, sem deslocamento. */
+const STEP_FADE_MS = 160;
+const CLOSE_HIT_SLOP = { top: ms(10), bottom: ms(10), left: ms(10), right: ms(10) };
+/** Os botões do rodapé são baixos para a paisagem; o hitSlop leva o toque a 44pt. */
+const NAV_HIT_SLOP = { top: ms(6), bottom: ms(6) };
+
+/**
+ * Guia "como jogar" em passos. Mesma moldura das configurações (cartão escuro com borda
+ * dourada); o título do passo fica no cabeçalho, para sobrar altura ao conteúdo em
+ * paisagem.
+ */
 export const HelpModalShell = ({
   visible,
   onClose,
@@ -37,11 +55,13 @@ export const HelpModalShell = ({
   steps,
   widthRatio,
   maxHeightRatio = 0.85,
+  fixedHeight = false,
 }: HelpModalShellProps) => {
   const { theme } = useTheme();
   const { width, height } = useWindowDimensions();
   const [step, setStep] = useState(0);
   const [wasVisible, setWasVisible] = useState(visible);
+  const fade = useRef(new Animated.Value(1)).current;
 
   // Reabrir começa do primeiro passo. Ajustado no render, e não num efeito, para não
   // mostrar por um quadro o passo em que o guia foi fechado.
@@ -53,26 +73,29 @@ export const HelpModalShell = ({
   const isFirstStep = step === 0;
   const isLastStep = step === steps.length - 1;
   const currentStep = steps[step];
+  const gold = theme.colors.truco.scoreText;
+
+  const goTo = (next: number) => {
+    fade.setValue(0);
+    setStep(next);
+    Animated.timing(fade, { toValue: 1, duration: STEP_FADE_MS, useNativeDriver: true }).start();
+  };
 
   const handleNext = () => {
     if (isLastStep) onClose();
-    else setStep(step + 1);
+    else goTo(step + 1);
   };
 
   const handleBack = () => {
-    if (!isFirstStep) setStep(step - 1);
-  };
-
-  const surface = {
-    backgroundColor: theme.colors.background.secondary,
-    borderColor: theme.colors.modal.divider,
+    if (!isFirstStep) goTo(step - 1);
   };
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
+      statusBarTranslucent
       onRequestClose={onClose}
       supportedOrientations={['portrait', 'landscape']}
     >
@@ -82,64 +105,99 @@ export const HelpModalShell = ({
             styles.container,
             {
               backgroundColor: theme.colors.background.secondary,
+              borderColor: gold,
               width: width * widthRatio,
-              maxHeight: height * maxHeightRatio,
             },
+            fixedHeight
+              ? { height: height * maxHeightRatio }
+              : { maxHeight: height * maxHeightRatio },
           ]}
         >
-          <View style={[styles.header, surface]}>
-            <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>{title}</Text>
+          <View style={[styles.header, { borderBottomColor: theme.colors.truco.divider }]}>
+            <View style={styles.headerText}>
+              <Text style={[styles.eyebrow, { color: theme.colors.text.secondary }]}>{title}</Text>
+              <Text style={[styles.stepTitle, { color: gold }]} accessibilityRole="header">
+                {currentStep.title}
+              </Text>
+            </View>
             <TouchableOpacity
               onPress={onClose}
+              hitSlop={CLOSE_HIT_SLOP}
               accessibilityRole="button"
               accessibilityLabel={translate('a11y.close')}
             >
-              <Ionicons name="close-circle" size={ms(32)} color={theme.colors.text.primary} />
+              <Ionicons name="close" size={ms(24)} color={theme.colors.text.primary} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <Text style={[styles.stepTitle, { color: theme.colors.text.primary }]}>
-              {currentStep.title}
-            </Text>
-            {currentStep.content}
+          {/*
+           * `key`: cada passo começa do topo, sem herdar a rolagem do anterior. Sem `flex`
+           * próprio: o padrão do ScrollView (cresce e encolhe) serve aos dois modos de altura.
+           */}
+          <ScrollView key={step} contentContainerStyle={styles.bodyContent}>
+            <Animated.View style={{ opacity: fade }}>{currentStep.content}</Animated.View>
           </ScrollView>
 
-          <View style={[styles.footer, surface]}>
-            <TouchableOpacity
-              style={[styles.navBtn, isFirstStep && styles.hiddenBtn]}
-              onPress={handleBack}
-              disabled={isFirstStep}
-            >
-              <Text style={[styles.navText, { color: theme.colors.text.primary }]}>
-                {translate('common.previous')}
-              </Text>
-            </TouchableOpacity>
+          {/* Laterais de largura igual: os pontos ficam no centro mesmo quando o texto muda. */}
+          <View style={[styles.footer, { borderTopColor: theme.colors.truco.divider }]}>
+            <View style={styles.footerSide}>
+              {/* Invisível no primeiro passo, mas ocupando o lugar. */}
+              <TouchableOpacity
+                style={[styles.navBtn, isFirstStep && styles.hidden]}
+                onPress={handleBack}
+                disabled={isFirstStep}
+                hitSlop={NAV_HIT_SLOP}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isFirstStep }}
+                accessibilityElementsHidden={isFirstStep}
+                importantForAccessibility={isFirstStep ? 'no-hide-descendants' : 'auto'}
+              >
+                <Ionicons name="chevron-back" size={ms(14)} color={theme.colors.text.primary} />
+                <Text style={[styles.navText, { color: theme.colors.text.primary }]}>
+                  {translate('common.previous')}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-            <View style={styles.dots}>
+            {/* Para o leitor de tela, os pontos viram "Passo 2 de 5". */}
+            <View
+              style={styles.dots}
+              accessible
+              accessibilityLabel={translate('a11y.step_of', {
+                current: step + 1,
+                total: steps.length,
+              })}
+            >
               {steps.map((stepItem, i) => (
                 <View
                   key={`step-${stepItem.title}`}
                   style={[
                     styles.dot,
-                    {
-                      backgroundColor:
-                        i === step ? theme.colors.text.primary : theme.colors.text.secondary,
-                    },
-                    i === step && styles.activeDot,
+                    i === step
+                      ? { ...styles.activeDot, backgroundColor: gold }
+                      : { ...styles.inactiveDot, backgroundColor: theme.colors.text.secondary },
                   ]}
                 />
               ))}
             </View>
 
-            <TouchableOpacity
-              style={[styles.navBtn, { backgroundColor: theme.colors.text.primary }]}
-              onPress={handleNext}
-            >
-              <Text style={[styles.navText, { color: theme.colors.text.inverse }]}>
-                {isLastStep ? translate('common.got_it') : translate('common.next')}
-              </Text>
-            </TouchableOpacity>
+            <View style={[styles.footerSide, styles.footerSideEnd]}>
+              <TouchableOpacity
+                style={[styles.navBtn, styles.nextBtn, { backgroundColor: gold }]}
+                onPress={handleNext}
+                hitSlop={NAV_HIT_SLOP}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.navText, { color: theme.colors.text.black }]}>
+                  {isLastStep ? translate('common.got_it') : translate('common.next')}
+                </Text>
+                <Ionicons
+                  name={isLastStep ? 'checkmark' : 'chevron-forward'}
+                  size={ms(14)}
+                  color={theme.colors.text.black}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -148,29 +206,49 @@ export const HelpModalShell = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: ms(20) },
-  container: { borderRadius: ms(16), overflow: 'hidden', elevation: 5 },
+  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { borderRadius: ms(20), borderWidth: 1, overflow: 'hidden' },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: ms(16),
+    gap: ms(12),
+    paddingHorizontal: ms(20),
+    paddingTop: ms(14),
+    paddingBottom: ms(12),
     borderBottomWidth: 1,
   },
-  headerTitle: { fontSize: ms(20), fontWeight: 'bold' },
-  scrollContent: { padding: ms(20) },
-  stepTitle: { fontSize: ms(22), fontWeight: 'bold', marginBottom: ms(20), textAlign: 'center' },
+  headerText: { flex: 1, gap: ms(6) },
+  eyebrow: { fontFamily: 'Minecraft', fontSize: ms(8), opacity: 0.6 },
+  stepTitle: { fontFamily: 'Minecraft', fontSize: ms(14) },
+  bodyContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: ms(20),
+    paddingVertical: ms(14),
+  },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: ms(16),
+    gap: ms(12),
+    paddingHorizontal: ms(16),
+    paddingVertical: ms(10),
     borderTopWidth: 1,
   },
-  navBtn: { paddingVertical: ms(10), paddingHorizontal: ms(20), borderRadius: ms(25) },
-  hiddenBtn: { opacity: 0 },
-  navText: { fontSize: ms(16), fontWeight: '600' },
-  dots: { flexDirection: 'row', gap: ms(6) },
-  dot: { width: ms(8), height: ms(8), borderRadius: ms(4) },
-  activeDot: { width: ms(20) },
+  footerSide: { flex: 1, alignItems: 'flex-start' },
+  footerSideEnd: { alignItems: 'flex-end' },
+  navBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ms(6),
+    paddingVertical: ms(10),
+    paddingHorizontal: ms(12),
+    borderRadius: ms(10),
+  },
+  nextBtn: { paddingHorizontal: ms(16) },
+  hidden: { opacity: 0 },
+  navText: { fontFamily: 'Minecraft', fontSize: ms(9) },
+  dots: { flexDirection: 'row', alignItems: 'center', gap: ms(6) },
+  dot: { height: ms(6), borderRadius: ms(3) },
+  activeDot: { width: ms(18) },
+  inactiveDot: { width: ms(6), opacity: 0.3 },
 });

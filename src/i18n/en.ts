@@ -107,6 +107,7 @@ export default {
   },
   // Read only by screen readers (VoiceOver/TalkBack): labels for icon-only buttons.
   a11y: {
+    step_of: 'Step {{current}} of {{total}}',
     back: 'Back',
     settings: 'Settings',
     close: 'Close',
@@ -265,35 +266,33 @@ export default {
       title: 'HOW TO PLAY',
       objective_title: 'OBJECTIVE',
       objective_text:
-        'The goal is to survive! Everyone starts with a number of lives. Losing all lives means elimination. The last survivor wins.',
+        'Survive. Everyone starts with the same lives and loses lives by missing their bet.',
+      objective_note: 'Out of lives, out of the game. The last one standing wins.',
       betting_title: 'BETTING',
       betting_text:
-        'In each round, players receive cards and must bet how many "hands" (tricks) they will win.',
-      betting_rule_title: 'IMPORTANT RULE',
+        'Each round, everyone looks at their cards and bets how many tricks they will take.',
       betting_rule_text:
-        "The sum of all players' bets CANNOT equal the total number of cards in the round.",
-      betting_rule_note:
-        'This ensures that at least one person will miss their bet and lose lives.',
+        'The bets can never add up to the number of cards. That way, someone always misses.',
+      betting_example: "{{name}} can't bet {{bet}}: the total would be {{cards}}.",
       scoring_title: 'SCORING',
-      scoring_text: 'At the end of the round, the bet is compared to the number of hands won:',
-      hit_title: 'HIT',
-      hit_text: 'If you won exactly what you bet: No lives lost.',
-      miss_title: 'MISSED',
-      miss_text: 'If you won more or less than you bet: Lose lives.',
-      penalty_fixed_title: 'Fixed Mode',
-      penalty_fixed_text: 'Lose 1 life per miss, regardless of the difference.',
-      penalty_diff_title: 'Difference Mode',
-      penalty_diff_text:
-        'Lose lives equal to the difference between bet and result (Ex: Bet 1, Won 3 = Lose 2 lives).',
+      scoring_text:
+        'At the end of the round, everyone compares their bet with the tricks they took. Hit it: no lives lost.',
+      scoring_bet: 'BET',
+      scoring_won: 'TOOK',
+      scoring_note: 'The penalty, fixed or by difference, is chosen in the settings.',
       cards_title: 'CARDS',
-      cards_text: 'Fodinha uses and follows the Truco hierarchy:',
-      cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
-      cards_suit_title: 'Suits (Tiebreaker)',
-      cards_suit_text: 'If cards have the same rank, the tiebreaker is by suit:',
-      cards_suit_order: 'Diamonds > Spades > Hearts > Clubs',
-      cards_suit_title_cancelOut: 'Canceling Out',
-      cards_suit_text_cancelOut:
-        'Another variant of the game, cards with the same rank (except for manilhas) cancel each other out. When this happens, the remaining cards in the round are still considered valid, even if they have lower ranks. As a result, a 4 can win the round. If all cards are canceled and no card remains valid, the next round is worth double points, and this effect continues cumulatively.',
+      cards_text: 'Truco deck, without 8s, 9s, 10s and jokers. From strongest to weakest:',
+      cards_strongest: 'STRONGEST',
+      cards_weakest: 'WEAKEST',
+      cards_suit_title: 'TIE',
+      cards_suit_text: 'Same rank: the stronger suit wins.',
+      cancel_title: 'VARIANT: CANCEL OUT',
+      cancel_text:
+        'Instead of the suit tiebreak, equal cards cancel each other out (except manilhas). The trick goes to the highest card left, so even a 4 can win.',
+      cancel_double:
+        'If every card cancels out, the next round is worth double, and the doubling stacks.',
+      cancel_label: 'CANCEL',
+      cancel_wins: 'WINS',
     },
   },
 };

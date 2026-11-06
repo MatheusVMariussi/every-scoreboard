@@ -106,6 +106,7 @@ export default {
   },
   // Lido só por leitores de tela (VoiceOver/TalkBack): rótulos dos botões que são só ícone.
   a11y: {
+    step_of: 'Passo {{current}} de {{total}}',
     back: 'Voltar',
     settings: 'Configurações',
     close: 'Fechar',
@@ -269,35 +270,31 @@ export default {
       title: 'COMO JOGAR',
       objective_title: 'OBJETIVO',
       objective_text:
-        'O objetivo é sobreviver! Todos começam com um número de vidas. Quem perder todas as vidas é eliminado. O último sobrevivente vence.',
+        'Sobreviver. Todos começam com as mesmas vidas e perdem vida quando erram a aposta.',
+      objective_note: 'Zerou as vidas, está fora. O último vivo vence.',
       betting_title: 'APOSTAS',
-      betting_text:
-        'Em cada rodada, os jogadores recebem cartas e devem apostar quantas "mãos" (vazas) irão ganhar.',
-      betting_rule_title: 'REGRA IMPORTANTE',
+      betting_text: 'A cada rodada, todos olham as cartas e apostam quantas vazas vão fazer.',
       betting_rule_text:
-        'A soma das apostas de todos os jogadores NÃO pode ser igual ao número de cartas da rodada.',
-      betting_rule_note:
-        'Isso garante que pelo menos uma pessoa vai errar a aposta e perder vidas.',
+        'A soma das apostas nunca pode dar o número de cartas. Assim, alguém sempre erra.',
+      betting_example: '{{name}} não pode apostar {{bet}}: a soma daria {{cards}}.',
       scoring_title: 'PONTUAÇÃO',
-      scoring_text: 'Ao final da rodada, compara-se a aposta com o número de mãos ganhas:',
-      hit_title: 'ACERTOU',
-      hit_text: 'Se ganhou exatamente o que apostou: Não perde vidas.',
-      miss_title: 'ERROU',
-      miss_text: 'Se ganhou mais ou menos do que apostou: Perde vidas.',
-      penalty_fixed_title: 'Modo Fixo',
-      penalty_fixed_text: 'Perde 1 vida por erro, não importa a diferença.',
-      penalty_diff_title: 'Modo Diferença',
-      penalty_diff_text:
-        'Perde vidas igual à diferença entre a aposta e o resultado (Ex: Apostou 1, Ganhou 3 = Perde 2 vidas).',
+      scoring_text:
+        'No fim da rodada, cada um compara a aposta com as vazas que fez. Acertou: não perde nada.',
+      scoring_bet: 'APOSTOU',
+      scoring_won: 'FEZ',
+      scoring_note: 'A punição, fixa ou pela diferença, é escolhida nas configurações.',
       cards_title: 'CARTAS',
-      cards_text: 'A Fodinha utiliza o baralho e segue a hierarquia do Truco:',
-      cards_order: '3 > 2 > A > K > J > Q > 7 > 6 > 5 > 4',
-      cards_suit_title: 'Nipes (Desempate)',
-      cards_suit_text: 'Caso as cartas tenham o mesmo valor, o desempate é pelo naipe:',
-      cards_suit_order: 'Ouros > Espadas > Copas > Paus',
-      cards_suit_title_cancelOut: 'Anulação',
-      cards_suit_text_cancelOut:
-        'Outra variante do jogo, cartas de mesmo valor (exceto manilhas) se anulam mutuamente. Quando isso acontece, as demais cartas da rodada continuam válidas, mesmo que tenham valores menores. Dessa forma, uma carta 4 pode vencer a rodada. Caso todas as cartas sejam anuladas e nenhuma reste válida, a próxima rodada valerá o dobro de pontos, e assim sucessivamente.',
+      cards_text: 'Baralho de truco, sem 8, 9, 10 e coringas. Da mais forte para a mais fraca:',
+      cards_strongest: 'MAIS FORTE',
+      cards_weakest: 'MAIS FRACA',
+      cards_suit_title: 'EMPATE',
+      cards_suit_text: 'Mesmo valor: ganha o naipe mais forte.',
+      cancel_title: 'VARIANTE: ANULAÇÃO',
+      cancel_text:
+        'No lugar do desempate por naipe, cartas iguais se anulam (menos as manilhas). A vaza fica com a maior carta que sobrar, e até um 4 pode ganhar.',
+      cancel_double: 'Se todas se anularem, a rodada seguinte vale o dobro, e o dobro acumula.',
+      cancel_label: 'SE ANULAM',
+      cancel_wins: 'VENCE',
     },
   },
 };

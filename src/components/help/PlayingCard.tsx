@@ -15,7 +15,10 @@ interface PlayingCardProps {
   isManilha?: boolean;
   /** Borda escura para destacar a carta mais forte de uma sequência. */
   highlight?: boolean;
-  size?: 'regular' | 'small';
+  /** Apagada: carta que saiu do jogo no exemplo (anulada, por exemplo). */
+  dimmed?: boolean;
+  /** `tiny`: dez cartas numa fileira só, até num iPhone SE deitado. */
+  size?: 'regular' | 'small' | 'tiny';
 }
 
 /** Carta de baralho desenhada nos guias de "como jogar". */
@@ -24,22 +27,34 @@ export const PlayingCard = ({
   suit,
   isManilha = false,
   highlight = false,
+  dimmed = false,
   size = 'regular',
 }: PlayingCardProps) => {
   const color = isRedSuit(suit) ? RED_SUIT_COLOR : 'black';
   const isSmall = size === 'small';
+  const isTiny = size === 'tiny';
 
   return (
     <View
       style={[
         styles.card,
         isSmall && styles.cardSmall,
+        isTiny && styles.cardTiny,
         isManilha && styles.cardManilha,
         highlight && styles.cardHighlight,
+        dimmed && styles.cardDimmed,
       ]}
     >
-      <Text style={[styles.value, isSmall && styles.valueSmall, { color }]}>{value}</Text>
-      <Text style={[styles.suit, isSmall && styles.suitSmall, { color }]}>{suit}</Text>
+      <Text
+        style={[styles.value, isSmall && styles.valueSmall, isTiny && styles.valueTiny, { color }]}
+      >
+        {value}
+      </Text>
+      <Text
+        style={[styles.suit, isSmall && styles.suitSmall, isTiny && styles.suitTiny, { color }]}
+      >
+        {suit}
+      </Text>
     </View>
   );
 };
@@ -57,10 +72,14 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardSmall: { width: ms(40), height: ms(56) },
+  cardTiny: { width: ms(36), height: ms(50) },
   cardManilha: { borderColor: '#FFD700', borderWidth: 2, backgroundColor: '#FFFDF0' },
   cardHighlight: { borderColor: '#333', borderWidth: 1.5 },
+  cardDimmed: { opacity: 0.35 },
   value: { fontSize: ms(18), fontWeight: 'bold' },
   valueSmall: { fontSize: ms(16) },
+  valueTiny: { fontSize: ms(14) },
   suit: { fontSize: ms(16) },
   suitSmall: { fontSize: ms(14) },
+  suitTiny: { fontSize: ms(12) },
 });
